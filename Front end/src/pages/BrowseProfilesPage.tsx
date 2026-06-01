@@ -1,18 +1,20 @@
 import React from 'react';
-import { Profile } from '../types/profile';
+import { ProfileSummary } from '../types/profile';
 import { ProfileGrid } from '../components/profile/ProfileGrid';
 import './Page.css';
 
 interface BrowseProfilesPageProps {
-  profiles: Profile[];
+  profiles: ProfileSummary[];
   savedIds: Set<string>;
   onToggleSave: (id: string) => void;
+  onViewProfile: (id: string) => void;
 }
 
 export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
   profiles,
   savedIds,
   onToggleSave,
+  onViewProfile,
 }) => {
   return (
     <div className="page">
@@ -26,6 +28,7 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
         profiles={profiles}
         savedIds={savedIds}
         onToggleSave={onToggleSave}
+        onViewProfile={onViewProfile}
       />
     </div>
   );

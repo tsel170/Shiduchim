@@ -1,7 +1,7 @@
 import React from 'react';
 import './Sidebar.css';
 
-export type NavItem = 'browse' | 'saved' | 'requests' | 'settings';
+export type NavItem = 'browse' | 'saved' | 'my-profile' | 'requests' | 'settings';
 
 interface SidebarProps {
   activeItem: NavItem;
@@ -13,6 +13,7 @@ interface SidebarProps {
 const navItems: { id: NavItem; label: string; icon: React.ReactNode }[] = [
   { id: 'browse', label: 'עיון בפרופילים', icon: <GridIcon /> },
   { id: 'saved', label: 'פרופילים שמורים', icon: <HeartIcon /> },
+  { id: 'my-profile', label: 'הפרופיל שלי', icon: <UserIcon /> },
   { id: 'requests', label: 'הבקשות שלי', icon: <InboxIcon /> },
   { id: 'settings', label: 'הגדרות', icon: <SettingsIcon /> },
 ];
@@ -78,6 +79,15 @@ function SettingsIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="3" />
       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }

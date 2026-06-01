@@ -1,0 +1,13 @@
+.profile-editor {
+  max-width: 720px;
+}
+
+.profile-editor__spacer {
+  height: var(--space-lg);
+}
+
+.form-field__textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+}

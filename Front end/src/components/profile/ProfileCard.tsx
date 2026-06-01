@@ -1,17 +1,19 @@
 import React from 'react';
-import { Profile } from '../../types/profile';
+import { ProfileSummary } from '../../types/profile';
 import './ProfileCard.css';
 
 interface ProfileCardProps {
-  profile: Profile;
+  profile: ProfileSummary;
   isSaved: boolean;
   onToggleSave: (id: string) => void;
+  onViewProfile: (id: string) => void;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
   isSaved,
   onToggleSave,
+  onViewProfile,
 }) => {
   return (
     <article className="profile-card">
@@ -46,7 +48,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <p className="profile-card__bio">{profile.bio}</p>
 
         <div className="profile-card__actions">
-          <button type="button" className="btn btn--secondary btn--sm">
+          <button
+            type="button"
+            className="btn btn--secondary btn--sm"
+            onClick={() => onViewProfile(profile.id)}
+          >
             צפה בפרופיל
           </button>
           <button type="button" className="btn btn--primary btn--sm">

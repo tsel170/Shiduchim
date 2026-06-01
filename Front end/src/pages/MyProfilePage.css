@@ -1,0 +1,19 @@
+.my-profile-page {
+  max-width: 760px;
+}
+
+.my-profile-page__toast {
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-md);
+  color: #065f46;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.my-profile-page .btn--primary {
+  width: auto;
+  min-width: 160px;
+}

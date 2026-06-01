@@ -1,18 +1,20 @@
 import React from 'react';
-import { Profile } from '../types/profile';
+import { ProfileSummary } from '../types/profile';
 import { ProfileGrid } from '../components/profile/ProfileGrid';
 import './Page.css';
 
 interface SavedProfilesPageProps {
-  profiles: Profile[];
+  profiles: ProfileSummary[];
   savedIds: Set<string>;
   onToggleSave: (id: string) => void;
+  onViewProfile: (id: string) => void;
 }
 
 export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
   profiles,
   savedIds,
   onToggleSave,
+  onViewProfile,
 }) => {
   const savedProfiles = profiles.filter((p) => savedIds.has(p.id));
 
@@ -28,6 +30,7 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
         profiles={savedProfiles}
         savedIds={savedIds}
         onToggleSave={onToggleSave}
+        onViewProfile={onViewProfile}
         emptyMessage="עדיין לא שמרת פרופילים. לחץ על לב בכרטיס פרופיל כדי לשמור."
       />
     </div>
