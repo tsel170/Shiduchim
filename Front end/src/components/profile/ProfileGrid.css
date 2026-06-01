@@ -1,0 +1,41 @@
+.profile-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: 1fr;
+}
+
+.profile-grid__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  padding: var(--space-xl);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Mobile: 1 column (default) */
+
+/* Small: 2 columns */
+@media (min-width: 576px) {
+  .profile-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Medium: 3 columns */
+@media (min-width: 992px) {
+  .profile-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large: 4 columns */
+@media (min-width: 1280px) {
+  .profile-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

@@ -1,0 +1,41 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.app-shell__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.app-shell__main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  min-width: 0;
+}
+
+.app-shell__overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  top: var(--header-height);
+  border: none;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 90;
+  cursor: pointer;
+}
+
+.app-shell__overlay--visible {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .app-shell__main {
+    padding: var(--space-md);
+  }
+}
