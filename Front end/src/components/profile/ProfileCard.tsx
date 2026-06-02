@@ -1,64 +1,85 @@
-import React from 'react';
-import { ProfileSummary } from '../../types/profile';
+import React, { KeyboardEvent } from 'react';
+import { FullProfile } from '../../types/profile';
+import { getMaritalStatusLabel } from '../../constants/profileOptions';
 import './ProfileCard.css';
 
 interface ProfileCardProps {
-  profile: ProfileSummary;
-  isSaved: boolean;
-  onToggleSave: (id: string) => void;
+  profile: FullProfile;
+  canFavorite: boolean;
+  showFavoriteControls?: boolean;
+  onToggleFavorite: (id: string) => void;
   onViewProfile: (id: string) => void;
+  isFavorite: boolean;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
-  isSaved,
-  onToggleSave,
+  canFavorite,
+  showFavoriteControls = true,
+  onToggleFavorite,
   onViewProfile,
+  isFavorite,
 }) => {
+  const fullName = `${profile.firstName} ${profile.lastName}`;
+  const cover = profile.photos[0];
+
+  const openProfile = () => onViewProfile(profile.id);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openProfile();
+    }
+  };
+
   return (
-    <article className="profile-card">
-      <div className="profile-card__image-wrap">
-        <img
-          src={profile.imageUrl}
-          alt={profile.name}
-          className="profile-card__image"
-          loading="lazy"
-        />
-        <button
-          type="button"
-          className={`profile-card__save${isSaved ? ' profile-card__save--active' : ''}`}
-          aria-label={isSaved ? 'הסר משמירה' : 'שמור פרופיל'}
-          aria-pressed={isSaved}
-          onClick={() => onToggleSave(profile.id)}
-        >
-          <HeartIcon filled={isSaved} />
-        </button>
+    <article
+      className="profile-card profile-card--clickable"
+      onClick={openProfile}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-label={`צפייה בפרופיל של ${fullName}`}
+    >
+      <div className="profile-card__image-wrap profile-card__image-wrap--locked">
+        {cover ? <img src={cover} alt="" className="profile-card__image" loading="lazy" /> : null}
+        <div className="profile-card__locked">התמונות נפתחות אחרי דירוג מלא</div>
+        {showFavoriteControls && (
+          <button
+            type="button"
+            className={`profile-card__save${isFavorite ? ' profile-card__save--active' : ''}`}
+            aria-label={isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
+            aria-pressed={isFavorite}
+            disabled={!canFavorite}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleFavorite(profile.id);
+            }}
+          >
+            <HeartIcon filled={isFavorite} />
+          </button>
+        )}
       </div>
 
       <div className="profile-card__body">
         <header className="profile-card__header">
-          <h3 className="profile-card__name">{profile.name}</h3>
+          <h3 className="profile-card__name">{fullName}</h3>
           <p className="profile-card__meta">
-            <span>{profile.age}</span>
-            <span className="profile-card__dot" aria-hidden="true">·</span>
-            <span>{profile.city}</span>
+            <span>גיל {profile.age}</span>
+            <span className="profile-card__dot" aria-hidden="true">
+              ·
+            </span>
+            <span>{getMaritalStatusLabel(profile.maritalStatus)}</span>
           </p>
         </header>
 
-        <p className="profile-card__bio">{profile.bio}</p>
+        {showFavoriteControls && !canFavorite && (
+          <p className="profile-card__hint">יש להשלים דירוג מלא לפני שמירה למועדפים.</p>
+        )}
 
-        <div className="profile-card__actions">
-          <button
-            type="button"
-            className="btn btn--secondary btn--sm"
-            onClick={() => onViewProfile(profile.id)}
-          >
-            צפה בפרופיל
-          </button>
-          <button type="button" className="btn btn--primary btn--sm">
-            שלח לשדכן
-          </button>
-        </div>
+        <p className="profile-card__cta" aria-hidden="true">
+          לחץ לצפייה בפרופיל
+        </p>
       </div>
     </article>
   );
@@ -74,7 +95,11 @@ function HeartIcon({ filled }: { filled: boolean }) {
   }
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

@@ -1,0 +1,75 @@
+/* Shared accent colors for profile fields (details + display preferences + filters) */
+.profile-field--age {
+  --section-accent: #0d9488;
+  --section-bg: #f0fdfa;
+  --section-border: #99f6e4;
+}
+
+.profile-field--average {
+  --section-accent: #4f46e5;
+  --section-bg: #eef2ff;
+  --section-border: #c7d2fe;
+}
+
+.profile-field--city,
+.profile-details__section--city {
+  --section-accent: #0284c7;
+  --section-bg: #f0f9ff;
+  --section-border: #bae6fd;
+}
+
+.profile-field--height,
+.profile-details__section--height {
+  --section-accent: #64748b;
+  --section-bg: #f8fafc;
+  --section-border: #cbd5e1;
+}
+
+.profile-field--maritalStatus,
+.profile-details__section--maritalStatus {
+  --section-accent: #7c3aed;
+  --section-bg: #f5f3ff;
+  --section-border: #ddd6fe;
+}
+
+.profile-field--religiousStream,
+.profile-details__section--religiousStream {
+  --section-accent: #4f46e5;
+  --section-bg: #eef2ff;
+  --section-border: #c7d2fe;
+}
+
+.profile-field--personalityTraits,
+.profile-details__section--personalityTraits {
+  --section-accent: #db2777;
+  --section-bg: #fdf2f8;
+  --section-border: #fbcfe8;
+}
+
+.profile-field--hobbies,
+.profile-details__section--hobbies {
+  --section-accent: #059669;
+  --section-bg: #ecfdf5;
+  --section-border: #a7f3d0;
+}
+
+.profile-field--familyVision,
+.profile-details__section--familyVision {
+  --section-accent: #d97706;
+  --section-bg: #fffbeb;
+  --section-border: #fde68a;
+}
+
+.profile-field--lookingFor,
+.profile-details__section--lookingFor {
+  --section-accent: #2563eb;
+  --section-bg: #eff6ff;
+  --section-border: #bfdbfe;
+}
+
+.profile-field--look,
+.profile-details__section--photos {
+  --section-accent: #0891b2;
+  --section-bg: #ecfeff;
+  --section-border: #a5f3fc;
+}

@@ -8,9 +8,9 @@
 }
 
 .chip-list__chip {
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: var(--radius-full);
-  font-size: 0.8125rem;
+  font-size: 0.93rem;
   font-weight: 500;
   background: var(--color-bg);
   color: var(--color-text-secondary);
@@ -25,6 +25,6 @@
 
 .chip-list__empty {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--color-text-muted);
 }

@@ -1,24 +1,41 @@
 import React, { ReactNode } from 'react';
-import { Header } from '../header/Header';
+import { Header, HeaderPanelMode } from '../header/Header';
 import { Sidebar, NavItem } from '../sidebar/Sidebar';
 import './AppLayout.css';
 
 interface AppLayoutProps {
   activeNav: NavItem;
   onNavigate: (item: NavItem) => void;
+  onBrandClick: () => void;
+  headerPanelMode: HeaderPanelMode;
+  isHeaderPanelOpen: boolean;
+  onHeaderPanelToggle: () => void;
+  headerPanelHighlight?: boolean;
   children: ReactNode;
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({
   activeNav,
   onNavigate,
+  onBrandClick,
+  headerPanelMode,
+  isHeaderPanelOpen,
+  onHeaderPanelToggle,
+  headerPanelHighlight = false,
   children,
 }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
     <div className="app-shell">
-      <Header onMenuToggle={() => setSidebarOpen((open) => !open)} />
+      <Header
+        onMenuToggle={() => setSidebarOpen((open) => !open)}
+        onBrandClick={onBrandClick}
+        panelMode={headerPanelMode}
+        isPanelOpen={isHeaderPanelOpen}
+        onPanelToggle={onHeaderPanelToggle}
+        panelHighlight={headerPanelHighlight}
+      />
       <div className="app-shell__body">
         <Sidebar
           activeItem={activeNav}

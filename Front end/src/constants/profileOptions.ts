@@ -1,4 +1,10 @@
-import { MaritalStatus } from '../types/profile';
+import {
+  DisplayField,
+  DisplayPreferences,
+  FilterConfiguration,
+  MaritalStatus,
+  ProfileRatingCategory,
+} from '../types/profile';
 
 export const MAX_PROFILE_PHOTOS = 6;
 
@@ -86,6 +92,91 @@ export const COUNTRY_CODES = [
   { code: '+33', label: 'צרפת (+33)' },
   { code: '+49', label: 'גרמניה (+49)' },
 ] as const;
+
+export const DISPLAY_FIELDS: ReadonlyArray<{ id: DisplayField; label: string }> = [
+  { id: 'city', label: 'עיר' },
+  { id: 'height', label: 'גובה' },
+  { id: 'maritalStatus', label: 'מצב משפחתי' },
+  { id: 'religiousStream', label: 'זרם דתי' },
+  { id: 'personalityTraits', label: 'תכונות אישיות' },
+  { id: 'hobbies', label: 'תחביבים' },
+  { id: 'familyVision', label: 'חזון בית ומשפחה' },
+  { id: 'lookingFor', label: 'מחפש/ת' },
+];
+
+/** Always visible on profile page — reorder only */
+export const REQUIRED_DISPLAY_FIELDS: ReadonlyArray<DisplayField> = [
+  'personalityTraits',
+  'hobbies',
+  'familyVision',
+  'lookingFor',
+];
+
+export const OPTIONAL_DISPLAY_FIELDS: ReadonlyArray<DisplayField> = [
+  'city',
+  'height',
+  'maritalStatus',
+  'religiousStream',
+];
+
+const REQUIRED_DISPLAY_FIELD_SET = new Set<DisplayField>(REQUIRED_DISPLAY_FIELDS);
+
+export function isRequiredDisplayField(field: DisplayField): boolean {
+  return REQUIRED_DISPLAY_FIELD_SET.has(field);
+}
+
+export function isOptionalDisplayField(field: DisplayField): boolean {
+  return !isRequiredDisplayField(field);
+}
+
+export function getDisplayFieldLabel(field: DisplayField): string {
+  return DISPLAY_FIELDS.find((x) => x.id === field)?.label ?? field;
+}
+
+export const RATING_CATEGORIES: ReadonlyArray<{
+  id: ProfileRatingCategory;
+  label: string;
+}> = [
+  { id: 'personality', label: 'אישיות' },
+  { id: 'hobbies', label: 'תחביבים' },
+  { id: 'homeVision', label: 'חזון בית ומשפחה' },
+  { id: 'lookingFor', label: 'מחפש/ת' },
+  { id: 'look', label: 'מראה' },
+];
+
+export const DEFAULT_FILTER_CONFIGURATION: FilterConfiguration = {
+  ageRange: { min: 18, max: 50 },
+  heightRange: { min: 140, max: 210 },
+  cities: [],
+  religiousStreams: [],
+  maritalStatuses: [],
+  personalityTraits: [],
+  hobbies: [],
+  lookingFor: [],
+};
+
+export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
+  visibleFields: {
+    city: true,
+    height: true,
+    maritalStatus: true,
+    religiousStream: true,
+    personalityTraits: true,
+    hobbies: true,
+    familyVision: true,
+    lookingFor: true,
+  },
+  fieldOrder: [
+    'city',
+    'height',
+    'maritalStatus',
+    'religiousStream',
+    'personalityTraits',
+    'hobbies',
+    'familyVision',
+    'lookingFor',
+  ],
+};
 
 export function getCityLabel(cityId: string): string {
   return CITIES.find((c) => c.id === cityId)?.label ?? cityId;
