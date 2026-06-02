@@ -1,7 +1,8 @@
 .profile-grid {
   display: grid;
   gap: var(--space-lg);
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 280px));
+  justify-content: start;
 }
 
 .profile-grid__empty {
@@ -15,27 +16,11 @@
   border-radius: var(--radius-lg);
   color: var(--color-text-muted);
   text-align: center;
+  grid-column: 1 / -1;
 }
 
-/* Mobile: 1 column (default) */
-
-/* Small: 2 columns */
-@media (min-width: 576px) {
+@media (max-width: 480px) {
   .profile-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Medium: 3 columns */
-@media (min-width: 992px) {
-  .profile-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Large: 4 columns */
-@media (min-width: 1280px) {
-  .profile-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
   }
 }

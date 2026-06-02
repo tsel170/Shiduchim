@@ -1,0 +1,6 @@
+@import '../styles/floatingPanel.css';
+
+.browse-page {
+  max-width: 1320px;
+  margin-inline: auto;
+}
