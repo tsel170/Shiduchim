@@ -9,16 +9,46 @@
   transition: box-shadow 0.2s, transform 0.2s;
 }
 
-.profile-card:hover {
+.profile-card--clickable {
+  cursor: pointer;
+  text-align: inherit;
+  width: 100%;
+  font: inherit;
+}
+
+.profile-card--clickable:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  border-color: var(--color-primary-light);
+}
+
+.profile-card--clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.profile-card--clickable:active {
+  transform: translateY(0);
 }
 
 .profile-card__image-wrap {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--color-bg);
+}
+.profile-card__image-wrap--locked img {
+  filter: blur(10px);
+}
+.profile-card__locked {
+  position: absolute;
+  inset: auto 8px 8px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 6px;
+  border-radius: 8px;
 }
 
 .profile-card__image {
@@ -47,6 +77,10 @@
 
 .profile-card__save:hover {
   color: var(--color-accent);
+}
+.profile-card__save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .profile-card__save--active {
@@ -96,10 +130,41 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
-.profile-card__actions {
+.profile-card__fields {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  margin-top: var(--space-xs);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profile-card__fields span {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.profile-card__field--wide {
+  width: 100%;
+  border-radius: var(--radius-md);
+  text-align: right;
+}
+.profile-card__rating {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-primary-dark);
+}
+.profile-card__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #92400e;
+}
+
+.profile-card__cta {
+  margin: auto 0 0;
+  padding-top: var(--space-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: center;
+  border-top: 1px dashed var(--color-border);
 }

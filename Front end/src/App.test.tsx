@@ -17,7 +17,7 @@ test('navigates to my profile page', async () => {
 
 test('opens profile details from grid', async () => {
   render(<App />);
-  const viewButtons = screen.getAllByRole('button', { name: 'צפה בפרופיל' });
-  await userEvent.click(viewButtons[0]);
+  const profileCards = screen.getAllByRole('button', { name: /צפייה בפרופיל של/ });
+  await userEvent.click(profileCards[0]);
   expect(screen.getByRole('button', { name: /חזרה לרשימה/ })).toBeInTheDocument();
 });

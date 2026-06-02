@@ -1,7 +1,9 @@
 .app-shell {
   display: flex;
   flex-direction: column;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   background: var(--color-bg);
 }
 
@@ -9,14 +11,18 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   position: relative;
 }
 
 .app-shell__main {
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: var(--space-lg);
   min-width: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-shell__overlay {

@@ -81,7 +81,6 @@ export const mockFullProfiles: FullProfile[] = [
       { id: 'r4-2', name: 'אבי כהן', phoneNumber: '053-4455667', countryCode: '+972' },
     ],
     photos: [img('1534528741775-53994a69daeb')],
-    saved: false,
   },
   {
     id: '5',
@@ -164,7 +163,6 @@ export const mockFullProfiles: FullProfile[] = [
     lookingFor: ['הומור', 'צניעות', 'ערכים דומים'],
     references: [{ id: 'r9-1', name: 'רבקה ברק', phoneNumber: '054-1122334', countryCode: '+972' }],
     photos: [img('1506794778202-cad84cf45f1d'), img('1529626455594-4ff0802cfb7e')],
-    saved: true,
   },
   {
     id: '10',
@@ -184,7 +182,6 @@ export const mockFullProfiles: FullProfile[] = [
       { id: 'r10-2', name: 'שרה גולד', phoneNumber: '052-8877665', countryCode: '+972' },
     ],
     photos: [img('1529626455594-4ff0802cfb7e')],
-    saved: true,
   },
   {
     id: '11',

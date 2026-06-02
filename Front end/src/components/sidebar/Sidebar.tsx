@@ -12,7 +12,7 @@ interface SidebarProps {
 
 const navItems: { id: NavItem; label: string; icon: React.ReactNode }[] = [
   { id: 'browse', label: 'עיון בפרופילים', icon: <GridIcon /> },
-  { id: 'saved', label: 'פרופילים שמורים', icon: <HeartIcon /> },
+  { id: 'saved', label: 'מועדפים', icon: <HeartIcon /> },
   { id: 'my-profile', label: 'הפרופיל שלי', icon: <UserIcon /> },
   { id: 'requests', label: 'הבקשות שלי', icon: <InboxIcon /> },
   { id: 'settings', label: 'הגדרות', icon: <SettingsIcon /> },
