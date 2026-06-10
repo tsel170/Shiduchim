@@ -337,11 +337,36 @@
   border-color: var(--color-primary-light);
 }
 
+.header__logout {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.header__logout:hover {
+  border-color: #f43f5e;
+  color: #be123c;
+  background: #fff1f2;
+}
+
 .header__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  object-fit: cover;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .header__profile-name {
@@ -375,7 +400,8 @@
     height: 28px;
   }
 
-  .header__profile-name {
+  .header__profile-name,
+  .header__logout {
     display: none;
   }
 

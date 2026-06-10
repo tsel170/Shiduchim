@@ -1,12 +1,12 @@
 import React, { ReactNode } from 'react';
 import { Header, HeaderPanelMode } from '../header/Header';
-import { Sidebar, NavItem } from '../sidebar/Sidebar';
+import { Sidebar } from '../sidebar/Sidebar';
 import './AppLayout.css';
 
 interface AppLayoutProps {
-  activeNav: NavItem;
-  onNavigate: (item: NavItem) => void;
   onBrandClick: () => void;
+  onLogout: () => void;
+  userLabel?: string;
   headerPanelMode: HeaderPanelMode;
   isHeaderPanelOpen: boolean;
   onHeaderPanelToggle: () => void;
@@ -15,9 +15,9 @@ interface AppLayoutProps {
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({
-  activeNav,
-  onNavigate,
   onBrandClick,
+  onLogout,
+  userLabel,
   headerPanelMode,
   isHeaderPanelOpen,
   onHeaderPanelToggle,
@@ -31,21 +31,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <Header
         onMenuToggle={() => setSidebarOpen((open) => !open)}
         onBrandClick={onBrandClick}
+        onLogout={onLogout}
+        userLabel={userLabel}
         panelMode={headerPanelMode}
         isPanelOpen={isHeaderPanelOpen}
         onPanelToggle={onHeaderPanelToggle}
         panelHighlight={headerPanelHighlight}
       />
       <div className="app-shell__body">
-        <Sidebar
-          activeItem={activeNav}
-          onNavigate={(item) => {
-            onNavigate(item);
-            setSidebarOpen(false);
-          }}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <button
           type="button"
           className={`app-shell__overlay${sidebarOpen ? ' app-shell__overlay--visible' : ''}`}

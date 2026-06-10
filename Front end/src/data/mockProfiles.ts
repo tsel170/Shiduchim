@@ -1,4 +1,6 @@
+import { mockAuthProfiles } from './mockAuthProfiles';
 import { FullProfile } from '../types/profile';
+import { platformProfileToFullProfile } from '../utils/platformProfileAdapter';
 import { toProfileSummary } from '../utils/profileHelpers';
 
 const img = (seed: string) =>
@@ -219,6 +221,14 @@ export const mockFullProfiles: FullProfile[] = [
 
 export const mockProfileSummaries = mockFullProfiles.map(toProfileSummary);
 
+const authProfilesAsFull = mockAuthProfiles.map(platformProfileToFullProfile);
+const authProfileIds = new Set(authProfilesAsFull.map((p) => p.id));
+
+export const mockBrowseProfiles: FullProfile[] = [
+  ...authProfilesAsFull,
+  ...mockFullProfiles.filter((p) => !authProfileIds.has(p.id)),
+];
+
 export function getProfileById(id: string): FullProfile | undefined {
-  return mockFullProfiles.find((p) => p.id === id);
+  return mockBrowseProfiles.find((p) => p.id === id);
 }
