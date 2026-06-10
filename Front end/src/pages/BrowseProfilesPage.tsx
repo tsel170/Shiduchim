@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { FavoriteProfile, FilterConfiguration, FullProfile, ProfileRating } from '../types/profile';
 import { ProfileGrid } from '../components/profile/ProfileGrid';
 import { ProfileFilterPanel } from '../components/profile/ProfileFilterPanel';
@@ -30,6 +31,9 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
   onToggleFavorite,
   onViewProfile,
 }) => {
+  const { currentUser } = useAuth();
+  const photosLocked = currentUser?.role !== 'shadchan';
+
   return (
     <div className="page browse-page">
       <header className="page__header">
@@ -62,6 +66,7 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
         profiles={profiles}
         favorites={favorites}
         ratingsByProfileId={ratingsByProfileId}
+        photosLocked={photosLocked}
         showFavoriteControls={false}
         onToggleFavorite={onToggleFavorite}
         onViewProfile={onViewProfile}

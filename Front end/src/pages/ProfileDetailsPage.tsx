@@ -1,4 +1,5 @@
 import React from 'react';
+import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
@@ -8,6 +9,7 @@ import './ProfileDetailsPage.css';
 
 interface ProfileDetailsPageProps {
   profile: FullProfile;
+  viewerRole: AccountRole;
   rating?: ProfileRating;
   displayPreferences: DisplayPreferences;
   onDisplayPreferencesChange: (next: DisplayPreferences) => void;
@@ -21,6 +23,7 @@ interface ProfileDetailsPageProps {
 
 export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   profile,
+  viewerRole,
   rating,
   displayPreferences,
   onDisplayPreferencesChange,
@@ -31,10 +34,15 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onRate,
   onToggleFavorite,
 }) => {
+  const isShadchan = viewerRole === 'shadchan';
   const handleSendToShadchan = () => {
     window.alert('בקשה נשלחה לשדכן (הדגמה בלבד)');
   };
-  const canFavorite = isRatingsComplete(rating);
+  const handleSendToMatch = () => {
+    window.alert('הפרופיל נשלח למשודך (הדגמה בלבד)');
+  };
+  const canFavorite = !isShadchan && isRatingsComplete(rating);
+  const photosUnlocked = isShadchan || canFavorite;
 
   return (
     <div className="page profile-details-page">
@@ -45,7 +53,7 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
         </button>
       </div>
 
-      {isDisplayPrefsOpen && (
+      {!isShadchan && isDisplayPrefsOpen && (
         <>
           <button
             type="button"
@@ -67,30 +75,39 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
         <ProfileDetails
           profile={profile}
           displayPreferences={displayPreferences}
-          photosUnlocked={canFavorite}
+          photosUnlocked={photosUnlocked}
+          viewerRole={viewerRole}
           rating={rating}
           onRate={onRate}
         />
       </div>
 
       <div className="profile-details-page__actions">
-        <button
-          type="button"
-          className={`btn btn--favorite${isFavorite ? ' btn--favorite--saved' : ''}`}
-          onClick={onToggleFavorite}
-          disabled={!canFavorite}
-          title={!canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''}
-        >
-          {isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
-        </button>
-        {!canFavorite && (
-          <p className="profile-details-page__hint">
-            יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
-          </p>
+        {isShadchan ? (
+          <button type="button" className="btn btn--primary" onClick={handleSendToMatch}>
+            שלח למשודך
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={`btn btn--favorite${isFavorite ? ' btn--favorite--saved' : ''}`}
+              onClick={onToggleFavorite}
+              disabled={!canFavorite}
+              title={!canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''}
+            >
+              {isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
+            </button>
+            {!canFavorite && (
+              <p className="profile-details-page__hint">
+                יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
+              </p>
+            )}
+            <button type="button" className="btn btn--primary" onClick={handleSendToShadchan}>
+              שלח לשדכן
+            </button>
+          </>
         )}
-        <button type="button" className="btn btn--primary" onClick={handleSendToShadchan}>
-          שלח לשדכן
-        </button>
       </div>
     </div>
   );

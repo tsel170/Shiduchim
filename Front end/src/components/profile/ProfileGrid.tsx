@@ -8,6 +8,7 @@ interface ProfileGridProps {
   profiles: FullProfile[];
   favorites: FavoriteProfile[];
   ratingsByProfileId: Record<string, ProfileRating>;
+  photosLocked?: boolean;
   showFavoriteControls?: boolean;
   onToggleFavorite: (id: string) => void;
   onViewProfile: (id: string) => void;
@@ -18,6 +19,7 @@ export const ProfileGrid: React.FC<ProfileGridProps> = ({
   profiles,
   favorites,
   ratingsByProfileId,
+  photosLocked = true,
   showFavoriteControls = true,
   onToggleFavorite,
   onViewProfile,
@@ -38,6 +40,7 @@ export const ProfileGrid: React.FC<ProfileGridProps> = ({
           <ProfileCard
             profile={profile}
             canFavorite={isRatingsComplete(ratingsByProfileId[profile.id])}
+            photosLocked={photosLocked}
             showFavoriteControls={showFavoriteControls}
             onToggleFavorite={onToggleFavorite}
             onViewProfile={onViewProfile}
