@@ -6,6 +6,7 @@ import './ProfileCard.css';
 interface ProfileCardProps {
   profile: FullProfile;
   canFavorite: boolean;
+  photosLocked?: boolean;
   showFavoriteControls?: boolean;
   onToggleFavorite: (id: string) => void;
   onViewProfile: (id: string) => void;
@@ -15,6 +16,7 @@ interface ProfileCardProps {
 export const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
   canFavorite,
+  photosLocked = true,
   showFavoriteControls = true,
   onToggleFavorite,
   onViewProfile,
@@ -41,9 +43,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       role="button"
       aria-label={`צפייה בפרופיל של ${fullName}`}
     >
-      <div className="profile-card__image-wrap profile-card__image-wrap--locked">
+      <div
+        className={`profile-card__image-wrap${photosLocked ? ' profile-card__image-wrap--locked' : ''}`}
+      >
         {cover ? <img src={cover} alt="" className="profile-card__image" loading="lazy" /> : null}
-        <div className="profile-card__locked">התמונות נפתחות אחרי דירוג מלא</div>
         {showFavoriteControls && (
           <button
             type="button"

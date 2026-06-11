@@ -1,0 +1,63 @@
+.added-profiles-page {
+  max-width: 720px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.added-profiles-page__empty {
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.added-profiles-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.added-profiles-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.added-profiles-card__name {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.added-profiles-card__meta {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.added-profiles-card__dot {
+  opacity: 0.5;
+}
+
+.added-profiles-card__note {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.added-profiles-card .btn {
+  width: auto;
+  min-width: 140px;
+}

@@ -7,10 +7,12 @@ import {
   ProfileRatingCategory,
 } from '../../types/profile';
 import {
+  DEFAULT_DISPLAY_PREFERENCES,
   getCityLabel,
   getMaritalStatusLabel,
   getReligiousStreamLabel,
 } from '../../constants/profileOptions';
+import { AccountRole } from '../../types/account';
 import { formatHeightAll } from '../../utils/height';
 import { getFullName, getOrderedVisibleFields } from '../../utils/profileHelpers';
 import { ChipList } from '../common/ChipList';
@@ -21,6 +23,7 @@ interface ProfileDetailsProps {
   profile: FullProfile;
   displayPreferences: DisplayPreferences;
   photosUnlocked: boolean;
+  viewerRole: AccountRole;
   rating?: ProfileRating;
   onRate: (category: ProfileRatingCategory, value: number) => void;
 }
@@ -29,11 +32,16 @@ export const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   profile,
   displayPreferences,
   photosUnlocked,
+  viewerRole,
   rating,
   onRate,
 }) => {
+  const isShadchan = viewerRole === 'shadchan';
+  const canRate = !isShadchan;
   const fullName = getFullName(profile);
-  const orderedFields = getOrderedVisibleFields(displayPreferences);
+  const orderedFields = isShadchan
+    ? DEFAULT_DISPLAY_PREFERENCES.fieldOrder
+    : getOrderedVisibleFields(displayPreferences);
 
   return (
     <div className="profile-details">
@@ -57,9 +65,14 @@ export const ProfileDetails: React.FC<ProfileDetailsProps> = ({
             profile={profile}
             rating={rating}
             onRate={onRate}
+            canRate={canRate}
           />
         ))}
       </div>
+
+      {isShadchan && (
+        <ReferencesSection references={profile.references} />
+      )}
 
       <section className="profile-details__section profile-details__section--photos">
         <h2 className="profile-details__section-title">תמונות פרופיל</h2>
@@ -73,29 +86,58 @@ export const ProfileDetails: React.FC<ProfileDetailsProps> = ({
             <p>יש לדרג את כל קטגוריות הפרופיל לפני צפייה בתמונות.</p>
           </div>
         )}
-        <InlineRating
-          label="דירוג מראה"
-          category="look"
-          value={rating?.look}
-          onRate={onRate}
-          disabled={!photosUnlocked}
-          disabledMessage="דירוג מראה זמין רק לאחר פתיחת התמונות."
-        />
+        {canRate && (
+          <InlineRating
+            label="דירוג מראה"
+            category="look"
+            value={rating?.look}
+            onRate={onRate}
+            disabled={!photosUnlocked}
+            disabledMessage="דירוג מראה זמין רק לאחר פתיחת התמונות."
+          />
+        )}
       </section>
     </div>
   );
 };
+
+function ReferencesSection({ references }: { references: FullProfile['references'] }) {
+  return (
+    <section className="profile-details__section profile-details__section--references">
+      <h2 className="profile-details__section-title">אנשי קשר / ממליצים</h2>
+      {references.length === 0 ? (
+        <p className="profile-details__text">לא צוינו אנשי קשר.</p>
+      ) : (
+        <ul className="profile-details__references">
+          {references.map((ref) => (
+            <li key={ref.id} className="profile-details__reference">
+              <span className="profile-details__reference-name">{ref.name}</span>
+              <a
+                href={`tel:${ref.countryCode}${ref.phoneNumber.replace(/\D/g, '')}`}
+                className="profile-details__reference-phone"
+              >
+                {ref.countryCode} {ref.phoneNumber}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 function ProfileFieldSection({
   field,
   profile,
   rating,
   onRate,
+  canRate,
 }: {
   field: DisplayField;
   profile: FullProfile;
   rating?: ProfileRating;
   onRate: (category: ProfileRatingCategory, value: number) => void;
+  canRate: boolean;
 }) {
   const map: Record<
     DisplayField,
@@ -138,7 +180,7 @@ function ProfileFieldSection({
     <section className={`profile-details__section profile-details__section--${field}`}>
       <h2 className="profile-details__section-title">{section.title}</h2>
       {section.content}
-      {section.ratingCategory && (
+      {canRate && section.ratingCategory && (
         <InlineRating
           label={`דירוג ${section.title}`}
           category={section.ratingCategory}
