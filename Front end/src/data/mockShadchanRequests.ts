@@ -1,8 +1,8 @@
 export interface ShadchanRequest {
   requestId: string;
+  fromPersonId: string;
   fromPersonName: string;
   profileId: string;
-  profileName: string;
   sentAt: string;
   message?: string;
 }
@@ -10,18 +10,26 @@ export interface ShadchanRequest {
 export const mockShadchanRequests: ShadchanRequest[] = [
   {
     requestId: 'req-1',
-    fromPersonName: 'Person',
+    fromPersonId: 'person-yossi',
+    fromPersonName: 'יוסי כהן',
     profileId: 'p1',
-    profileName: 'שרה כהן',
     sentAt: '2026-06-02',
-    message: 'מעוניין/ת לשמוע עוד על הפרופיל.',
+    message: 'מעוניין לשמוע עוד על הפרופיל.',
   },
   {
     requestId: 'req-2',
-    fromPersonName: 'Person',
-    profileId: '2',
-    profileName: 'יעל לוי',
+    fromPersonId: 'person-michal',
+    fromPersonName: 'מיכל אברהם',
+    profileId: 'p2',
     sentAt: '2026-05-30',
     message: 'נשלח דרך "שלח לשדכן".',
+  },
+  {
+    requestId: 'req-3',
+    fromPersonId: 'person-eli',
+    fromPersonName: 'אלי פרידמן',
+    profileId: '5',
+    sentAt: '2026-05-28',
+    message: 'חשבתי שזה יכול להתאים לי.',
   },
 ];

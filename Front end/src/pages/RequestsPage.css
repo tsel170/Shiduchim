@@ -1,0 +1,47 @@
+.requests-page.added-profiles-page {
+  max-width: 880px;
+}
+
+.request-card {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.request-card__content {
+  width: 100%;
+}
+
+.request-card__date {
+  margin: 0 0 var(--space-md);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.request-card__previews {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.request-card__note {
+  margin: var(--space-md) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.request-card__actions {
+  margin-top: var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.request-card__actions .btn {
+  width: auto;
+}
+
+@media (max-width: 600px) {
+  .request-card__previews {
+    flex-direction: column;
+  }
+}

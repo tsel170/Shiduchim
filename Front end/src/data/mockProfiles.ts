@@ -1,4 +1,5 @@
 import { mockAuthProfiles } from './mockAuthProfiles';
+import { mockPersonProfiles } from './mockPersonProfiles';
 import { FullProfile } from '../types/profile';
 import { platformProfileToFullProfile } from '../utils/platformProfileAdapter';
 import { toProfileSummary } from '../utils/profileHelpers';
@@ -224,11 +225,27 @@ export const mockProfileSummaries = mockFullProfiles.map(toProfileSummary);
 const authProfilesAsFull = mockAuthProfiles.map(platformProfileToFullProfile);
 const authProfileIds = new Set(authProfilesAsFull.map((p) => p.id));
 
+/** mockFullProfiles 1–4 are the same people as mockAuthProfiles p1–p4 */
+const LEGACY_AUTH_PROFILE_IDS = new Set(['1', '2', '3', '4']);
+
+const LEGACY_TO_AUTH_PROFILE_ID: Record<string, string> = {
+  '1': 'p1',
+  '2': 'p2',
+  '3': 'p3',
+  '4': 'p4',
+};
+
 export const mockBrowseProfiles: FullProfile[] = [
   ...authProfilesAsFull,
-  ...mockFullProfiles.filter((p) => !authProfileIds.has(p.id)),
+  ...mockFullProfiles.filter(
+    (p) => !authProfileIds.has(p.id) && !LEGACY_AUTH_PROFILE_IDS.has(p.id)
+  ),
 ];
 
 export function getProfileById(id: string): FullProfile | undefined {
-  return mockBrowseProfiles.find((p) => p.id === id);
+  const canonicalId = LEGACY_TO_AUTH_PROFILE_ID[id] ?? id;
+  return (
+    mockBrowseProfiles.find((p) => p.id === canonicalId) ??
+    mockPersonProfiles.find((p) => p.id === canonicalId)
+  );
 }
