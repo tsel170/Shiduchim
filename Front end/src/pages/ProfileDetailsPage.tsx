@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
+import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
+import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
 import { isRatingsComplete } from '../utils/rating';
+import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import './Page.css';
 import './ProfileDetailsPage.css';
 
@@ -35,14 +38,22 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onToggleFavorite,
 }) => {
   const isShadchan = viewerRole === 'shadchan';
+  const [shareTab, setShareTab] = useState<ShadchanShareTab | null>(null);
+  const [shareSettings, setShareSettings] = useState<ProfileShareSettings>(() =>
+    createDefaultProfileShareSettings()
+  );
+
   const handleSendToShadchan = () => {
     window.alert('בקשה נשלחה לשדכן (הדגמה בלבד)');
   };
-  const handleSendToMatch = () => {
-    window.alert('הפרופיל נשלח למשודך (הדגמה בלבד)');
-  };
+
   const canFavorite = !isShadchan && isRatingsComplete(rating);
   const photosUnlocked = isShadchan || canFavorite;
+
+  const openShare = (tab: ShadchanShareTab) => {
+    setShareSettings(createDefaultProfileShareSettings());
+    setShareTab(tab);
+  };
 
   return (
     <div className="page profile-details-page">
@@ -71,6 +82,26 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
         </>
       )}
 
+      {isShadchan && shareTab && (
+        <>
+          <button
+            type="button"
+            className="floating-panel-backdrop"
+            onClick={() => setShareTab(null)}
+            aria-label="סגור שיתוף פרופיל"
+          />
+          <aside className="floating-panel floating-panel--share" aria-label="שיתוף פרופיל">
+            <ShadchanSharePanel
+              profile={profile}
+              initialTab={shareTab}
+              settings={shareSettings}
+              onSettingsChange={setShareSettings}
+              onClose={() => setShareTab(null)}
+            />
+          </aside>
+        </>
+      )}
+
       <div className="profile-details-page__content">
         <ProfileDetails
           profile={profile}
@@ -84,9 +115,14 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
 
       <div className="profile-details-page__actions">
         {isShadchan ? (
-          <button type="button" className="btn btn--primary" onClick={handleSendToMatch}>
-            שלח למשודך
-          </button>
+          <>
+            <button type="button" className="btn btn--primary" onClick={() => openShare('site')}>
+              שלח דרך האתר
+            </button>
+            <button type="button" className="btn btn--secondary" onClick={() => openShare('other')}>
+              שלח בשיטות אחרות
+            </button>
+          </>
         ) : (
           <>
             <button

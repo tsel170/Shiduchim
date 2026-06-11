@@ -1,0 +1,220 @@
+.shadchan-share-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--header-height, 64px) - 32px);
+}
+
+.shadchan-share-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shadchan-share-panel__title {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.shadchan-share-panel__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  max-width: 42ch;
+}
+
+.shadchan-share-panel__tabs {
+  display: flex;
+  gap: var(--space-sm);
+  padding: 0 var(--space-lg) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shadchan-share-panel__tab {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.shadchan-share-panel__tab--active {
+  background: var(--color-primary-bg);
+  border-color: transparent;
+  color: var(--color-primary);
+}
+
+.shadchan-share-panel__spacing-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.shadchan-share-panel__spacing-input {
+  width: 88px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.shadchan-share-panel__spacing-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.shadchan-share-panel__method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.shadchan-share-panel__method-grid .btn {
+  width: 100%;
+}
+
+.shadchan-share-panel__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.shadchan-share-panel__close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.shadchan-share-panel__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  overflow: auto;
+}
+
+.shadchan-share-panel__section-title {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.shadchan-share-fields {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.shadchan-share-fields .display-prefs__section {
+  padding: 0;
+  border-bottom: none;
+  margin-bottom: var(--space-md);
+}
+
+.shadchan-share-fields__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.shadchan-share-fields__section-head h3 {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+}
+
+.shadchan-share-panel__textarea {
+  width: 100%;
+  margin-bottom: var(--space-md);
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.shadchan-share-panel__saved {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.8rem;
+  color: #15803d;
+}
+
+.shadchan-share-panel__preview {
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  max-height: 360px;
+  overflow: auto;
+}
+
+.shadchan-share-panel__preview-image {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  border-radius: var(--radius-sm);
+}
+
+.shadchan-share-panel__preview-line {
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.shadchan-share-panel__preview-line--name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.shadchan-share-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.shadchan-share-panel__actions .btn {
+  width: auto;
+}
+
+.shadchan-share-panel__status {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .shadchan-share-panel__body {
+    grid-template-columns: 1fr;
+  }
+
+  .shadchan-share-panel__fields {
+    grid-template-columns: 1fr;
+  }
+}
