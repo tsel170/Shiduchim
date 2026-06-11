@@ -24,6 +24,10 @@
   width: min(400px, calc(100vw - 32px));
 }
 
+.floating-panel--share {
+  width: min(920px, calc(100vw - 32px));
+}
+
 @media (max-width: 640px) {
   .floating-panel {
     inset-inline-end: 8px;
@@ -32,7 +36,8 @@
     max-height: min(75vh, calc(100vh - var(--header-height, 64px) - 24px));
   }
 
-  .floating-panel--wide {
+  .floating-panel--wide,
+  .floating-panel--share {
     width: auto;
   }
 }

@@ -6,6 +6,8 @@ export type HeaderPanelMode = 'filters' | 'preferences' | 'favorites-sort' | 'no
 interface HeaderProps {
   onMenuToggle: () => void;
   onBrandClick: () => void;
+  onLogout: () => void;
+  userLabel?: string;
   panelMode: HeaderPanelMode;
   isPanelOpen: boolean;
   onPanelToggle: () => void;
@@ -33,6 +35,8 @@ const PANEL_CONFIG = {
 export const Header: React.FC<HeaderProps> = ({
   onMenuToggle,
   onBrandClick,
+  onLogout,
+  userLabel,
   panelMode,
   isPanelOpen,
   onPanelToggle,
@@ -97,13 +101,14 @@ export const Header: React.FC<HeaderProps> = ({
           <BellIcon />
           <span className="header__badge" aria-hidden="true" />
         </button>
+        <button type="button" className="header__logout" onClick={onLogout}>
+          התנתקות
+        </button>
         <button type="button" className="header__profile" aria-label="פרופיל משתמש">
-          <img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop"
-            alt=""
-            className="header__avatar"
-          />
-          <span className="header__profile-name">יוסי כהן</span>
+          <span className="header__avatar" aria-hidden="true">
+            {(userLabel ?? '?').charAt(0).toUpperCase()}
+          </span>
+          <span className="header__profile-name">{userLabel ?? 'משתמש'}</span>
         </button>
       </div>
     </header>
