@@ -228,7 +228,12 @@ export const AppRoutes: React.FC = () => {
               <ShadchanSuggestionsPage />
             </RoleRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="new" replace />} />
+          <Route path="new" element={null} />
+          <Route path="in-check" element={null} />
+          <Route path="checked" element={null} />
+        </Route>
         <Route
           path="/added-profiles"
           element={
