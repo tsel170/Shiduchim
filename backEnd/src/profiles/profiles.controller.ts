@@ -42,27 +42,27 @@ export class ProfilesController {
     schema: {
       example: {
         cities: CITIES,
-        streams: STREAMS,
+        religiousStreams: STREAMS,
         maritalStatuses: MARITAL_STATUSES,
         personalityTraits: PERSONALITY_TRAITS,
         hobbies: HOBBIES,
-        lookingForTraits: LOOKING_FOR_TRAITS,
+        lookingFor: LOOKING_FOR_TRAITS,
       },
     },
   })
   getOptions() {
     return {
       cities: CITIES,
-      streams: STREAMS,
+      religiousStreams: STREAMS,
       maritalStatuses: MARITAL_STATUSES,
       personalityTraits: PERSONALITY_TRAITS,
       hobbies: HOBBIES,
-      lookingForTraits: LOOKING_FOR_TRAITS,
+      lookingFor: LOOKING_FOR_TRAITS,
     };
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new profile' })
+  @ApiOperation({ summary: 'Create profile' })
   @ApiCreatedResponse({ type: ProfileResponseDto })
   create(@Body() createProfileDto: CreateProfileDto) {
     return this.profilesService.create(createProfileDto);
@@ -75,31 +75,34 @@ export class ProfilesController {
     return this.profilesService.findAll();
   }
 
-  @Get(':id')
+  @Get(':profileId')
   @ApiOperation({ summary: 'Get profile by id' })
-  @ApiParam({ name: 'id', example: 'D54F0F54-E6EB-4296-8803-D1051A4D3065' })
+  @ApiParam({ name: 'profileId' })
   @ApiOkResponse({ type: ProfileResponseDto })
   @ApiNotFoundResponse({ description: 'Profile not found' })
-  findOne(@Param('id') id: string) {
-    return this.profilesService.findOne(id);
+  findOne(@Param('profileId') profileId: string) {
+    return this.profilesService.findOne(profileId);
   }
 
-  @Patch(':id')
+  @Patch(':profileId')
   @ApiOperation({ summary: 'Update profile' })
-  @ApiParam({ name: 'id', example: 'D54F0F54-E6EB-4296-8803-D1051A4D3065' })
+  @ApiParam({ name: 'profileId' })
   @ApiOkResponse({ type: ProfileResponseDto })
   @ApiNotFoundResponse({ description: 'Profile not found' })
-  update(@Param('id') id: string, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.profilesService.update(id, updateProfileDto);
+  update(
+    @Param('profileId') profileId: string,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.profilesService.update(profileId, updateProfileDto);
   }
 
-  @Delete(':id')
+  @Delete(':profileId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete profile' })
-  @ApiParam({ name: 'id', example: 'D54F0F54-E6EB-4296-8803-D1051A4D3065' })
+  @ApiParam({ name: 'profileId' })
   @ApiNoContentResponse({ description: 'Profile deleted' })
   @ApiNotFoundResponse({ description: 'Profile not found' })
-  remove(@Param('id') id: string) {
-    return this.profilesService.remove(id);
+  remove(@Param('profileId') profileId: string) {
+    return this.profilesService.remove(profileId);
   }
 }

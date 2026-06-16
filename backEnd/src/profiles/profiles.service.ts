@@ -1,154 +1,83 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { generateId } from '../common/utils/generate-id';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { ProfileHobby } from './entities/profile-hobby.entity';
-import { ProfileInquiryPhone } from './entities/profile-inquiry-phone.entity';
-import { ProfileLookingForTrait } from './entities/profile-looking-for.entity';
-import { ProfilePersonality } from './entities/profile-personality.entity';
-import { Profile } from './entities/profile.entity';
-import {
-  ProfileResponse,
-  toProfileResponse,
-  toProfilesResponse,
-} from './profiles.types';
+import { Profile, ProfileDocument } from './schemas/profile.schema';
 
 @Injectable()
 export class ProfilesService {
   constructor(
-    @InjectRepository(Profile)
-    private readonly profilesRepository: Repository<Profile>,
-    @InjectRepository(ProfilePersonality)
-    private readonly personalitiesRepository: Repository<ProfilePersonality>,
-    @InjectRepository(ProfileHobby)
-    private readonly hobbiesRepository: Repository<ProfileHobby>,
-    @InjectRepository(ProfileLookingForTrait)
-    private readonly lookingForRepository: Repository<ProfileLookingForTrait>,
-    @InjectRepository(ProfileInquiryPhone)
-    private readonly phonesRepository: Repository<ProfileInquiryPhone>,
+    @InjectModel(Profile.name)
+    private readonly profileModel: Model<ProfileDocument>,
   ) {}
 
-  async create(createProfileDto: CreateProfileDto): Promise<ProfileResponse> {
-    const profile = this.profilesRepository.create({
-      firstName: createProfileDto.firstName,
-      lastName: createProfileDto.lastName,
-      residence: createProfileDto.residence,
-      heightCm: createProfileDto.heightCm,
-      stream: createProfileDto.stream,
-      maritalStatus: createProfileDto.maritalStatus,
-      age: createProfileDto.age,
-      desiredHomeDescription: createProfileDto.desiredHomeDescription,
-      personalityTraits: createProfileDto.personalityTraits.map((value) =>
-        this.personalitiesRepository.create({ value }),
-      ),
-      hobbies: createProfileDto.hobbies.map((value) =>
-        this.hobbiesRepository.create({ value }),
-      ),
-      lookingForInPartner: createProfileDto.lookingForInPartner.map((value) =>
-        this.lookingForRepository.create({ value }),
-      ),
-      inquiryPhones: createProfileDto.inquiryPhones.map((phone) =>
-        this.phonesRepository.create(phone),
-      ),
+  async create(createProfileDto: CreateProfileDto) {
+    const profile = await this.profileModel.create({
+      profileId: generateId(),
+      ...createProfileDto,
+      ownerAccountId: createProfileDto.ownerAccountId ?? null,
+      addedByShadchanId: createProfileDto.addedByShadchanId ?? null,
     });
-
-    const savedProfile = await this.profilesRepository.save(profile);
-    return toProfileResponse(savedProfile);
+    return this.toResponse(profile);
   }
 
-  async findAll(): Promise<ProfileResponse[]> {
-    const profiles = await this.profilesRepository.find({
-      order: { createdAt: 'DESC' },
-    });
-
-    return toProfilesResponse(profiles);
+  async findAll() {
+    const profiles = await this.profileModel.find().sort({ createdAt: -1 });
+    return profiles.map((profile) => this.toResponse(profile));
   }
 
-  async findOne(id: string): Promise<ProfileResponse> {
-    const profile = await this.profilesRepository.findOne({ where: { id } });
-
+  async findOne(profileId: string) {
+    const profile = await this.profileModel.findOne({ profileId });
     if (!profile) {
-      throw new NotFoundException(`Profile with id "${id}" not found`);
+      throw new NotFoundException(`Profile "${profileId}" not found`);
     }
-
-    return toProfileResponse(profile);
+    return this.toResponse(profile);
   }
 
-  async update(
-    id: string,
-    updateProfileDto: UpdateProfileDto,
-  ): Promise<ProfileResponse> {
-    const profile = await this.profilesRepository.findOne({ where: { id } });
-
+  async update(profileId: string, updateProfileDto: UpdateProfileDto) {
+    const profile = await this.profileModel.findOneAndUpdate(
+      { profileId },
+      { $set: updateProfileDto },
+      { new: true, runValidators: true },
+    );
     if (!profile) {
-      throw new NotFoundException(`Profile with id "${id}" not found`);
+      throw new NotFoundException(`Profile "${profileId}" not found`);
     }
-
-    if (updateProfileDto.firstName !== undefined) {
-      profile.firstName = updateProfileDto.firstName;
-    }
-    if (updateProfileDto.lastName !== undefined) {
-      profile.lastName = updateProfileDto.lastName;
-    }
-    if (updateProfileDto.residence !== undefined) {
-      profile.residence = updateProfileDto.residence;
-    }
-    if (updateProfileDto.heightCm !== undefined) {
-      profile.heightCm = updateProfileDto.heightCm;
-    }
-    if (updateProfileDto.stream !== undefined) {
-      profile.stream = updateProfileDto.stream;
-    }
-    if (updateProfileDto.maritalStatus !== undefined) {
-      profile.maritalStatus = updateProfileDto.maritalStatus;
-    }
-    if (updateProfileDto.age !== undefined) {
-      profile.age = updateProfileDto.age;
-    }
-    if (updateProfileDto.desiredHomeDescription !== undefined) {
-      profile.desiredHomeDescription = updateProfileDto.desiredHomeDescription;
-    }
-
-    if (updateProfileDto.personalityTraits !== undefined) {
-      await this.personalitiesRepository.delete({ profile: { id } });
-      profile.personalityTraits = updateProfileDto.personalityTraits.map(
-        (value) => this.personalitiesRepository.create({ value }),
-      );
-    }
-
-    if (updateProfileDto.hobbies !== undefined) {
-      await this.hobbiesRepository.delete({ profile: { id } });
-      profile.hobbies = updateProfileDto.hobbies.map((value) =>
-        this.hobbiesRepository.create({ value }),
-      );
-    }
-
-    if (updateProfileDto.lookingForInPartner !== undefined) {
-      await this.lookingForRepository.delete({ profile: { id } });
-      profile.lookingForInPartner = updateProfileDto.lookingForInPartner.map(
-        (value) => this.lookingForRepository.create({ value }),
-      );
-    }
-
-    if (updateProfileDto.inquiryPhones !== undefined) {
-      await this.phonesRepository.delete({ profile: { id } });
-      profile.inquiryPhones = updateProfileDto.inquiryPhones.map((phone) =>
-        this.phonesRepository.create(phone),
-      );
-    }
-
-    const savedProfile = await this.profilesRepository.save(profile);
-    return toProfileResponse(savedProfile);
+    return this.toResponse(profile);
   }
 
-  async remove(id: string): Promise<void> {
-    const profile = await this.profilesRepository.findOne({ where: { id } });
-
-    if (!profile) {
-      throw new NotFoundException(`Profile with id "${id}" not found`);
+  async remove(profileId: string) {
+    const result = await this.profileModel.deleteOne({ profileId });
+    if (result.deletedCount === 0) {
+      throw new NotFoundException(`Profile "${profileId}" not found`);
     }
+  }
 
-    await this.profilesRepository.remove(profile);
+  private toResponse(profile: ProfileDocument) {
+    return {
+      profileId: profile.profileId,
+      ownerAccountId: profile.ownerAccountId,
+      addedByShadchanId: profile.addedByShadchanId,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      city: profile.city,
+      age: profile.age,
+      heightCm: profile.heightCm,
+      religiousStream: profile.religiousStream,
+      maritalStatus: profile.maritalStatus,
+      personalityTraits: profile.personalityTraits,
+      hobbies: profile.hobbies,
+      homeVision: profile.homeVision,
+      lookingFor: profile.lookingFor,
+      references: profile.references,
+      photos: profile.photos,
+      shadchanIds: profile.shadchanIds,
+      aboutMe: profile.aboutMe,
+      aboutMyFamily: profile.aboutMyFamily,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+    };
   }
 }
