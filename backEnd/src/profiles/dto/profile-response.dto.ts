@@ -1,64 +1,63 @@
-import { ApiProperty } from '@nestjs/swagger';
-
-export class InquiryPhoneResponseDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty({ example: 'אמא' })
-  contactName: string;
-
-  @ApiProperty({ example: '050' })
-  phonePrefix: string;
-
-  @ApiProperty({ example: '1234567' })
-  phoneNumber: string;
-}
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ReferenceContactDto } from './reference-contact.dto';
 
 export class ProfileResponseDto {
   @ApiProperty()
-  id: string;
+  profileId: string;
+
+  @ApiProperty({ nullable: true })
+  ownerAccountId: string | null;
+
+  @ApiProperty({ nullable: true })
+  addedByShadchanId: string | null;
 
   @ApiProperty({ example: 'שרה' })
   firstName: string;
 
-  @ApiProperty({ example: 'כהן' })
-  lastName: string;
+  @ApiPropertyOptional({ example: 'כהן' })
+  lastName?: string;
 
-  @ApiProperty({ example: 'ירושלים' })
-  residence: string;
-
-  @ApiProperty({ example: 165 })
-  heightCm: number;
-
-  @ApiProperty({ example: 1.65, description: 'Height in meters' })
-  heightMeters: number;
-
-  @ApiProperty({ example: "5'5\"", description: 'Height in feet and inches' })
-  heightImperial: string;
-
-  @ApiProperty({ example: 'ליטאי' })
-  stream: string;
-
-  @ApiProperty({ example: 'רווקה' })
-  maritalStatus: string;
+  @ApiPropertyOptional({ example: 'ירושלים' })
+  city?: string;
 
   @ApiProperty({ example: 22 })
   age: number;
 
-  @ApiProperty({ type: [String], example: ['חמה', 'שמחה'] })
-  personalityTraits: string[];
+  @ApiPropertyOptional({ example: 165 })
+  heightCm?: number;
 
-  @ApiProperty({ type: [String], example: ['קריאה', 'בישול'] })
-  hobbies: string[];
+  @ApiPropertyOptional({ example: 'ליטאי' })
+  religiousStream?: string;
 
-  @ApiProperty({ example: 'בית חם ותורני עם אווירה משפחתית' })
-  desiredHomeDescription: string;
+  @ApiProperty({ example: 'רווקה' })
+  maritalStatus: string;
 
-  @ApiProperty({ type: [String], example: ['לומד', 'רציני'] })
-  lookingForInPartner: string[];
+  @ApiPropertyOptional({ type: [String] })
+  personalityTraits?: string[];
 
-  @ApiProperty({ type: [InquiryPhoneResponseDto] })
-  inquiryPhones: InquiryPhoneResponseDto[];
+  @ApiPropertyOptional({ type: [String] })
+  hobbies?: string[];
+
+  @ApiPropertyOptional()
+  homeVision?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  lookingFor?: string[];
+
+  @ApiPropertyOptional({ type: [ReferenceContactDto] })
+  references?: ReferenceContactDto[];
+
+  @ApiPropertyOptional({ type: [String] })
+  photos?: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  shadchanIds?: string[];
+
+  @ApiPropertyOptional()
+  aboutMe?: string;
+
+  @ApiPropertyOptional()
+  aboutMyFamily?: string;
 
   @ApiProperty()
   createdAt: Date;
