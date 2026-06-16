@@ -14,8 +14,8 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Shidohim API')
-    .setDescription('API for managing profiles')
+    .setTitle('Shiduchim API')
+    .setDescription('API for managing accounts, profiles, favorites, interests, and match requests')
     .setVersion('1.0')
     .build();
 

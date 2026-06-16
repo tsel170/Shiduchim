@@ -1,10 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
   IsIn,
   IsInt,
+  IsOptional,
   IsString,
   Max,
   MaxLength,
@@ -18,42 +19,35 @@ import {
   PERSONALITY_TRAITS,
   STREAMS,
 } from '../constants/profile-options';
-import { InquiryPhoneDto } from './inquiry-phone.dto';
+import { ReferenceContactDto } from './reference-contact.dto';
 
 export class CreateProfileDto {
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  ownerAccountId?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  addedByShadchanId?: string | null;
+
   @ApiProperty({ example: 'שרה' })
   @IsString()
   @MaxLength(255)
   firstName: string;
 
-  @ApiProperty({ example: 'כהן' })
+  @ApiPropertyOptional({ example: 'כהן' })
+  @IsOptional()
   @IsString()
   @MaxLength(255)
-  lastName: string;
+  lastName?: string;
 
-  @ApiProperty({ example: 'ירושלים', enum: CITIES })
+  @ApiPropertyOptional({ example: 'ירושלים', enum: CITIES })
+  @IsOptional()
   @IsString()
   @IsIn(CITIES)
-  residence: string;
-
-  @ApiProperty({ example: 165, description: 'Height in centimeters' })
-  @IsInt()
-  @Min(100)
-  @Max(250)
-  heightCm: number;
-
-  @ApiProperty({ example: 'ליטאי', enum: STREAMS })
-  @IsString()
-  @IsIn(STREAMS)
-  stream: string;
-
-  @ApiProperty({
-    example: 'רווקה',
-    description: 'Text field for flexibility (e.g. רווקה, גרושה, אלמנה)',
-  })
-  @IsString()
-  @MaxLength(100)
-  maritalStatus: string;
+  city?: string;
 
   @ApiProperty({ example: 22 })
   @IsInt()
@@ -61,48 +55,80 @@ export class CreateProfileDto {
   @Max(120)
   age: number;
 
-  @ApiProperty({
-    type: [String],
-    example: ['חמה', 'שמחה'],
-    enum: PERSONALITY_TRAITS,
-  })
+  @ApiPropertyOptional({ example: 165 })
+  @IsOptional()
+  @IsInt()
+  @Min(100)
+  @Max(250)
+  heightCm?: number;
+
+  @ApiPropertyOptional({ example: 'ליטאי', enum: STREAMS })
+  @IsOptional()
+  @IsString()
+  @IsIn(STREAMS)
+  religiousStream?: string;
+
+  @ApiProperty({ example: 'רווקה' })
+  @IsString()
+  @MaxLength(100)
+  maritalStatus: string;
+
+  @ApiPropertyOptional({ type: [String], example: ['חמה', 'שמחה'] })
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
   @IsString({ each: true })
   @IsIn(PERSONALITY_TRAITS, { each: true })
-  personalityTraits: string[];
+  personalityTraits?: string[];
 
-  @ApiProperty({
-    type: [String],
-    example: ['קריאה', 'בישול'],
-    enum: HOBBIES,
-  })
+  @ApiPropertyOptional({ type: [String], example: ['קריאה', 'בישול'] })
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
   @IsString({ each: true })
   @IsIn(HOBBIES, { each: true })
-  hobbies: string[];
+  hobbies?: string[];
 
-  @ApiProperty({ example: 'בית חם ותורני עם אווירה משפחתית' })
+  @ApiPropertyOptional({ example: 'בית חם ותורני עם אווירה משפחתית' })
+  @IsOptional()
   @IsString()
   @MaxLength(4000)
-  desiredHomeDescription: string;
+  homeVision?: string;
 
-  @ApiProperty({
-    type: [String],
-    example: ['לומד', 'רציני'],
-    enum: LOOKING_FOR_TRAITS,
-  })
+  @ApiPropertyOptional({ type: [String], example: ['לומד', 'רציני'] })
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
   @IsString({ each: true })
   @IsIn(LOOKING_FOR_TRAITS, { each: true })
-  lookingForInPartner: string[];
+  lookingFor?: string[];
 
-  @ApiProperty({ type: [InquiryPhoneDto] })
+  @ApiPropertyOptional({ type: [ReferenceContactDto] })
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => InquiryPhoneDto)
-  inquiryPhones: InquiryPhoneDto[];
+  @Type(() => ReferenceContactDto)
+  references?: ReferenceContactDto[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  photos?: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  shadchanIds?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  aboutMe?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  aboutMyFamily?: string;
 }
