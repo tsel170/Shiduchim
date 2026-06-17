@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Navigate,
   Route,
@@ -15,12 +15,15 @@ import {
   DEFAULT_FILTER_CONFIGURATION,
 } from './constants/profileOptions';
 import { useAuth } from './contexts/AuthContext';
-import { getProfileById, mockBrowseProfiles } from './data/mockProfiles';
-import { mockMyProfile } from './data/mockMyProfile';
+import { favoritesApi } from './api/favoritesApi';
+import { getApiErrorMessage } from './api/apiError';
+import { profilesApi } from './api/profilesApi';
+import { suggestionsApi } from './api/suggestionsApi';
 import { BrowseProfilesPage } from './pages/BrowseProfilesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { AddedProfilesPage } from './pages/AddedProfilesPage';
 import { AddProfilePage } from './pages/AddProfilePage';
+import { EditAddedProfilePage } from './pages/EditAddedProfilePage';
 import { MyProfilePage } from './pages/MyProfilePage';
 import { RequestsPage } from './pages/RequestsPage';
 import { ShadchanSuggestionsPage } from './pages/ShadchanSuggestionsPage';
@@ -34,16 +37,42 @@ import {
   ProfileRating,
   ProfileRatingCategory,
 } from './types/profile';
-import { filterProfiles, isFilterKeyAtDefault } from './utils/filters';
-import { isDisplayPreferencesAtDefault } from './utils/profileHelpers';
-import { FavoriteSortKey, isRatingsCompleteStrict, toFavoriteProfile } from './utils/rating';
+import { isFilterKeyAtDefault, normalizeFilterConfiguration } from './utils/filters';
+import { isDisplayPreferencesAtDefault, normalizeDisplayPreferences } from './utils/profileHelpers';
+import { FavoriteSortKey, isRatingsCompleteStrict } from './utils/rating';
+import { buildPersonCreateRequestBody } from './utils/profileValidation';
+import { PageState } from './components/common/PageState';
+
+const EMPTY_MY_PROFILE: FullProfile = {
+  id: 'new-my-profile',
+  firstName: '',
+  lastName: '',
+  city: '',
+  heightCm: 0,
+  religiousStream: '',
+  gender: '',
+  maritalStatus: '',
+  age: 0,
+  personalityTraits: [],
+  hobbies: [],
+  familyVision: '',
+  lookingFor: [],
+  references: [],
+  photos: [],
+};
+
+const SETTINGS_SAVE_DEBOUNCE_MS = 600;
 
 export const AppRoutes: React.FC = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, updateAccountSettings, refreshCurrentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [myProfile, setMyProfile] = useState<FullProfile>(mockMyProfile);
+  const [myProfile, setMyProfile] = useState<FullProfile | null>(null);
+  const [browseProfiles, setBrowseProfiles] = useState<FullProfile[]>([]);
+  const [browseLoading, setBrowseLoading] = useState(true);
+  const [browseError, setBrowseError] = useState<string | null>(null);
+  const [profileCatalog, setProfileCatalog] = useState<Record<string, FullProfile>>({});
   const [filters, setFilters] = useState<FilterConfiguration>(DEFAULT_FILTER_CONFIGURATION);
   const [displayPreferences, setDisplayPreferences] = useState<DisplayPreferences>(
     DEFAULT_DISPLAY_PREFERENCES
@@ -55,11 +84,159 @@ export const AppRoutes: React.FC = () => {
   const [favoritesSortDirection, setFavoritesSortDirection] = useState<'desc' | 'asc'>('desc');
   const [ratingsByProfileId, setRatingsByProfileId] = useState<Record<string, ProfileRating>>({});
   const [favorites, setFavorites] = useState<FavoriteProfile[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
+  const [myProfileLoading, setMyProfileLoading] = useState(false);
+  const filtersSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const displaySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filteredProfiles = useMemo(
-    () => filterProfiles(mockBrowseProfiles, filters),
-    [filters]
+  const filteredProfiles = useMemo(() => browseProfiles, [browseProfiles]);
+
+  const catalogProfiles = useMemo(() => Object.values(profileCatalog), [profileCatalog]);
+
+  useEffect(() => {
+    if (!currentUser?.settings) return;
+    setFilters(normalizeFilterConfiguration(currentUser.settings.filters));
+    setDisplayPreferences(
+      normalizeDisplayPreferences(currentUser.settings.displayPreferences)
+    );
+  }, [currentUser?.accountId]);
+
+  useEffect(() => {
+    return () => {
+      if (filtersSaveTimerRef.current) clearTimeout(filtersSaveTimerRef.current);
+      if (displaySaveTimerRef.current) clearTimeout(displaySaveTimerRef.current);
+    };
+  }, []);
+
+  const handleFiltersChange = useCallback(
+    (next: FilterConfiguration) => {
+      setFilters(next);
+      if (!currentUser) return;
+
+      if (filtersSaveTimerRef.current) clearTimeout(filtersSaveTimerRef.current);
+      filtersSaveTimerRef.current = setTimeout(() => {
+        updateAccountSettings({ filters: next }).catch(() => undefined);
+      }, SETTINGS_SAVE_DEBOUNCE_MS);
+    },
+    [currentUser, updateAccountSettings]
   );
+
+  const handleDisplayPreferencesChange = useCallback(
+    (next: DisplayPreferences) => {
+      setDisplayPreferences(next);
+      if (!currentUser) return;
+
+      if (displaySaveTimerRef.current) clearTimeout(displaySaveTimerRef.current);
+      displaySaveTimerRef.current = setTimeout(() => {
+        updateAccountSettings({ displayPreferences: next }).catch(() => undefined);
+      }, SETTINGS_SAVE_DEBOUNCE_MS);
+    },
+    [currentUser, updateAccountSettings]
+  );
+
+  const handleResetFilters = useCallback(() => {
+    handleFiltersChange(DEFAULT_FILTER_CONFIGURATION);
+  }, [handleFiltersChange]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+
+    async function loadBrowse() {
+      setBrowseLoading(true);
+      setBrowseError(null);
+      try {
+        const profiles = await profilesApi.search(filters);
+        if (!cancelled) {
+          setBrowseProfiles(profiles);
+          setProfileCatalog((prev) => ({
+            ...prev,
+            ...Object.fromEntries(profiles.map((profile) => [profile.id, profile])),
+          }));
+        }
+      } catch (error) {
+        if (!cancelled) setBrowseError(getApiErrorMessage(error));
+      } finally {
+        if (!cancelled) setBrowseLoading(false);
+      }
+    }
+
+    loadBrowse();
+    return () => {
+      cancelled = true;
+    };
+  }, [filters, currentUser?.accountId]);
+
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'person') {
+      setFavoritesLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadFavorites() {
+      setFavoritesLoading(true);
+      try {
+        const items = await favoritesApi.list();
+        if (cancelled) return;
+        setFavorites(items);
+
+        if (items.length > 0) {
+          const profiles = await Promise.all(
+            items.map(async (item) => {
+              try {
+                return await profilesApi.getById(item.profileId);
+              } catch {
+                return null;
+              }
+            })
+          );
+          if (cancelled) return;
+          const loadedProfiles = profiles.filter((profile): profile is FullProfile => profile !== null);
+          setProfileCatalog((prev) => ({
+            ...prev,
+            ...Object.fromEntries(loadedProfiles.map((profile) => [profile.id, profile])),
+          }));
+        }
+      } catch {
+        if (!cancelled) setFavorites([]);
+      } finally {
+        if (!cancelled) setFavoritesLoading(false);
+      }
+    }
+
+    loadFavorites();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.accountId, currentUser?.role]);
+
+  useEffect(() => {
+    if (!currentUser?.profileId) {
+      setMyProfileLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setMyProfileLoading(true);
+
+    profilesApi
+      .getById(currentUser.profileId)
+      .then((profile) => {
+        if (!cancelled) {
+          setMyProfile(profile);
+          setProfileCatalog((prev) => ({ ...prev, [profile.id]: profile }));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMyProfileLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.profileId]);
 
   const hasActiveFilters = useMemo(
     () =>
@@ -145,17 +322,22 @@ export const AppRoutes: React.FC = () => {
   );
 
   const handleToggleFavorite = useCallback(
-    (profileId: string) => {
-      setFavorites((prev) => {
-        const existing = prev.some((f) => f.profileId === profileId);
-        if (existing) return prev.filter((f) => f.profileId !== profileId);
-        const profile = getProfileById(profileId);
-        const rating = ratingsByProfileId[profileId];
-        if (!profile || !isRatingsCompleteStrict(rating)) return prev;
-        return [...prev, toFavoriteProfile(profile, rating)];
-      });
+    async (profileId: string) => {
+      const existing = favorites.find((favorite) => favorite.profileId === profileId);
+      if (existing) {
+        await favoritesApi.remove(existing.favoriteId);
+        setFavorites((prev) => prev.filter((favorite) => favorite.favoriteId !== existing.favoriteId));
+        return;
+      }
+
+      const rating = ratingsByProfileId[profileId];
+      const profile = profileCatalog[profileId];
+      if (!profile || !isRatingsCompleteStrict(profile, rating)) return;
+
+      const created = await favoritesApi.add(profileId, profile, rating);
+      setFavorites((prev) => [...prev, created]);
     },
-    [ratingsByProfileId]
+    [favorites, ratingsByProfileId, profileCatalog]
   );
 
   const handleHeaderPanelToggle = useCallback(() => {
@@ -189,18 +371,23 @@ export const AppRoutes: React.FC = () => {
         <Route
           path="/browse"
           element={
-            <BrowseProfilesPage
-              profiles={filteredProfiles}
-              favorites={favorites}
-              ratingsByProfileId={ratingsByProfileId}
-              filters={filters}
-              onFiltersChange={setFilters}
-              onResetFilters={() => setFilters(DEFAULT_FILTER_CONFIGURATION)}
-              isFiltersOpen={isFiltersOpen}
-              onFiltersOpenChange={setIsFiltersOpen}
-              onToggleFavorite={handleToggleFavorite}
-              onViewProfile={handleViewProfile}
-            />
+            browseError ? (
+              <PageState error={browseError} />
+            ) : (
+              <BrowseProfilesPage
+                profiles={filteredProfiles}
+                favorites={favorites}
+                ratingsByProfileId={ratingsByProfileId}
+                filters={filters}
+                loading={browseLoading}
+                onFiltersChange={handleFiltersChange}
+                onResetFilters={handleResetFilters}
+                isFiltersOpen={isFiltersOpen}
+                onFiltersOpenChange={setIsFiltersOpen}
+                onToggleFavorite={handleToggleFavorite}
+                onViewProfile={handleViewProfile}
+              />
+            )
           }
         />
         <Route
@@ -208,8 +395,9 @@ export const AppRoutes: React.FC = () => {
           element={
             <RoleRoute allowed={['person']}>
               <FavoritesPage
-                profiles={mockBrowseProfiles}
+                profiles={catalogProfiles}
                 favorites={favorites}
+                loading={favoritesLoading}
                 sortBy={favoritesSortBy}
                 sortDirection={favoritesSortDirection}
                 onSortByChange={setFavoritesSortBy}
@@ -234,6 +422,14 @@ export const AppRoutes: React.FC = () => {
           <Route path="in-check" element={null} />
           <Route path="checked" element={null} />
         </Route>
+        <Route
+          path="/added-profiles/:profileId/edit"
+          element={
+            <RoleRoute allowed={['shadchan']}>
+              <EditAddedProfilePage />
+            </RoleRoute>
+          }
+        />
         <Route
           path="/added-profiles"
           element={
@@ -262,7 +458,26 @@ export const AppRoutes: React.FC = () => {
           path="/my-profile"
           element={
             <RoleRoute allowed={['person']}>
-              <MyProfilePage initialProfile={myProfile} onSave={setMyProfile} />
+              <PageState loading={myProfileLoading}>
+                <MyProfilePage
+                  mode={myProfile ? 'edit' : 'create'}
+                  initialProfile={myProfile ?? EMPTY_MY_PROFILE}
+                  onSave={async (profile) => {
+                    const saved = await profilesApi.update(profile.id, profile);
+                    setMyProfile(saved);
+                    setProfileCatalog((prev) => ({ ...prev, [saved.id]: saved }));
+                  }}
+                  onCreate={async (profile) => {
+                    if (!currentUser) return;
+                    const created = await profilesApi.createMine(
+                      buildPersonCreateRequestBody(profile, currentUser.accountId)
+                    );
+                    await refreshCurrentUser();
+                    setMyProfile(created);
+                    setProfileCatalog((prev) => ({ ...prev, [created.id]: created }));
+                  }}
+                />
+              </PageState>
             </RoleRoute>
           }
         />
@@ -272,7 +487,7 @@ export const AppRoutes: React.FC = () => {
           element={
             <ProfileDetailsRoute
               displayPreferences={displayPreferences}
-              onDisplayPreferencesChange={setDisplayPreferences}
+              onDisplayPreferencesChange={handleDisplayPreferencesChange}
               isDisplayPrefsOpen={isDisplayPrefsOpen}
               onDisplayPrefsOpenChange={setIsDisplayPrefsOpen}
               favorites={favorites}
@@ -313,17 +528,45 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   const { profileId } = useParams<{ profileId: string }>();
   const navigate = useNavigate();
   const viewerRole = currentUser?.role ?? 'person';
+  const [profile, setProfile] = useState<FullProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profileId) return;
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const loaded = await profilesApi.getById(profileId!);
+        if (!cancelled) setProfile(loaded);
+      } catch (err) {
+        if (!cancelled) setError(getApiErrorMessage(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileId]);
 
   if (!profileId) {
     return <Navigate to="/browse" replace />;
   }
 
-  const profile = getProfileById(profileId);
+  if (loading) {
+    return <PageState loading />;
+  }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <div className="page">
-        <p>הפרופיל לא נמצא.</p>
+        <PageState error={error ?? 'הפרופיל לא נמצא.'} />
         <button type="button" className="btn btn--secondary" onClick={() => navigate('/browse')}>
           חזרה
         </button>
@@ -344,6 +587,16 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       onBack={() => navigate(-1)}
       onRate={(category, value) => onRate(profile.id, category, value)}
       onToggleFavorite={() => onToggleFavorite(profile.id)}
+      onSiteSend={async (note, recipientAccountId) => {
+        if (!recipientAccountId.trim()) {
+          throw new Error('יש להזין מזהה חשבון משודך/ת');
+        }
+        await suggestionsApi.create({
+          ownerAccountId: recipientAccountId.trim(),
+          profileId: profile.id,
+          shadchanNote: note,
+        });
+      }}
     />
   );
 };

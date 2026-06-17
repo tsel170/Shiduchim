@@ -2,11 +2,13 @@ import {
   DisplayField,
   DisplayPreferences,
   FilterConfiguration,
+  Gender,
   MaritalStatus,
   ProfileRatingCategory,
 } from '../types/profile';
 
 export const MAX_PROFILE_PHOTOS = 6;
+export const MIN_PROFILE_AGE = 18;
 
 export const CITIES = [
   { id: 'jerusalem', label: 'ירושלים' },
@@ -38,6 +40,11 @@ export const MARITAL_STATUS_OPTIONS: ReadonlyArray<{ value: MaritalStatus; label
   { value: 'single', label: 'רווק/ה' },
   { value: 'divorced', label: 'גרוש/ה' },
   { value: 'widowed', label: 'אלמן/ה' },
+];
+
+export const GENDER_OPTIONS: ReadonlyArray<{ value: Gender; label: string }> = [
+  { value: 'male', label: 'גבר' },
+  { value: 'female', label: 'אישה' },
 ];
 
 export const PERSONALITY_TRAIT_OPTIONS = [
@@ -96,6 +103,7 @@ export const COUNTRY_CODES = [
 export const DISPLAY_FIELDS: ReadonlyArray<{ id: DisplayField; label: string }> = [
   { id: 'city', label: 'עיר' },
   { id: 'height', label: 'גובה' },
+  { id: 'gender', label: 'מין' },
   { id: 'maritalStatus', label: 'מצב משפחתי' },
   { id: 'religiousStream', label: 'זרם דתי' },
   { id: 'personalityTraits', label: 'תכונות אישיות' },
@@ -115,6 +123,7 @@ export const REQUIRED_DISPLAY_FIELDS: ReadonlyArray<DisplayField> = [
 export const OPTIONAL_DISPLAY_FIELDS: ReadonlyArray<DisplayField> = [
   'city',
   'height',
+  'gender',
   'maritalStatus',
   'religiousStream',
 ];
@@ -139,16 +148,17 @@ export const RATING_CATEGORIES: ReadonlyArray<{
 }> = [
   { id: 'personality', label: 'אישיות' },
   { id: 'hobbies', label: 'תחביבים' },
-  { id: 'homeVision', label: 'חזון בית ומשפחה' },
+  { id: 'familyVision', label: 'חזון בית ומשפחה' },
   { id: 'lookingFor', label: 'מחפש/ת' },
   { id: 'look', label: 'מראה' },
 ];
 
 export const DEFAULT_FILTER_CONFIGURATION: FilterConfiguration = {
-  ageRange: { min: 18, max: 50 },
+  ageRange: { min: MIN_PROFILE_AGE, max: 50 },
   heightRange: { min: 140, max: 210 },
   cities: [],
   religiousStreams: [],
+  genders: [],
   maritalStatuses: [],
   personalityTraits: [],
   hobbies: [],
@@ -159,6 +169,7 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
   visibleFields: {
     city: true,
     height: true,
+    gender: true,
     maritalStatus: true,
     religiousStream: true,
     personalityTraits: true,
@@ -169,6 +180,7 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
   fieldOrder: [
     'city',
     'height',
+    'gender',
     'maritalStatus',
     'religiousStream',
     'personalityTraits',
@@ -188,4 +200,8 @@ export function getReligiousStreamLabel(streamId: string): string {
 
 export function getMaritalStatusLabel(status: MaritalStatus): string {
   return MARITAL_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status;
+}
+
+export function getGenderLabel(gender: Gender): string {
+  return GENDER_OPTIONS.find((o) => o.value === gender)?.label ?? gender;
 }

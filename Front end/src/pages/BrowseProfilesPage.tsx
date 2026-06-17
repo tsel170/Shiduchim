@@ -11,6 +11,7 @@ interface BrowseProfilesPageProps {
   favorites: FavoriteProfile[];
   ratingsByProfileId: Record<string, ProfileRating>;
   filters: FilterConfiguration;
+  loading?: boolean;
   onFiltersChange: (next: FilterConfiguration) => void;
   onResetFilters: () => void;
   isFiltersOpen: boolean;
@@ -24,6 +25,7 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
   favorites,
   ratingsByProfileId,
   filters,
+  loading = false,
   onFiltersChange,
   onResetFilters,
   isFiltersOpen,
@@ -39,7 +41,9 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
       <header className="page__header">
         <h1 className="page__title">עיון בפרופילים</h1>
         <p className="page__subtitle">
-          {profiles.length} פרופילים זמינים · תצוגה מקוצרת: שם, גיל ומצב משפחתי
+          {loading
+            ? 'טוען פרופילים...'
+            : `${profiles.length} פרופילים זמינים · תצוגה מקוצרת: שם, גיל ומצב משפחתי`}
         </p>
       </header>
 
@@ -68,6 +72,7 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
         ratingsByProfileId={ratingsByProfileId}
         photosLocked={photosLocked}
         showFavoriteControls={false}
+        loading={loading}
         onToggleFavorite={onToggleFavorite}
         onViewProfile={onViewProfile}
       />

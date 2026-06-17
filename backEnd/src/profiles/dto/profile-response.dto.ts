@@ -2,6 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReferenceContactDto } from './reference-contact.dto';
 
 export class ProfileResponseDto {
+  @ApiProperty({ description: 'Canonical profile id (same as profileId)' })
+  id: string;
+
   @ApiProperty()
   profileId: string;
 
@@ -11,44 +14,47 @@ export class ProfileResponseDto {
   @ApiProperty({ nullable: true })
   addedByShadchanId: string | null;
 
-  @ApiProperty({ example: 'שרה' })
+  @ApiProperty()
   firstName: string;
 
-  @ApiPropertyOptional({ example: 'כהן' })
-  lastName?: string;
+  @ApiProperty()
+  lastName: string;
 
-  @ApiPropertyOptional({ example: 'ירושלים' })
-  city?: string;
+  @ApiProperty()
+  city: string;
 
-  @ApiProperty({ example: 22 })
+  @ApiProperty()
   age: number;
 
-  @ApiPropertyOptional({ example: 165 })
-  heightCm?: number;
+  @ApiProperty()
+  heightCm: number;
 
-  @ApiPropertyOptional({ example: 'ליטאי' })
-  religiousStream?: string;
+  @ApiProperty()
+  religiousStream: string;
 
-  @ApiProperty({ example: 'רווקה' })
+  @ApiProperty({ enum: ['male', 'female'] })
+  gender: string;
+
+  @ApiProperty()
   maritalStatus: string;
 
-  @ApiPropertyOptional({ type: [String] })
-  personalityTraits?: string[];
+  @ApiProperty({ type: [String] })
+  personalityTraits: string[];
 
-  @ApiPropertyOptional({ type: [String] })
-  hobbies?: string[];
+  @ApiProperty({ type: [String] })
+  hobbies: string[];
 
-  @ApiPropertyOptional()
-  homeVision?: string;
+  @ApiProperty()
+  familyVision: string;
 
-  @ApiPropertyOptional({ type: [String] })
-  lookingFor?: string[];
+  @ApiProperty({ type: [String] })
+  lookingFor: string[];
 
-  @ApiPropertyOptional({ type: [ReferenceContactDto] })
-  references?: ReferenceContactDto[];
+  @ApiProperty({ type: [ReferenceContactDto] })
+  references: ReferenceContactDto[];
 
-  @ApiPropertyOptional({ type: [String] })
-  photos?: string[];
+  @ApiProperty({ type: [String] })
+  photos: string[];
 
   @ApiPropertyOptional({ type: [String] })
   shadchanIds?: string[];

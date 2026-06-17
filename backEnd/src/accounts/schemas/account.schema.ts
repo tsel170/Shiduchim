@@ -18,14 +18,26 @@ export class Account {
   @Prop({ required: true, select: false })
   passwordHash: string;
 
-  @Prop({ required: true, enum: ['person', 'shadchan'] })
+  @Prop({ type: String, required: true, enum: ['person', 'shadchan'] })
   role: 'person' | 'shadchan';
 
   @Prop({ type: String, default: null })
   profileId: string | null;
 
+  @Prop({ type: String, default: null })
+  phone: string | null;
+
+  @Prop({ type: String, default: '' })
+  firstName: string;
+
+  @Prop({ type: String, default: '' })
+  lastName: string;
+
   @Prop({ type: AccountSettingsSchema, default: () => ({}) })
   settings: AccountSettings;
+
+  @Prop({ type: [String], default: [] })
+  linkedShadchanIds: string[];
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);

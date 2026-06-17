@@ -10,7 +10,7 @@ export const FAVORITE_SORT_OPTIONS: ReadonlyArray<{
   { id: 'average', label: 'ממוצע דירוג', themeClass: 'profile-field--average' },
   { id: 'personality', label: 'אישיות', themeClass: 'profile-field--personalityTraits' },
   { id: 'hobbies', label: 'תחביבים', themeClass: 'profile-field--hobbies' },
-  { id: 'homeVision', label: 'חזון בית ומשפחה', themeClass: 'profile-field--familyVision' },
+  { id: 'familyVision', label: 'חזון בית ומשפחה', themeClass: 'profile-field--familyVision' },
   { id: 'lookingFor', label: 'מחפש/ת', themeClass: 'profile-field--lookingFor' },
   { id: 'look', label: 'מראה', themeClass: 'profile-field--look' },
 ];

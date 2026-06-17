@@ -2,6 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, MaxLength } from 'class-validator';
 
 export class ReferenceContactDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(64)
+  id: string;
+
   @ApiProperty({ example: 'אמא' })
   @IsString()
   @MaxLength(255)

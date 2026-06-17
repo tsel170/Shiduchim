@@ -39,6 +39,18 @@
   border-color: var(--color-primary-light);
 }
 
+.btn--danger {
+  background: var(--color-surface);
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #991b1b;
+}
+
 .btn--favorite {
   background: #16a34a;
   color: #fff;
@@ -68,4 +80,56 @@
   border-color: #d1d5db;
   color: #6b7280;
   cursor: not-allowed;
+}
+
+.btn--loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn--primary.btn--loading:disabled {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: #fff;
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.btn--favorite.btn--loading:disabled {
+  background: #16a34a;
+  border-color: #15803d;
+  color: #fff;
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.btn--favorite--saved.btn--loading:disabled {
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #fff;
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.btn__spinner--dark {
+  border-color: rgba(15, 23, 42, 0.15);
+  border-top-color: var(--color-primary);
+}
+
+.btn__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spinner 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }

@@ -46,6 +46,17 @@
   color: var(--color-text-secondary);
 }
 
+.form-field__required {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.form-field__optional {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted, #64748b);
+}
+
 .form-field__input,
 .form-field__select,
 .form-field__textarea {

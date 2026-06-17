@@ -1,54 +1,100 @@
+/** Slug ids aligned with Front end/src/constants/profileOptions.ts */
+
+export const MIN_PROFILE_AGE = 18;
+
 export const CITIES = [
-  'ירושלים',
-  'תל אביב',
-  'בני ברק',
-  'מודיעין עילית',
-  'ביתר עילית',
-  'אלעד',
-  'נתניה',
-  'חיפה',
-  'באר שבע',
-  'אשדוד',
-  'פתח תקווה',
-  'ראשון לציון',
+  'jerusalem',
+  'bnei-brak',
+  'modiin',
+  'petah-tikva',
+  'haifa',
+  'ashdod',
+  'beer-sheva',
+  'netanya',
+  'ramat-gan',
+  'tzfat',
+  'kiryat-gat',
+  'raanana',
+  'tel-aviv',
+  'bet-shemesh',
 ] as const;
 
-export const STREAMS = [
-  'ליטאי',
-  'חסידי',
-  'ספרדי חרדי',
-  'דתי לאומי',
-  'מסורתי',
+export const RELIGIOUS_STREAMS = [
+  'haredi',
+  'modern-haredi',
+  'dati-leumi',
+  'traditional',
+  'sephardi-haredi',
 ] as const;
 
-export const MARITAL_STATUSES = ['רווקה', 'גרושה', 'אלמנה'] as const;
+export const MARITAL_STATUSES = ['single', 'divorced', 'widowed'] as const;
+
+export const GENDERS = ['male', 'female'] as const;
 
 export const PERSONALITY_TRAITS = [
-  'חמה',
-  'רצינית',
-  'שמחה',
-  'רגישה',
-  'חברותית',
-  'צנועה',
-  'אנרגטית',
+  'חם/ה',
+  'אחריות',
+  'שמח/ה',
+  'רציני/ת',
+  'יצירתי/ת',
+  'צנוע/ה',
+  'חברותי/ת',
+  'רגוע/ה',
+  'אנרגטי/ת',
+  'אמפתי/ת',
+  'מאורגן/ת',
+  'גמיש/ה',
 ] as const;
 
 export const HOBBIES = [
   'קריאה',
-  'בישול',
-  'ספורט',
-  'מוזיקה',
-  'ציור',
   'טיולים',
+  'בישול',
+  'מוזיקה',
+  'ספורט',
+  'אמנות',
+  'התנדבות',
   'לימוד תורה',
+  'צילום',
+  'טבע',
+  'משפחה',
+  'יוגה',
 ] as const;
 
 export const LOOKING_FOR_TRAITS = [
-  'לומד',
-  'עובד',
-  'רציני',
-  'חם',
-  'צנוע',
-  'משפחתי',
-  'בעל מידות',
+  'ערכים דומים',
+  'לימוד תורה',
+  'משפחה חמה',
+  'יציבות כלכלית',
+  'צניעות',
+  'חינוך לילדים',
+  'עלייה לארץ',
+  'קריירה מאוזנת',
+  'חברות טובה',
+  'הומור',
+  'אחריות',
+  'רוחניות',
 ] as const;
+
+export const DISPLAY_FIELDS = [
+  'city',
+  'height',
+  'gender',
+  'maritalStatus',
+  'religiousStream',
+  'personalityTraits',
+  'hobbies',
+  'familyVision',
+  'lookingFor',
+] as const;
+
+export const PROFILE_OPTIONS_RESPONSE = {
+  cities: CITIES,
+  religiousStreams: RELIGIOUS_STREAMS,
+  genders: GENDERS,
+  maritalStatuses: MARITAL_STATUSES,
+  personalityTraits: PERSONALITY_TRAITS,
+  hobbies: HOBBIES,
+  lookingFor: LOOKING_FOR_TRAITS,
+  displayFields: DISPLAY_FIELDS,
+};

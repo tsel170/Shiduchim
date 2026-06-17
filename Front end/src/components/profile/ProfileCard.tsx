@@ -1,6 +1,6 @@
 import React, { KeyboardEvent } from 'react';
 import { FullProfile } from '../../types/profile';
-import { getMaritalStatusLabel } from '../../constants/profileOptions';
+import { getGenderLabel, getMaritalStatusLabel } from '../../constants/profileOptions';
 import './ProfileCard.css';
 
 interface ProfileCardProps {
@@ -69,6 +69,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <h3 className="profile-card__name">{fullName}</h3>
           <p className="profile-card__meta">
             <span>גיל {profile.age}</span>
+            <span className="profile-card__dot" aria-hidden="true">
+              ·
+            </span>
+            <span>{getGenderLabel(profile.gender) || '—'}</span>
             <span className="profile-card__dot" aria-hidden="true">
               ·
             </span>
