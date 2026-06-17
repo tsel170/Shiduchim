@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getApiErrorMessage } from '../api/apiError';
+import { profilesApi } from '../api/profilesApi';
+import { suggestionsApi } from '../api/suggestionsApi';
+import { PageState } from '../components/common/PageState';
 import { getCityLabel } from '../constants/profileOptions';
 import {
   getSuggestionCheckStatusClassName,
@@ -8,8 +12,8 @@ import {
   getSuggestionStageSubtitle,
   SUGGESTION_STAGE_TABS,
 } from '../constants/suggestionOptions';
-import { getProfileById } from '../data/mockProfiles';
-import { mockShadchanSuggestions, SuggestionStage } from '../data/mockShadchanSuggestions';
+import { ShadchanSuggestion, SuggestionStage } from '../types/suggestion';
+import { FullProfile } from '../types/profile';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
@@ -25,10 +29,46 @@ export const ShadchanSuggestionsPage: React.FC = () => {
   const location = useLocation();
   const activeStage = pathToStage(location.pathname);
 
-  const items = mockShadchanSuggestions
-    .filter((suggestion) => suggestion.stage === activeStage)
+  const [suggestions, setSuggestions] = useState<ShadchanSuggestion[]>([]);
+  const [profilesById, setProfilesById] = useState<Record<string, FullProfile>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const loadedSuggestions = await suggestionsApi.list(activeStage);
+        if (cancelled) return;
+        setSuggestions(loadedSuggestions);
+
+        const profiles = await Promise.all(
+          loadedSuggestions.map((suggestion) => profilesApi.getById(suggestion.profileId))
+        );
+        if (!cancelled) {
+          setProfilesById(
+            Object.fromEntries(profiles.map((profile) => [profile.id, profile]))
+          );
+        }
+      } catch (err) {
+        if (!cancelled) setError(getApiErrorMessage(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeStage]);
+
+  const items = suggestions
     .map((suggestion) => {
-      const profile = getProfileById(suggestion.profileId);
+      const profile = profilesById[suggestion.profileId];
       return profile ? { suggestion, profile } : null;
     })
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -37,7 +77,9 @@ export const ShadchanSuggestionsPage: React.FC = () => {
     <div className="page added-profiles-page">
       <header className="page__header">
         <h1 className="page__title">הצעות מהשדכן</h1>
-        <p className="page__subtitle">{getSuggestionStageSubtitle(activeStage, items.length)}</p>
+        <p className="page__subtitle">
+          {loading ? 'טוען הצעות...' : getSuggestionStageSubtitle(activeStage, items.length)}
+        </p>
       </header>
 
       <nav className="suggestions-tabs" aria-label="סוגי הצעות">
@@ -54,11 +96,12 @@ export const ShadchanSuggestionsPage: React.FC = () => {
         ))}
       </nav>
 
-      {items.length === 0 ? (
-        <div className="profile-grid__empty added-profiles-page__empty">
-          <p>{getSuggestionStageEmptyMessage(activeStage)}</p>
-        </div>
-      ) : (
+      <PageState
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && items.length === 0}
+        emptyMessage={getSuggestionStageEmptyMessage(activeStage)}
+      >
         <ul className="added-profiles-list">
           {items.map(({ suggestion, profile }) => (
             <li key={suggestion.suggestionId} className="added-profiles-card">
@@ -92,7 +135,7 @@ export const ShadchanSuggestionsPage: React.FC = () => {
             </li>
           ))}
         </ul>
-      )}
+      </PageState>
     </div>
   );
 };

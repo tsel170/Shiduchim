@@ -20,9 +20,15 @@ import './ShadchanSharePanel.css';
 interface ShadchanSharePanelProps {
   profile: FullProfile;
   initialTab: ShadchanShareTab;
+  /** send = שדכן שולח למשודך/ת; export = שמירה מקומית (העתקה / PDF) */
+  variant?: 'send' | 'export';
   settings: ProfileShareSettings;
   onSettingsChange: (next: ProfileShareSettings) => void;
   onClose: () => void;
+  recipientAccountId?: string;
+  onRecipientAccountIdChange?: (value: string) => void;
+  onSiteSend?: (note: string) => Promise<void>;
+  isSending?: boolean;
 }
 
 const OTHER_METHODS: ReadonlyArray<{ id: ShadchanShareMethod; label: string }> = [
@@ -36,11 +42,17 @@ const OTHER_METHODS: ReadonlyArray<{ id: ShadchanShareMethod; label: string }> =
 export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
   profile,
   initialTab,
+  variant = 'send',
   settings,
   onSettingsChange,
   onClose,
+  recipientAccountId = '',
+  onRecipientAccountIdChange,
+  onSiteSend,
+  isSending = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<ShadchanShareTab>(initialTab);
+  const isExport = variant === 'export';
+  const [activeTab, setActiveTab] = useState<ShadchanShareTab>(isExport ? 'other' : initialTab);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [prefixSaved, setPrefixSaved] = useState(false);
 
@@ -56,8 +68,11 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
     setPrefixSaved(true);
   };
 
-  const handleSiteSend = () => {
-    window.alert(`הפרופיל של ${profile.firstName} נשלח דרך האתר (הדגמה בלבד)`);
+  const handleSiteSend = async () => {
+    if (!onSiteSend) return;
+    const note = [settings.topPrefix, settings.bottomPrefix].filter(Boolean).join('\n\n').trim()
+      || `המלצה: ${profile.firstName} ${profile.lastName}`;
+    await onSiteSend(note);
   };
 
   const runOtherMethod = async (method: ShadchanShareMethod) => {
@@ -116,9 +131,13 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
     <section className="shadchan-share-panel">
       <header className="shadchan-share-panel__header">
         <div>
-          <h2 className="shadchan-share-panel__title">שיתוף פרופיל</h2>
+          <h2 className="shadchan-share-panel__title">
+            {isExport ? 'שמירת פרופיל' : 'שיתוף פרופיל'}
+          </h2>
           <p className="shadchan-share-panel__subtitle">
-            בחר שיטת שליחה, התאם שדות וצפה בתצוגה מקדימה
+            {isExport
+              ? 'בחר שיטת שמירה, התאם שדות וצפה בתצוגה מקדימה'
+              : 'בחר שיטת שליחה, התאם שדות וצפה בתצוגה מקדימה'}
           </p>
         </div>
         <button type="button" className="shadchan-share-panel__close" onClick={onClose} aria-label="סגור">
@@ -126,26 +145,28 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
         </button>
       </header>
 
-      <div className="shadchan-share-panel__tabs" role="tablist" aria-label="שיטת שליחה">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'site'}
-          className={`shadchan-share-panel__tab${activeTab === 'site' ? ' shadchan-share-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('site')}
-        >
-          שליחה דרך האתר
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'other'}
-          className={`shadchan-share-panel__tab${activeTab === 'other' ? ' shadchan-share-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('other')}
-        >
-          שיטות אחרות
-        </button>
-      </div>
+      {!isExport && (
+        <div className="shadchan-share-panel__tabs" role="tablist" aria-label="שיטת שליחה">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'site'}
+            className={`shadchan-share-panel__tab${activeTab === 'site' ? ' shadchan-share-panel__tab--active' : ''}`}
+            onClick={() => setActiveTab('site')}
+          >
+            שליחה דרך האתר
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'other'}
+            className={`shadchan-share-panel__tab${activeTab === 'other' ? ' shadchan-share-panel__tab--active' : ''}`}
+            onClick={() => setActiveTab('other')}
+          >
+            שיטות אחרות
+          </button>
+        </div>
+      )}
 
       <div className="shadchan-share-panel__body">
         <div className="shadchan-share-panel__config">
@@ -229,10 +250,30 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
           </div>
 
           <div className="shadchan-share-panel__actions">
-            {activeTab === 'site' ? (
-              <button type="button" className="btn btn--primary" onClick={handleSiteSend}>
-                שלח דרך האתר
-              </button>
+            {!isExport && activeTab === 'site' ? (
+              <>
+                <label className="shadchan-share-panel__section-title" htmlFor="recipient-account-id">
+                  מזהה חשבון משודך/ת
+                </label>
+                <input
+                  id="recipient-account-id"
+                  type="text"
+                  className="shadchan-share-panel__spacing-input"
+                  value={recipientAccountId}
+                  onChange={(event) => onRecipientAccountIdChange?.(event.target.value)}
+                  placeholder="הזן accountId של המשודך/ת"
+                />
+                <button
+                  type="button"
+                  className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
+                  onClick={handleSiteSend}
+                  disabled={isSending || !recipientAccountId.trim() || !onSiteSend}
+                  aria-busy={isSending}
+                >
+                  {isSending && <span className="btn__spinner" aria-hidden="true" />}
+                  {isSending ? 'שולח...' : 'שלח דרך האתר'}
+                </button>
+              </>
             ) : (
               <div className="shadchan-share-panel__method-grid">
                 {OTHER_METHODS.map((method) => (

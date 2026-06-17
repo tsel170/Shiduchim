@@ -1,56 +1,219 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getApiErrorMessage } from '../api/apiError';
+import { profilesApi } from '../api/profilesApi';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
+import { PageState } from '../components/common/PageState';
 import { useAuth } from '../contexts/AuthContext';
-import { getAuthProfilesByIds } from '../data/mockAuthProfiles';
 import { getCityLabel } from '../constants/profileOptions';
+import { FullProfile } from '../types/profile';
 import './AddedProfilesPage.css';
 import './Page.css';
+
+const CARD_ACCENTS = ['#4f46e5', '#7c3aed', '#0891b2', '#059669', '#db2777', '#ea580c'];
+
+function canShadchanDeleteProfile(profile: FullProfile): boolean {
+  return !profile.ownerAccountId;
+}
 
 export const AddedProfilesPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [profiles, setProfiles] = useState<FullProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [profileToDelete, setProfileToDelete] = useState<FullProfile | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(
+    null
+  );
 
-  const managedIds = currentUser?.role === 'shadchan' ? currentUser.managedProfileIds ?? [] : [];
-  const profiles = getAuthProfilesByIds(managedIds);
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'shadchan') return;
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const loaded = await profilesApi.getAll({
+          addedByShadchanId: currentUser!.accountId,
+        });
+        if (!cancelled) setProfiles(loaded);
+      } catch (err) {
+        if (!cancelled) setError(getApiErrorMessage(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timerId = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timerId);
+  }, [toast]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!profileToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await profilesApi.remove(profileToDelete.id);
+      setProfiles((prev) => prev.filter((item) => item.id !== profileToDelete.id));
+      setProfileToDelete(null);
+      setToast({ message: 'הפרופיל נמחק בהצלחה', tone: 'success' });
+    } catch (err) {
+      setToast({ message: getApiErrorMessage(err), tone: 'error' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [profileToDelete]);
 
   return (
     <div className="page added-profiles-page">
-      <header className="page__header">
-        <h1 className="page__title">פרופילים שהוספתי</h1>
-        <p className="page__subtitle">{profiles.length} פרופילים בניהולך</p>
+      <header className="added-profiles-page__hero">
+        <div className="added-profiles-page__hero-glow" aria-hidden="true" />
+        <h1 className="added-profiles-page__title">פרופילים שהוספתי</h1>
+        <p className="added-profiles-page__subtitle">
+          <span className="added-profiles-page__count">{profiles.length}</span>
+          פרופילים בניהולך
+        </p>
       </header>
 
-      {profiles.length === 0 ? (
-        <div className="profile-grid__empty added-profiles-page__empty">
-          <p>אין פרופילים בניהול. הוסף פרופילים דרך המערכת (בקרוב).</p>
+      {toast && (
+        <div
+          className={`added-profiles-page__toast added-profiles-page__toast--${toast.tone}`}
+          role="status"
+        >
+          {toast.tone === 'success' ? <CheckIcon /> : <AlertIcon />}
+          <span>{toast.message}</span>
         </div>
-      ) : (
-        <ul className="added-profiles-list">
-          {profiles.map((profile) => (
-            <li key={profile.profileId} className="added-profiles-card">
-              <div>
-                <h3 className="added-profiles-card__name">
-                  {profile.firstName} {profile.lastName}
-                </h3>
-                <p className="added-profiles-card__meta">
-                  גיל {profile.age}
-                  <span className="added-profiles-card__dot" aria-hidden="true">
-                    ·
-                  </span>
-                  {getCityLabel(profile.city)}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="btn btn--secondary btn--sm"
-                onClick={() => navigate(`/profiles/${profile.profileId}`)}
-              >
-                צפה בפרופיל
-              </button>
-            </li>
-          ))}
-        </ul>
       )}
+
+      <PageState
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && profiles.length === 0}
+        emptyMessage="אין פרופילים בניהול. הוסף פרופילים דרך המערכת."
+      >
+        <ul className="added-profiles-list">
+          {profiles.map((profile, index) => {
+            const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
+
+            return (
+              <li
+                key={profile.id}
+                className="added-profiles-card"
+                style={{ '--card-accent': accent } as React.CSSProperties}
+              >
+                <div className="added-profiles-card__badge" aria-hidden="true">
+                  {profile.firstName.charAt(0)}
+                </div>
+
+                <div className="added-profiles-card__body">
+                  <h3 className="added-profiles-card__name">
+                    {profile.firstName} {profile.lastName}
+                  </h3>
+                  <p className="added-profiles-card__meta">
+                    <span className="added-profiles-card__chip">גיל {profile.age}</span>
+                    <span className="added-profiles-card__chip">
+                      {getCityLabel(profile.city) || 'ללא עיר'}
+                    </span>
+                  </p>
+                  {profile.ownerAccountId && (
+                    <p className="added-profiles-card__note added-profiles-card__note--locked">
+                      <LockIcon />
+                      פרופיל משויך לחשבון משתמש — לא ניתן למחיקה
+                    </p>
+                  )}
+                </div>
+
+                <div className="added-profiles-card__actions">
+                  <button
+                    type="button"
+                    className="btn btn--sm added-profiles-card__btn added-profiles-card__btn--edit"
+                    onClick={() => navigate(`/added-profiles/${profile.id}/edit`)}
+                  >
+                    ערוך
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--sm added-profiles-card__btn added-profiles-card__btn--view"
+                    onClick={() => navigate(`/profiles/${profile.id}`)}
+                  >
+                    צפה
+                  </button>
+                  {canShadchanDeleteProfile(profile) && (
+                    <button
+                      type="button"
+                      className="btn btn--sm added-profiles-card__btn added-profiles-card__btn--delete"
+                      onClick={() => setProfileToDelete(profile)}
+                      disabled={isDeleting && profileToDelete?.id === profile.id}
+                    >
+                      מחק
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </PageState>
+
+      <ConfirmDialog
+        isOpen={Boolean(profileToDelete)}
+        title="מחיקת פרופיל"
+        tone="danger"
+        cooldownSeconds={3}
+        isLoading={isDeleting}
+        confirmLabel="מחק לצמיתות"
+        cancelLabel="ביטול"
+        message={
+          profileToDelete ? (
+            <>
+              האם למחוק את הפרופיל של <strong>{profileToDelete.firstName}</strong>?
+              <br />
+              פעולה זו אינה ניתנת לביטול.
+            </>
+          ) : null
+        }
+        onCancel={() => {
+          if (!isDeleting) setProfileToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };
+
+function CheckIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v5M12 16h.01" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 018 0v3" strokeLinecap="round" />
+    </svg>
+  );
+}

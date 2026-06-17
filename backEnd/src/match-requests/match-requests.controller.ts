@@ -8,83 +8,113 @@ import {
   Param,
   Patch,
   Post,
-  Query,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthUserPayload } from '../auth/types/auth-user.payload';
 import {
   CreateMatchRequestDto,
-  MatchRequestResponseDto,
+  EnrichedMatchRequestResponseDto,
   UpdateMatchRequestDto,
 } from './dto/match-request.dto';
 import { MatchRequestsService } from './match-requests.service';
 
-@ApiTags('match-requests')
-@Controller('match-requests')
+@ApiTags('requests')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('requests')
 export class MatchRequestsController {
   constructor(private readonly matchRequestsService: MatchRequestsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create match request' })
-  @ApiCreatedResponse({ type: MatchRequestResponseDto })
-  create(@Body() createMatchRequestDto: CreateMatchRequestDto) {
-    return this.matchRequestsService.create(createMatchRequestDto);
+  @ApiOperation({ summary: 'Person sends a request to their shadchan' })
+  @ApiCreatedResponse({ type: EnrichedMatchRequestResponseDto })
+  create(
+    @CurrentUser() user: AuthUserPayload,
+    @Body() createMatchRequestDto: CreateMatchRequestDto,
+  ) {
+    return this.matchRequestsService.create(user, createMatchRequestDto);
+  }
+
+  @Get('outgoing')
+  @ApiOperation({ summary: 'Get outgoing requests for current person' })
+  @ApiOkResponse({ type: EnrichedMatchRequestResponseDto, isArray: true })
+  findOutgoing(@CurrentUser() user: AuthUserPayload) {
+    return this.matchRequestsService.findOutgoingForPerson(user);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get match requests' })
-  @ApiQuery({ name: 'shadchanId', required: false })
-  @ApiQuery({ name: 'senderProfileId', required: false })
-  @ApiQuery({ name: 'targetProfileId', required: false })
-  @ApiOkResponse({ type: MatchRequestResponseDto, isArray: true })
-  findAll(
-    @Query('shadchanId') shadchanId?: string,
-    @Query('senderProfileId') senderProfileId?: string,
-    @Query('targetProfileId') targetProfileId?: string,
-  ) {
-    return this.matchRequestsService.findAll({
-      shadchanId,
-      senderProfileId,
-      targetProfileId,
-    });
+  @ApiOperation({ summary: 'Get requests for current shadchan' })
+  @ApiOkResponse({ type: EnrichedMatchRequestResponseDto, isArray: true })
+  findAll(@CurrentUser() user: AuthUserPayload) {
+    return this.matchRequestsService.findAll({ shadchanId: user.accountId });
   }
 
   @Get(':requestId')
-  @ApiOperation({ summary: 'Get match request by id' })
+  @ApiOperation({ summary: 'Get request by id' })
   @ApiParam({ name: 'requestId' })
-  @ApiOkResponse({ type: MatchRequestResponseDto })
-  @ApiNotFoundResponse({ description: 'Match request not found' })
-  findOne(@Param('requestId') requestId: string) {
-    return this.matchRequestsService.findOne(requestId);
+  @ApiOkResponse({ type: EnrichedMatchRequestResponseDto })
+  @ApiNotFoundResponse({ description: 'Request not found' })
+  findOne(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('requestId') requestId: string,
+  ) {
+    return this.matchRequestsService.findOne(requestId, user.accountId);
   }
 
-  @Patch(':requestId')
-  @ApiOperation({ summary: 'Update match request' })
+  @Put(':requestId')
+  @ApiOperation({ summary: 'Update request' })
   @ApiParam({ name: 'requestId' })
-  @ApiOkResponse({ type: MatchRequestResponseDto })
-  @ApiNotFoundResponse({ description: 'Match request not found' })
-  update(
+  @ApiOkResponse({ type: EnrichedMatchRequestResponseDto })
+  put(
+    @CurrentUser() user: AuthUserPayload,
     @Param('requestId') requestId: string,
     @Body() updateMatchRequestDto: UpdateMatchRequestDto,
   ) {
-    return this.matchRequestsService.update(requestId, updateMatchRequestDto);
+    return this.matchRequestsService.update(
+      requestId,
+      user.accountId,
+      updateMatchRequestDto,
+    );
+  }
+
+  @Patch(':requestId')
+  @ApiOperation({ summary: 'Partially update request' })
+  @ApiParam({ name: 'requestId' })
+  @ApiOkResponse({ type: EnrichedMatchRequestResponseDto })
+  patch(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('requestId') requestId: string,
+    @Body() updateMatchRequestDto: UpdateMatchRequestDto,
+  ) {
+    return this.matchRequestsService.update(
+      requestId,
+      user.accountId,
+      updateMatchRequestDto,
+    );
   }
 
   @Delete(':requestId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete match request' })
+  @ApiOperation({ summary: 'Delete request' })
   @ApiParam({ name: 'requestId' })
-  @ApiNoContentResponse({ description: 'Match request deleted' })
-  @ApiNotFoundResponse({ description: 'Match request not found' })
-  remove(@Param('requestId') requestId: string) {
-    return this.matchRequestsService.remove(requestId);
+  @ApiNoContentResponse({ description: 'Request deleted' })
+  remove(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('requestId') requestId: string,
+  ) {
+    return this.matchRequestsService.removeForUser(user, requestId);
   }
 }

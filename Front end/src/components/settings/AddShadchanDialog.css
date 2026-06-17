@@ -1,0 +1,310 @@
+.add-shadchan-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.add-shadchan-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  animation: add-shadchan-fade-in 0.2s ease;
+}
+
+.add-shadchan-dialog__panel {
+  position: relative;
+  width: min(100%, 480px);
+  max-height: min(85vh, 640px);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg);
+  border-radius: calc(var(--radius-lg) + 2px);
+  background: linear-gradient(160deg, #f5f3ff 0%, #ffffff 50%, #eef2ff 100%);
+  border: 1px solid #c7d2fe;
+  box-shadow: 0 24px 48px rgba(79, 70, 229, 0.2);
+  animation: add-shadchan-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.add-shadchan-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.add-shadchan-dialog__title {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.add-shadchan-dialog__subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.add-shadchan-dialog__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.add-shadchan-dialog__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+.add-shadchan-dialog__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e0e7ff;
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: add-shadchan-spin 0.75s linear infinite;
+}
+
+.add-shadchan-dialog__empty {
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-lg);
+  text-align: center;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px dashed #c7d2fe;
+  color: var(--color-text-secondary);
+}
+
+.add-shadchan-dialog__list {
+  list-style: none;
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.add-shadchan-dialog__option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  text-align: right;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.add-shadchan-dialog__option:hover:not(:disabled) {
+  border-color: #c7d2fe;
+}
+
+.add-shadchan-dialog__option--selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+  background: #fff;
+}
+
+.add-shadchan-dialog__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  flex-shrink: 0;
+}
+
+.add-shadchan-dialog__option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.add-shadchan-dialog__option-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.add-shadchan-dialog__option-meta {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.add-shadchan-dialog__actions {
+  display: flex;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid #e0e7ff;
+}
+
+.add-shadchan-dialog__btn {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+@keyframes add-shadchan-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes add-shadchan-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.send-shadchan-dialog__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.send-shadchan-dialog__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.send-shadchan-dialog__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.send-shadchan-dialog__section-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: none;
+}
+
+.send-shadchan-dialog__section--profile .send-shadchan-dialog__section-title {
+  color: #0891b2;
+}
+
+.send-shadchan-dialog__section--linked .send-shadchan-dialog__section-title {
+  color: #7c3aed;
+}
+
+.send-shadchan-dialog__section--database .send-shadchan-dialog__section-title {
+  color: #db2777;
+}
+
+.send-shadchan-dialog__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.send-shadchan-dialog__section--mine .send-shadchan-dialog__section-title {
+  color: #059669;
+}
+
+.send-shadchan-dialog__include {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: 0.88rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.send-shadchan-dialog__include input {
+  margin-top: 0.2rem;
+  accent-color: var(--color-primary);
+}
+
+.send-shadchan-dialog__profile-missing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.send-shadchan-dialog__profile-link {
+  width: fit-content;
+  text-decoration: none;
+}
+
+.add-shadchan-dialog__panel--send {
+  background: linear-gradient(160deg, #fdf2f8 0%, #ffffff 50%, #eef2ff 100%);
+  border-color: #f9a8d4;
+  box-shadow: 0 24px 48px rgba(219, 39, 119, 0.18);
+  max-height: min(85vh, 640px);
+  display: flex;
+  flex-direction: column;
+}
+
+.add-shadchan-dialog__empty--settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.add-shadchan-dialog__empty-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.add-shadchan-dialog__settings-link {
+  width: auto;
+  text-decoration: none;
+  text-align: center;
+}
+
+@keyframes add-shadchan-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

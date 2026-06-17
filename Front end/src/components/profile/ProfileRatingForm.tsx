@@ -1,7 +1,7 @@
 import React from 'react';
 import { RATING_CATEGORIES } from '../../constants/profileOptions';
 import { ProfileRating, ProfileRatingCategory } from '../../types/profile';
-import { calculateAverageRating, isRatingsCompleteStrict } from '../../utils/rating';
+import { calculateAverageRating, isRatingsComplete } from '../../utils/rating';
 import './ProfileRatingForm.css';
 
 interface ProfileRatingFormProps {
@@ -13,7 +13,7 @@ export const ProfileRatingForm: React.FC<ProfileRatingFormProps> = ({
   rating,
   onRate,
 }) => {
-  const completed = isRatingsCompleteStrict(rating);
+  const completed = isRatingsComplete(rating);
   const completeRating = completed ? rating : undefined;
   return (
     <section className="rating-form">

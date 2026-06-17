@@ -1,18 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { ProfileResponseDto } from '../../profiles/dto/profile-response.dto';
 
 export class CreateMatchRequestDto {
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Defaults to the person account profile id' })
+  @IsOptional()
   @IsString()
-  senderProfileId: string;
+  senderProfileId?: string;
 
   @ApiProperty()
   @IsString()
   targetProfileId: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Defaults to demo shadchan when omitted' })
+  @IsOptional()
   @IsString()
-  shadchanId: string;
+  shadchanId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -50,4 +53,12 @@ export class MatchRequestResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
+}
+
+export class EnrichedMatchRequestResponseDto extends MatchRequestResponseDto {
+  @ApiProperty({ type: ProfileResponseDto })
+  senderProfile: ProfileResponseDto;
+
+  @ApiProperty({ type: ProfileResponseDto })
+  targetProfile: ProfileResponseDto;
 }

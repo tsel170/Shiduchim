@@ -14,80 +14,38 @@ export class ProfileRatingDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  firstName: number;
+  personality: number;
 
-  @ApiProperty({ minimum: 1, maximum: 5 })
+  @ApiPropertyOptional({ minimum: 1, maximum: 5 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  lastName: number;
+  hobbies?: number;
 
-  @ApiProperty({ minimum: 1, maximum: 5 })
+  @ApiPropertyOptional({ minimum: 1, maximum: 5 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  city: number;
+  familyVision?: number;
 
-  @ApiProperty({ minimum: 1, maximum: 5 })
+  @ApiPropertyOptional({ minimum: 1, maximum: 5 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  age: number;
+  lookingFor?: number;
 
-  @ApiProperty({ minimum: 1, maximum: 5 })
+  @ApiPropertyOptional({ minimum: 1, maximum: 5 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  heightCm: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  religiousStream: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  maritalStatus: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  personalityTraits: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  hobbies: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  homeVision: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  lookingFor: number;
-
-  @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  photos: number;
+  look?: number;
 }
 
 export class CreateFavoriteDto {
-  @ApiProperty()
-  @IsString()
-  ownerAccountId: string;
-
   @ApiProperty()
   @IsString()
   profileId: string;
@@ -121,9 +79,6 @@ export class FavoriteResponseDto {
   favoriteId: string;
 
   @ApiProperty()
-  ownerAccountId: string;
-
-  @ApiProperty()
   profileId: string;
 
   @ApiProperty({ type: ProfileRatingDto })
@@ -131,4 +86,7 @@ export class FavoriteResponseDto {
 
   @ApiProperty({ nullable: true })
   requestId: string | null;
+
+  @ApiProperty()
+  createdAt: Date;
 }

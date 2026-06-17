@@ -1,7 +1,7 @@
 import {
   SuggestionCheckStatus,
   SuggestionStage,
-} from '../data/mockShadchanSuggestions';
+} from '../types/suggestion';
 
 const STAGE_LABELS: Record<SuggestionStage, string> = {
   new: 'הצעות חדשות',

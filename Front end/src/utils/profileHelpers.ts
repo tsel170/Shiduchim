@@ -6,16 +6,32 @@ import {
   OPTIONAL_DISPLAY_FIELDS,
 } from '../constants/profileOptions';
 
-export function normalizeDisplayPreferences(preferences: DisplayPreferences): DisplayPreferences {
-  const visibleFields = { ...preferences.visibleFields };
-  preferences.fieldOrder.forEach((field) => {
+export function normalizeDisplayPreferences(
+  preferences?: Partial<DisplayPreferences> | null
+): DisplayPreferences {
+  const input = preferences ?? {};
+
+  const visibleFields = {
+    ...DEFAULT_DISPLAY_PREFERENCES.visibleFields,
+    ...input.visibleFields,
+  };
+
+  const fieldOrder = [...(input.fieldOrder ?? DEFAULT_DISPLAY_PREFERENCES.fieldOrder)];
+  for (const field of DEFAULT_DISPLAY_PREFERENCES.fieldOrder) {
+    if (!fieldOrder.includes(field)) {
+      fieldOrder.push(field);
+    }
+  }
+
+  fieldOrder.forEach((field) => {
     if (isRequiredDisplayField(field)) {
       visibleFields[field] = true;
     } else if (visibleFields[field] === undefined) {
       visibleFields[field] = true;
     }
   });
-  return { ...preferences, visibleFields };
+
+  return { visibleFields, fieldOrder };
 }
 
 export function isDisplayFieldVisible(

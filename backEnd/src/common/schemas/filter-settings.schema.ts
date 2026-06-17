@@ -1,49 +1,57 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ _id: false })
-export class FilterCriteria {
-  @Prop({ type: [String], default: undefined })
-  maritalStatuses?: string[];
+export class AgeHeightRange {
+  @Prop({ required: true })
+  min: number;
 
-  @Prop({ type: [String], default: undefined })
-  religiousStreams?: string[];
-
-  @Prop({ type: [String], default: undefined })
-  hobbies?: string[];
-
-  @Prop({ type: [String], default: undefined })
-  personalityTraits?: string[];
+  @Prop({ required: true })
+  max: number;
 }
 
-export const FilterCriteriaSchema =
-  SchemaFactory.createForClass(FilterCriteria);
+export const AgeHeightRangeSchema = SchemaFactory.createForClass(AgeHeightRange);
 
 @Schema({ _id: false })
-export class FilterSettings {
-  @Prop()
-  minAge?: number;
+export class FilterConfiguration {
+  @Prop({ type: AgeHeightRangeSchema, required: true })
+  ageRange: AgeHeightRange;
 
-  @Prop()
-  maxAge?: number;
+  @Prop({ type: AgeHeightRangeSchema, required: true })
+  heightRange: AgeHeightRange;
 
-  @Prop({ type: [String], default: undefined })
-  cities?: string[];
+  @Prop({ type: [String], default: [] })
+  cities: string[];
 
-  @Prop()
-  maxDistanceKm?: number;
+  @Prop({ type: [String], default: [] })
+  religiousStreams: string[];
 
-  @Prop({ type: FilterCriteriaSchema, default: undefined })
-  mustHave?: FilterCriteria;
+  @Prop({ type: [String], default: [] })
+  genders: string[];
 
-  @Prop({ type: FilterCriteriaSchema, default: undefined })
-  mustNotHave?: FilterCriteria;
+  @Prop({ type: [String], default: [] })
+  maritalStatuses: string[];
 
-  @Prop()
-  minHeightCm?: number;
+  @Prop({ type: [String], default: [] })
+  personalityTraits: string[];
 
-  @Prop()
-  maxHeightCm?: number;
+  @Prop({ type: [String], default: [] })
+  hobbies: string[];
+
+  @Prop({ type: [String], default: [] })
+  lookingFor: string[];
 }
 
-export const FilterSettingsSchema =
-  SchemaFactory.createForClass(FilterSettings);
+export const FilterConfigurationSchema =
+  SchemaFactory.createForClass(FilterConfiguration);
+
+export const DEFAULT_FILTER_CONFIGURATION: FilterConfiguration = {
+  ageRange: { min: 18, max: 50 },
+  heightRange: { min: 140, max: 210 },
+  cities: [],
+  religiousStreams: [],
+  genders: [],
+  maritalStatuses: [],
+  personalityTraits: [],
+  hobbies: [],
+  lookingFor: [],
+};

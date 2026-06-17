@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
 import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
+import { getApiErrorMessage } from '../api/apiError';
+import { requestsApi } from '../api/requestsApi';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
-import { isRatingsComplete } from '../utils/rating';
+import { isRatingsCompleteForProfile } from '../utils/rating';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import './Page.css';
 import './ProfileDetailsPage.css';
@@ -21,7 +23,8 @@ interface ProfileDetailsPageProps {
   isFavorite: boolean;
   onBack: () => void;
   onRate: (category: ProfileRatingCategory, value: number) => void;
-  onToggleFavorite: () => void;
+  onToggleFavorite: () => void | Promise<void>;
+  onSiteSend: (note: string, recipientAccountId: string) => Promise<void>;
 }
 
 export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
@@ -36,18 +39,58 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onBack,
   onRate,
   onToggleFavorite,
+  onSiteSend,
 }) => {
   const isShadchan = viewerRole === 'shadchan';
   const [shareTab, setShareTab] = useState<ShadchanShareTab | null>(null);
   const [shareSettings, setShareSettings] = useState<ProfileShareSettings>(() =>
     createDefaultProfileShareSettings()
   );
+  const [recipientAccountId, setRecipientAccountId] = useState('');
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
-  const handleSendToShadchan = () => {
-    window.alert('בקשה נשלחה לשדכן (הדגמה בלבד)');
+  const handleToggleFavorite = async () => {
+    setIsFavoriteLoading(true);
+    setActionMessage(null);
+    try {
+      await onToggleFavorite();
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsFavoriteLoading(false);
+    }
   };
 
-  const canFavorite = !isShadchan && isRatingsComplete(rating);
+  const handleSendToShadchan = async () => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      await requestsApi.create({ targetProfileId: profile.id });
+      setActionMessage('הבקשה נשלחה לשדכן בהצלחה');
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSiteSend = async (note: string) => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      await onSiteSend(note, recipientAccountId);
+      setActionMessage('ההצעה נשלחה בהצלחה');
+      setShareTab(null);
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
   const photosUnlocked = isShadchan || canFavorite;
 
   const openShare = (tab: ShadchanShareTab) => {
@@ -97,6 +140,10 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
               settings={shareSettings}
               onSettingsChange={setShareSettings}
               onClose={() => setShareTab(null)}
+              recipientAccountId={recipientAccountId}
+              onRecipientAccountIdChange={setRecipientAccountId}
+              onSiteSend={handleSiteSend}
+              isSending={isSending}
             />
           </aside>
         </>
@@ -127,23 +174,41 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
           <>
             <button
               type="button"
-              className={`btn btn--favorite${isFavorite ? ' btn--favorite--saved' : ''}`}
-              onClick={onToggleFavorite}
-              disabled={!canFavorite}
+              className={`btn btn--favorite${isFavorite ? ' btn--favorite--saved' : ''}${
+                isFavoriteLoading ? ' btn--loading' : ''
+              }`}
+              onClick={handleToggleFavorite}
+              disabled={!canFavorite || isFavoriteLoading}
+              aria-busy={isFavoriteLoading}
               title={!canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''}
             >
-              {isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
+              {isFavoriteLoading && <span className="btn__spinner" aria-hidden="true" />}
+              {isFavoriteLoading
+                ? isFavorite
+                  ? 'מסיר...'
+                  : 'מוסיף...'
+                : isFavorite
+                  ? 'הסר ממועדפים'
+                  : 'הוסף למועדפים'}
             </button>
             {!canFavorite && (
               <p className="profile-details-page__hint">
                 יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
               </p>
             )}
-            <button type="button" className="btn btn--primary" onClick={handleSendToShadchan}>
-              שלח לשדכן
+            <button
+              type="button"
+              className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
+              onClick={handleSendToShadchan}
+              disabled={isSending}
+              aria-busy={isSending}
+            >
+              {isSending && <span className="btn__spinner" aria-hidden="true" />}
+              {isSending ? 'שולח...' : 'שלח לשדכן'}
             </button>
           </>
         )}
+        {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}
       </div>
     </div>
   );

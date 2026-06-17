@@ -31,6 +31,13 @@
   --section-border: #cbd5e1;
 }
 
+.profile-field--gender,
+.profile-details__section--gender {
+  --section-accent: #be185d;
+  --section-bg: #fdf2f8;
+  --section-border: #fbcfe8;
+}
+
 .profile-field--maritalStatus,
 .profile-details__section--maritalStatus {
   --section-accent: #7c3aed;

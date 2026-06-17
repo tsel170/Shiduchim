@@ -1,23 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
+  DEFAULT_DISPLAY_PREFERENCES,
   DisplayPreferences,
   DisplayPreferencesSchema,
 } from './display-preferences.schema';
-import { FilterSettings, FilterSettingsSchema } from './filter-settings.schema';
+import {
+  DEFAULT_FILTER_CONFIGURATION,
+  FilterConfiguration,
+  FilterConfigurationSchema,
+} from './filter-settings.schema';
 
 @Schema({ _id: false })
 export class AccountSettings {
-  @Prop({ type: FilterSettingsSchema, default: () => ({}) })
-  filters: FilterSettings;
+  @Prop({ type: FilterConfigurationSchema, default: () => DEFAULT_FILTER_CONFIGURATION })
+  filters: FilterConfiguration;
 
   @Prop({
     type: DisplayPreferencesSchema,
-    default: () => ({
-      visibleFields: [],
-      hiddenFields: [],
-      fieldOrder: [],
-      rankableFields: [],
-    }),
+    default: () => DEFAULT_DISPLAY_PREFERENCES,
   })
   displayPreferences: DisplayPreferences;
 }

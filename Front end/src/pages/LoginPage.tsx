@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.css';
 
@@ -18,7 +18,7 @@ export const LoginPage: React.FC = () => {
     return <Navigate to={from} replace />;
   }
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
 
@@ -33,7 +33,7 @@ export const LoginPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    const success = login(trimmedEmail, password);
+    const success = await login(trimmedEmail, password);
     setIsSubmitting(false);
 
     if (!success) {
@@ -92,6 +92,13 @@ export const LoginPage: React.FC = () => {
             {isSubmitting ? 'מתחבר...' : 'התחברות'}
           </button>
         </form>
+
+        <p className="login-card__footer">
+          אין לך חשבון?{' '}
+          <Link className="login-card__footer-link" to="/signup">
+            הרשמה
+          </Link>
+        </p>
 
         <p className="login-card__hint">
           דמו: Person / Person או Shadchan / Shadchan

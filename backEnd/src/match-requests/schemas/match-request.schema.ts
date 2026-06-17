@@ -8,8 +8,8 @@ export class MatchRequest {
   @Prop({ required: true, unique: true, index: true })
   requestId: string;
 
-  @Prop({ required: true, index: true })
-  senderProfileId: string;
+  @Prop({ index: true })
+  senderProfileId?: string;
 
   @Prop({ required: true, index: true })
   targetProfileId: string;

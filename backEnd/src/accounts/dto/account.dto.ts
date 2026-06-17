@@ -4,107 +4,88 @@ import {
   IsArray,
   IsEmail,
   IsIn,
+  IsInt,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { DISPLAY_FIELDS } from '../../profiles/constants/profile-options';
 
-export class FilterCriteriaDto {
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  maritalStatuses?: string[];
+export class RangeDto {
+  @ApiProperty()
+  @IsInt()
+  min: number;
 
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  religiousStreams?: string[];
-
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  hobbies?: string[];
-
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  personalityTraits?: string[];
+  @ApiProperty()
+  @IsInt()
+  max: number;
 }
 
-export class FilterSettingsDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  minAge?: number;
+export class FilterConfigurationDto {
+  @ApiProperty({ type: RangeDto })
+  @ValidateNested()
+  @Type(() => RangeDto)
+  ageRange: RangeDto;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  maxAge?: number;
+  @ApiProperty({ type: RangeDto })
+  @ValidateNested()
+  @Type(() => RangeDto)
+  heightRange: RangeDto;
 
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
+  @ApiProperty({ type: [String] })
   @IsArray()
   @IsString({ each: true })
-  cities?: string[];
+  cities: string[];
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  maxDistanceKm?: number;
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  religiousStreams: string[];
 
-  @ApiPropertyOptional({ type: FilterCriteriaDto })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => FilterCriteriaDto)
-  mustHave?: FilterCriteriaDto;
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  genders: string[];
 
-  @ApiPropertyOptional({ type: FilterCriteriaDto })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => FilterCriteriaDto)
-  mustNotHave?: FilterCriteriaDto;
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  maritalStatuses: string[];
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  minHeightCm?: number;
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  personalityTraits: string[];
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  maxHeightCm?: number;
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  hobbies: string[];
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  lookingFor: string[];
 }
 
 export class DisplayPreferencesDto {
-  @ApiProperty({ type: [String], example: ['firstName', 'hobbies'] })
-  @IsArray()
-  @IsString({ each: true })
-  visibleFields: string[];
+  @ApiProperty({ type: Object, example: { city: true, hobbies: true } })
+  visibleFields: Record<string, boolean>;
 
-  @ApiProperty({ type: [String], example: ['city'] })
-  @IsArray()
-  @IsString({ each: true })
-  hiddenFields: string[];
-
-  @ApiProperty({ type: [String], example: ['firstName', 'heightCm'] })
+  @ApiProperty({ type: [String], enum: DISPLAY_FIELDS })
   @IsArray()
   @IsString({ each: true })
   fieldOrder: string[];
-
-  @ApiProperty({ type: [String], example: ['hobbies'] })
-  @IsArray()
-  @IsString({ each: true })
-  rankableFields: string[];
 }
 
 export class AccountSettingsDto {
-  @ApiPropertyOptional({ type: FilterSettingsDto })
+  @ApiPropertyOptional({ type: FilterConfigurationDto })
   @IsOptional()
   @ValidateNested()
-  @Type(() => FilterSettingsDto)
-  filters?: FilterSettingsDto;
+  @Type(() => FilterConfigurationDto)
+  filters?: FilterConfigurationDto;
 
   @ApiPropertyOptional({ type: DisplayPreferencesDto })
   @IsOptional()
@@ -120,7 +101,7 @@ export class CreateAccountDto {
 
   @ApiProperty({ example: 'securePassword123' })
   @IsString()
-  @MinLength(8)
+  @MinLength(1)
   @MaxLength(128)
   password: string;
 
@@ -128,10 +109,28 @@ export class CreateAccountDto {
   @IsIn(['person', 'shadchan'])
   role: 'person' | 'shadchan';
 
+  @ApiPropertyOptional({ example: 'ישראל' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  firstName?: string;
+
+  @ApiPropertyOptional({ example: 'ישראלי' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  lastName?: string;
+
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @IsString()
   profileId?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string | null;
 
   @ApiPropertyOptional({ type: AccountSettingsDto })
   @IsOptional()
@@ -143,15 +142,33 @@ export class CreateAccountDto {
 export class UpdateAccountDto {
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  lastName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsEmail()
   email?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MinLength(8)
+  @MinLength(1)
   @MaxLength(128)
   password?: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string | null;
 
   @ApiPropertyOptional({ enum: ['person', 'shadchan'] })
   @IsOptional()
@@ -165,11 +182,11 @@ export class UpdateAccountDto {
 }
 
 export class UpdateAccountSettingsDto {
-  @ApiPropertyOptional({ type: FilterSettingsDto })
+  @ApiPropertyOptional({ type: FilterConfigurationDto })
   @IsOptional()
   @ValidateNested()
-  @Type(() => FilterSettingsDto)
-  filters?: FilterSettingsDto;
+  @Type(() => FilterConfigurationDto)
+  filters?: FilterConfigurationDto;
 
   @ApiPropertyOptional({ type: DisplayPreferencesDto })
   @IsOptional()
@@ -183,6 +200,12 @@ export class AccountResponseDto {
   accountId: string;
 
   @ApiProperty()
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
+
+  @ApiProperty()
   email: string;
 
   @ApiProperty({ enum: ['person', 'shadchan'] })
@@ -191,6 +214,12 @@ export class AccountResponseDto {
   @ApiProperty({ nullable: true })
   profileId: string | null;
 
+  @ApiProperty({ nullable: true })
+  phone: string | null;
+
   @ApiProperty({ type: AccountSettingsDto })
   settings: AccountSettingsDto;
+
+  @ApiPropertyOptional({ type: [String], description: 'שדכנים מקושרים (משודך/ת בלבד)' })
+  linkedShadchanIds?: string[];
 }

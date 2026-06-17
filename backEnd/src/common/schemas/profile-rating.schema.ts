@@ -3,65 +3,38 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 @Schema({ _id: false })
 export class ProfileRating {
   @Prop({ required: true, min: 1, max: 5 })
-  firstName: number;
+  personality: number;
 
-  @Prop({ required: true, min: 1, max: 5 })
-  lastName: number;
+  @Prop({ min: 1, max: 5 })
+  hobbies?: number;
 
-  @Prop({ required: true, min: 1, max: 5 })
-  city: number;
+  @Prop({ min: 1, max: 5 })
+  familyVision?: number;
 
-  @Prop({ required: true, min: 1, max: 5 })
-  age: number;
+  @Prop({ min: 1, max: 5 })
+  lookingFor?: number;
 
-  @Prop({ required: true, min: 1, max: 5 })
-  heightCm: number;
+  @Prop({ min: 1, max: 5 })
+  look?: number;
 
-  @Prop({ required: true, min: 1, max: 5 })
-  religiousStream: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  maritalStatus: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  personalityTraits: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  hobbies: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  homeVision: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  lookingFor: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  photos: number;
-
-  @Prop({ required: true, min: 1, max: 5 })
-  averageRating: number;
+  @Prop({ min: 1, max: 5 })
+  averageRating?: number;
 }
 
 export const ProfileRatingSchema =
   SchemaFactory.createForClass(ProfileRating);
 
 export function computeAverageRating(
-  rating: Omit<ProfileRating, 'averageRating'>,
+  rating: Pick<ProfileRating, 'personality' | 'hobbies' | 'familyVision' | 'lookingFor' | 'look'>,
 ): number {
   const values = [
-    rating.firstName,
-    rating.lastName,
-    rating.city,
-    rating.age,
-    rating.heightCm,
-    rating.religiousStream,
-    rating.maritalStatus,
-    rating.personalityTraits,
+    rating.personality,
     rating.hobbies,
-    rating.homeVision,
+    rating.familyVision,
     rating.lookingFor,
-    rating.photos,
-  ];
+    rating.look,
+  ].filter((value): value is number => typeof value === 'number');
+  if (values.length === 0) return 0;
   const sum = values.reduce((total, value) => total + value, 0);
-  return Math.round((sum / values.length) * 100) / 100;
+  return Math.round((sum / values.length) * 10) / 10;
 }
