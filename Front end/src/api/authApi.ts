@@ -1,4 +1,4 @@
-import { AuthUser, AccountRole, ShadchanSummary } from '../types/account';
+import { AuthUser, AccountRole, PersonSummary, ShadchanSummary } from '../types/account';
 import { DisplayPreferences, FilterConfiguration } from '../types/profile';
 import { apiRequest, setStoredToken } from './apiClient';
 
@@ -11,6 +11,32 @@ type ShadchanSummaryInput = Partial<ShadchanSummary> & {
   first_name?: string;
   last_name?: string;
 };
+
+type PersonSummaryInput = Partial<PersonSummary> & {
+  first_name?: string;
+  last_name?: string;
+  display_name?: string;
+};
+
+function normalizePersonSummary(raw: PersonSummaryInput): PersonSummary {
+  const firstName = String(raw.firstName ?? raw.first_name ?? '').trim();
+  const lastName = String(raw.lastName ?? raw.last_name ?? '').trim();
+  const displayName =
+    String(raw.displayName ?? raw.display_name ?? '').trim() ||
+    [firstName, lastName].filter(Boolean).join(' ').trim() ||
+    String(raw.email ?? '').trim() ||
+    'משודך/ת';
+
+  return {
+    accountId: raw.accountId ? String(raw.accountId) : null,
+    firstName,
+    lastName,
+    email: String(raw.email ?? ''),
+    phone: raw.phone != null && String(raw.phone).trim() ? String(raw.phone) : null,
+    profileId: raw.profileId ? String(raw.profileId) : null,
+    displayName,
+  };
+}
 
 function normalizeShadchanSummary(raw: ShadchanSummaryInput): ShadchanSummary {
   return {
@@ -129,6 +155,12 @@ export const authApi = {
         const linkedIds = new Set(user.linkedShadchanIds ?? []);
         return shadchanim.filter((shadchan) => linkedIds.has(shadchan.accountId));
       });
+  },
+
+  getLinkedPersons() {
+    return apiRequest<PersonSummary[]>('/auth/me/linked-persons').then((list) =>
+      list.map((item) => normalizePersonSummary(item))
+    );
   },
 
   addLinkedShadchan(shadchanAccountId: string) {

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AccountsService } from '../accounts/accounts.service';
 import { UpdateAccountSettingsDto } from '../accounts/dto/account.dto';
@@ -76,6 +76,13 @@ export class AuthService {
 
   async listLinkedShadchanim(personAccountId: string) {
     return this.accountsService.findLinkedShadchanim(personAccountId);
+  }
+
+  async listLinkedPersons(shadchanAccountId: string, role: 'person' | 'shadchan') {
+    if (role !== 'shadchan') {
+      throw new ForbiddenException('רק שדכן/ית יכול/ה לצפות במשודכים מקושרים');
+    }
+    return this.accountsService.findLinkedPersons(shadchanAccountId);
   }
 
   async addLinkedShadchan(personAccountId: string, shadchanAccountId: string) {

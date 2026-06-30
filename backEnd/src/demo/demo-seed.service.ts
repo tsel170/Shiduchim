@@ -34,6 +34,9 @@ export class DemoSeedService implements OnModuleInit {
 
   async onModuleInit() {
     await this.accountsService.seedDemoAccounts();
+    await this.ensureDemoPersonShadchanLink();
+    await this.ensureDemoPersonUnderShadchanResponsibility();
+    await this.accountsService.syncShadchanLinksToProfiles();
     const existingProfiles = await this.profileModel.countDocuments();
     if (existingProfiles > 0) return;
 
@@ -68,7 +71,7 @@ export class DemoSeedService implements OnModuleInit {
     await this.profileModel.create({
       ...DEMO_PERSON_PROFILE,
       ownerAccountId: personAccount.accountId,
-      addedByShadchanId: null,
+      addedByShadchanId: shadchanAccount.accountId,
     });
 
     personAccount.profileId = DEMO_PERSON_PROFILE.profileId;
@@ -153,5 +156,28 @@ export class DemoSeedService implements OnModuleInit {
         notes: 'נשלח דרך "שלח לשדכן".',
       },
     ]);
+  }
+
+  private async ensureDemoPersonShadchanLink() {
+    const personAccount = await this.accountModel.findOne({ email: 'Person' });
+    const shadchanAccount = await this.accountModel.findOne({ email: 'Shadchan' });
+    if (!personAccount || !shadchanAccount) return;
+
+    const linkedIds = personAccount.linkedShadchanIds ?? [];
+    if (linkedIds.includes(shadchanAccount.accountId)) return;
+
+    personAccount.linkedShadchanIds = [...linkedIds, shadchanAccount.accountId];
+    await personAccount.save();
+  }
+
+  private async ensureDemoPersonUnderShadchanResponsibility() {
+    const personAccount = await this.accountModel.findOne({ email: 'Person' });
+    const shadchanAccount = await this.accountModel.findOne({ email: 'Shadchan' });
+    if (!personAccount || !shadchanAccount) return;
+
+    await this.profileModel.updateOne(
+      { profileId: DEMO_PERSON_PROFILE.profileId },
+      { $set: { addedByShadchanId: shadchanAccount.accountId } },
+    );
   }
 }

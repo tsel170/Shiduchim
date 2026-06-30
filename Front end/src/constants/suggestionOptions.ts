@@ -1,7 +1,14 @@
 import {
   SuggestionCheckStatus,
   SuggestionStage,
+  PersonSuggestionResponse,
 } from '../types/suggestion';
+
+export function getPersonSuggestionResponseLabel(
+  response: PersonSuggestionResponse
+): string {
+  return response === 'interested' ? 'מעוניין/ת' : 'לא מעוניין/ת';
+}
 
 const STAGE_LABELS: Record<SuggestionStage, string> = {
   new: 'הצעות חדשות',

@@ -37,11 +37,6 @@ export const EditAddedProfilePage: React.FC = () => {
         const loaded = await profilesApi.getById(profileId!);
         if (cancelled) return;
 
-        if (loaded.addedByShadchanId !== currentUser!.accountId) {
-          navigate('/added-profiles', { replace: true });
-          return;
-        }
-
         setProfile(loaded);
       } catch (err) {
         if (!cancelled) setError(getApiErrorMessage(err));

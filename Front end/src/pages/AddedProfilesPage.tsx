@@ -7,6 +7,7 @@ import { PageState } from '../components/common/PageState';
 import { useAuth } from '../contexts/AuthContext';
 import { getCityLabel } from '../constants/profileOptions';
 import { FullProfile } from '../types/profile';
+import { getProfileDisplayName, getProfileInitial } from '../utils/profileDisplay';
 import './AddedProfilesPage.css';
 import './Page.css';
 
@@ -37,7 +38,7 @@ export const AddedProfilesPage: React.FC = () => {
       setError(null);
       try {
         const loaded = await profilesApi.getAll({
-          addedByShadchanId: currentUser!.accountId,
+          managedByShadchanId: currentUser!.accountId,
         });
         if (!cancelled) setProfiles(loaded);
       } catch (err) {
@@ -79,10 +80,10 @@ export const AddedProfilesPage: React.FC = () => {
     <div className="page added-profiles-page">
       <header className="added-profiles-page__hero">
         <div className="added-profiles-page__hero-glow" aria-hidden="true" />
-        <h1 className="added-profiles-page__title">פרופילים שהוספתי</h1>
+        <h1 className="added-profiles-page__title">פרופילים באחריותי</h1>
         <p className="added-profiles-page__subtitle">
           <span className="added-profiles-page__count">{profiles.length}</span>
-          פרופילים בניהולך
+          פרופילים באחריותך
         </p>
       </header>
 
@@ -100,11 +101,12 @@ export const AddedProfilesPage: React.FC = () => {
         loading={loading}
         error={error}
         isEmpty={!loading && !error && profiles.length === 0}
-        emptyMessage="אין פרופילים בניהול. הוסף פרופילים דרך המערכת."
+        emptyMessage="אין פרופילים באחריותך כרגע."
       >
         <ul className="added-profiles-list">
           {profiles.map((profile, index) => {
             const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
+            const displayName = getProfileDisplayName(profile);
 
             return (
               <li
@@ -113,13 +115,11 @@ export const AddedProfilesPage: React.FC = () => {
                 style={{ '--card-accent': accent } as React.CSSProperties}
               >
                 <div className="added-profiles-card__badge" aria-hidden="true">
-                  {profile.firstName.charAt(0)}
+                  {getProfileInitial(profile)}
                 </div>
 
                 <div className="added-profiles-card__body">
-                  <h3 className="added-profiles-card__name">
-                    {profile.firstName} {profile.lastName}
-                  </h3>
+                  <h3 className="added-profiles-card__name">{displayName}</h3>
                   <p className="added-profiles-card__meta">
                     <span className="added-profiles-card__chip">גיל {profile.age}</span>
                     <span className="added-profiles-card__chip">
@@ -177,7 +177,7 @@ export const AddedProfilesPage: React.FC = () => {
         message={
           profileToDelete ? (
             <>
-              האם למחוק את הפרופיל של <strong>{profileToDelete.firstName}</strong>?
+              האם למחוק את הפרופיל של <strong>{getProfileDisplayName(profileToDelete)}</strong>?
               <br />
               פעולה זו אינה ניתנת לביטול.
             </>

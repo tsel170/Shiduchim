@@ -11,6 +11,7 @@ import {
 import { AccountResponseDto, UpdateAccountSettingsDto } from '../accounts/dto/account.dto';
 import { AddLinkedShadchanDto } from '../accounts/dto/update-my-account.dto';
 import { ShadchanSummaryDto } from '../accounts/dto/shadchan-summary.dto';
+import { PersonSummaryDto } from '../accounts/dto/person-summary.dto';
 import { UpdateMyAccountDto } from '../accounts/dto/update-my-account.dto';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -97,6 +98,15 @@ export class AuthController {
   @ApiOkResponse({ type: ShadchanSummaryDto, isArray: true })
   listLinkedShadchanim(@CurrentUser() user: AuthUserPayload) {
     return this.authService.listLinkedShadchanim(user.accountId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('me/linked-persons')
+  @ApiOperation({ summary: 'List persons whose profiles are managed by the current shadchan' })
+  @ApiOkResponse({ type: PersonSummaryDto, isArray: true })
+  listLinkedPersons(@CurrentUser() user: AuthUserPayload) {
+    return this.authService.listLinkedPersons(user.accountId, user.role);
   }
 
   @ApiBearerAuth()

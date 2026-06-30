@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -27,6 +28,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthUserPayload } from '../auth/types/auth-user.payload';
 import {
   CreateSuggestionDto,
+  PersonSuggestionResponseDto,
   SuggestionResponseDto,
   UpdateSuggestionDto,
 } from './dto/suggestion.dto';
@@ -47,7 +49,39 @@ export class SuggestionsController {
     @CurrentUser() user: AuthUserPayload,
     @Body() createSuggestionDto: CreateSuggestionDto,
   ) {
-    return this.suggestionsService.create(user.accountId, createSuggestionDto);
+    return this.suggestionsService.create(user, createSuggestionDto);
+  }
+
+  @Get('check/:profileId')
+  @ApiOperation({ summary: 'Check if a profile was suggested to the current person' })
+  @ApiParam({ name: 'profileId' })
+  getProfileSuggestionContext(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('profileId') profileId: string,
+  ) {
+    return this.suggestionsService.getProfileSuggestionContext(user.accountId, profileId);
+  }
+
+  @Patch('profile/:profileId/response')
+  @ApiOperation({ summary: 'Person responds to a shadchan suggestion (interested / not interested)' })
+  @ApiParam({ name: 'profileId' })
+  @ApiOkResponse({ type: SuggestionResponseDto })
+  respondToProfile(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('profileId') profileId: string,
+    @Body() body: PersonSuggestionResponseDto,
+  ) {
+    return this.suggestionsService.respondToProfile(user, profileId, body.response);
+  }
+
+  @Get('shadchan/responses')
+  @ApiOperation({ summary: 'Shadchan: person responses to sent suggestions' })
+  @ApiOkResponse({ type: SuggestionResponseDto, isArray: true })
+  findShadchanResponses(@CurrentUser() user: AuthUserPayload) {
+    if (user.role !== 'shadchan') {
+      throw new ForbiddenException('רק שדכן/ית יכול/ה לצפות בעדכונים');
+    }
+    return this.suggestionsService.findResponsesForShadchan(user.accountId);
   }
 
   @Get()

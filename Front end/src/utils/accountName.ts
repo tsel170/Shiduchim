@@ -39,6 +39,36 @@ export function getShadchanContactMeta(phone?: string | null): string | null {
   return trimmed ? `טלפון: ${trimmed}` : null;
 }
 
+export function getPersonDisplayName(person: {
+  displayName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+}): string {
+  if (person.displayName?.trim()) return person.displayName.trim();
+
+  const fullName = formatAccountName(person.firstName, person.lastName);
+  if (fullName) return fullName;
+
+  const email = person.email?.trim();
+  if (!email) return 'משודך/ת';
+
+  const localPart = email.includes('@') ? email.split('@')[0]?.trim() : email;
+  return localPart || 'משודך/ת';
+}
+
+export function getPersonInitial(person: {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+}): string {
+  const displayName = getPersonDisplayName(person);
+  if (displayName && displayName !== 'משודך/ת') {
+    return displayName.charAt(0).toUpperCase();
+  }
+  return 'מ';
+}
+
 export function getAccountInitial(firstName?: string | null, fallback = '?'): string {
   const trimmed = firstName?.trim();
   if (trimmed) return trimmed.charAt(0).toUpperCase();

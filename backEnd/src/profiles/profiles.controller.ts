@@ -80,13 +80,19 @@ export class ProfilesController {
   @Get()
   @ApiOperation({ summary: 'Get profiles' })
   @ApiQuery({ name: 'addedByShadchanId', required: false })
+  @ApiQuery({ name: 'managedByShadchanId', required: false })
   @ApiQuery({ name: 'ownerAccountId', required: false })
   @ApiOkResponse({ type: ProfileResponseDto, isArray: true })
   findAll(
     @Query('addedByShadchanId') addedByShadchanId?: string,
+    @Query('managedByShadchanId') managedByShadchanId?: string,
     @Query('ownerAccountId') ownerAccountId?: string,
   ) {
-    return this.profilesService.findAll({ addedByShadchanId, ownerAccountId });
+    return this.profilesService.findAll({
+      addedByShadchanId,
+      managedByShadchanId,
+      ownerAccountId,
+    });
   }
 
   @Get(':profileId')

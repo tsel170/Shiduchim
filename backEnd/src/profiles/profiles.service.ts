@@ -30,10 +30,15 @@ export class ProfilesService {
       throw new ConflictException('כבר קיים פרופיל אישי לחשבון זה');
     }
 
+    const account = await this.accountsService.findOne(user.accountId);
+    const linkedShadchanIds =
+      account.role === 'person' ? account.linkedShadchanIds ?? [] : [];
+
     const profile = await this.create({
       ...createProfileDto,
       ownerAccountId: user.accountId,
       addedByShadchanId: null,
+      shadchanIds: linkedShadchanIds,
     });
     await this.accountsService.linkProfile(user.accountId, profile.profileId);
     return profile;
@@ -67,7 +72,15 @@ export class ProfilesService {
     return toProfileResponse(profile);
   }
 
-  async findAll(filters?: { addedByShadchanId?: string; ownerAccountId?: string }) {
+  async findAll(filters?: {
+    addedByShadchanId?: string;
+    ownerAccountId?: string;
+    managedByShadchanId?: string;
+  }) {
+    if (filters?.managedByShadchanId) {
+      return this.findManagedByShadchan(filters.managedByShadchanId);
+    }
+
     const query: Record<string, string> = {};
     if (filters?.addedByShadchanId) {
       query.addedByShadchanId = filters.addedByShadchanId;
@@ -78,6 +91,33 @@ export class ProfilesService {
 
     const profiles = await this.profileModel.find(query).sort({ createdAt: -1 });
     return profiles.map((profile) => toProfileResponse(profile));
+  }
+
+  async findManagedByShadchan(shadchanId: string) {
+    const profiles = await this.profileModel
+      .find(await this.accountsService.getManagedProfilesFilter(shadchanId))
+      .sort({ createdAt: -1 });
+
+    const accountsByProfileId =
+      await this.accountsService.findPersonAccountsForManagedProfiles(profiles);
+
+    return profiles.map((profile) => {
+      const account = this.accountsService.getPersonAccountForManagedProfile(
+        profile,
+        accountsByProfileId,
+      );
+      const names = this.accountsService.resolveManagedPersonName(profile, account ?? null);
+      return {
+        ...toProfileResponse(profile),
+        firstName: names.firstName,
+        lastName: names.lastName,
+        displayName: names.displayName,
+      };
+    });
+  }
+
+  private async isManagedByShadchan(profile: ProfileDocument, shadchanId: string) {
+    return this.accountsService.isProfileManagedByShadchan(profile, shadchanId);
   }
 
   async search(filters: FilterConfiguration) {
@@ -119,7 +159,7 @@ export class ProfilesService {
     }
 
     if (user.role === 'shadchan') {
-      if (existing.addedByShadchanId !== user.accountId) {
+      if (!(await this.isManagedByShadchan(existing, user.accountId))) {
         throw new ForbiddenException('אין הרשאה לערוך פרופיל זה');
       }
     } else if (user.role === 'person') {
@@ -185,7 +225,7 @@ export class ProfilesService {
       throw new ForbiddenException('אין הרשאה למחוק פרופיל זה');
     }
 
-    if (existing.addedByShadchanId !== user.accountId) {
+    if (!(await this.isManagedByShadchan(existing, user.accountId))) {
       throw new ForbiddenException('אין הרשאה למחוק פרופיל זה');
     }
 

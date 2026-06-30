@@ -45,13 +45,29 @@ export const ShadchanSuggestionsPage: React.FC = () => {
         if (cancelled) return;
         setSuggestions(loadedSuggestions);
 
-        const profiles = await Promise.all(
-          loadedSuggestions.map((suggestion) => profilesApi.getById(suggestion.profileId))
+        const nextProfiles: Record<string, FullProfile> = {};
+        for (const suggestion of loadedSuggestions) {
+          if (suggestion.profile) {
+            nextProfiles[suggestion.profileId] = suggestion.profile;
+          }
+        }
+
+        const missingProfileIds = loadedSuggestions
+          .map((suggestion) => suggestion.profileId)
+          .filter((profileId) => !nextProfiles[profileId]);
+
+        const fetched = await Promise.allSettled(
+          missingProfileIds.map((profileId) => profilesApi.getById(profileId))
         );
+
+        fetched.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            nextProfiles[missingProfileIds[index]] = result.value;
+          }
+        });
+
         if (!cancelled) {
-          setProfilesById(
-            Object.fromEntries(profiles.map((profile) => [profile.id, profile]))
-          );
+          setProfilesById(nextProfiles);
         }
       } catch (err) {
         if (!cancelled) setError(getApiErrorMessage(err));
@@ -66,19 +82,14 @@ export const ShadchanSuggestionsPage: React.FC = () => {
     };
   }, [activeStage]);
 
-  const items = suggestions
-    .map((suggestion) => {
-      const profile = profilesById[suggestion.profileId];
-      return profile ? { suggestion, profile } : null;
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
-
   return (
     <div className="page added-profiles-page">
       <header className="page__header">
         <h1 className="page__title">הצעות מהשדכן</h1>
         <p className="page__subtitle">
-          {loading ? 'טוען הצעות...' : getSuggestionStageSubtitle(activeStage, items.length)}
+          {loading
+            ? 'טוען הצעות...'
+            : getSuggestionStageSubtitle(activeStage, suggestions.length)}
         </p>
       </header>
 
@@ -99,41 +110,48 @@ export const ShadchanSuggestionsPage: React.FC = () => {
       <PageState
         loading={loading}
         error={error}
-        isEmpty={!loading && !error && items.length === 0}
+        isEmpty={!loading && !error && suggestions.length === 0}
         emptyMessage={getSuggestionStageEmptyMessage(activeStage)}
       >
         <ul className="added-profiles-list">
-          {items.map(({ suggestion, profile }) => (
-            <li key={suggestion.suggestionId} className="added-profiles-card">
-              <div>
-                <h3 className="added-profiles-card__name">
-                  {profile.firstName} {profile.lastName}
-                </h3>
-                <p className="added-profiles-card__meta">
-                  גיל {profile.age}
-                  <span className="added-profiles-card__dot" aria-hidden="true">
-                    ·
-                  </span>
-                  {getCityLabel(profile.city)}
-                </p>
-                <p className="added-profiles-card__note">{suggestion.shadchanNote}</p>
-                {activeStage === 'in_check' && suggestion.checkStatus && (
-                  <span
-                    className={`suggestion-status-badge ${getSuggestionCheckStatusClassName(suggestion.checkStatus)}`}
-                  >
-                    {getSuggestionCheckStatusLabel(suggestion.checkStatus)}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="btn btn--secondary btn--sm"
-                onClick={() => navigate(`/profiles/${profile.id}`)}
-              >
-                צפה בפרופיל
-              </button>
-            </li>
-          ))}
+          {suggestions.map((suggestion) => {
+            const profile = profilesById[suggestion.profileId];
+            const displayName = profile
+              ? `${profile.firstName} ${profile.lastName}`.trim()
+              : 'פרופיל מוצע';
+
+            return (
+              <li key={suggestion.suggestionId} className="added-profiles-card">
+                <div>
+                  <h3 className="added-profiles-card__name">{displayName}</h3>
+                  {profile && (
+                    <p className="added-profiles-card__meta">
+                      גיל {profile.age}
+                      <span className="added-profiles-card__dot" aria-hidden="true">
+                        ·
+                      </span>
+                      {getCityLabel(profile.city)}
+                    </p>
+                  )}
+                  <p className="added-profiles-card__note">{suggestion.shadchanNote}</p>
+                  {activeStage === 'in_check' && suggestion.checkStatus && (
+                    <span
+                      className={`suggestion-status-badge ${getSuggestionCheckStatusClassName(suggestion.checkStatus)}`}
+                    >
+                      {getSuggestionCheckStatusLabel(suggestion.checkStatus)}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  onClick={() => navigate(`/profiles/${suggestion.profileId}`)}
+                >
+                  צפה בפרופיל
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </PageState>
     </div>

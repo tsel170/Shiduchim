@@ -3,6 +3,8 @@ const API_ERROR_MESSAGES_HE: Record<string, string> = {
     'נדרש פרופיל אישי כדי לשלוח לשדכן. צור/י את הפרופיל שלי ונסה שוב.',
   'Profile already in favorites': 'הפרופיל כבר נמצא במועדפים',
   'Invalid email or password': 'אימייל או סיסמה שגויים',
+  'לא נמצאה הצעה מהשדכן עבור פרופיל זה':
+    'לא נמצאה הצעה מהשדכן עבור פרופיל זה. פתח/י פרופיל מהרשימה "הצעות מהשדכן".',
 };
 
 export class ApiError extends Error {
@@ -49,6 +51,10 @@ export function getApiErrorMessage(error: unknown): string {
     if (error.isUnauthorized) return 'פג תוקף ההתחברות. התחבר מחדש.';
     if (error.isForbidden) return 'אין הרשאה לפעולה זו.';
     if (error.isNotFound) {
+      const message = error.message?.trim();
+      if (message && !/^cannot (get|post|put|patch|delete) /i.test(message)) {
+        return translateApiMessage(message);
+      }
       return 'לא נמצאה נקודת הקצה בשרת. ודא שהבקאנד רץ (npm run start:dev ב-backEnd) וש-REACT_APP_API_URL מצביע לפורט הנכון.';
     }
     if (error.isServerError) return 'שגיאת שרת. נסה שוב מאוחר יותר.';
