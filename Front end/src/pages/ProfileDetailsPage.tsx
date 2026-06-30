@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
+import { PersonSuggestionResponse, ShadchanSuggestion } from '../types/suggestion';
 import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
 import { getApiErrorMessage } from '../api/apiError';
+import { suggestionsApi } from '../api/suggestionsApi';
 import { requestsApi } from '../api/requestsApi';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
+import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
 import { isRatingsCompleteForProfile } from '../utils/rating';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import './Page.css';
@@ -25,6 +29,9 @@ interface ProfileDetailsPageProps {
   onRate: (category: ProfileRatingCategory, value: number) => void;
   onToggleFavorite: () => void | Promise<void>;
   onSiteSend: (note: string, recipientAccountId: string) => Promise<void>;
+  isSuggestedProfile?: boolean;
+  suggestion?: ShadchanSuggestion | null;
+  onSuggestionUpdate?: (suggestion: ShadchanSuggestion) => void;
 }
 
 export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
@@ -40,13 +47,16 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onRate,
   onToggleFavorite,
   onSiteSend,
+  isSuggestedProfile = false,
+  suggestion = null,
+  onSuggestionUpdate,
 }) => {
+  const navigate = useNavigate();
   const isShadchan = viewerRole === 'shadchan';
   const [shareTab, setShareTab] = useState<ShadchanShareTab | null>(null);
   const [shareSettings, setShareSettings] = useState<ProfileShareSettings>(() =>
     createDefaultProfileShareSettings()
   );
-  const [recipientAccountId, setRecipientAccountId] = useState('');
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
@@ -63,6 +73,24 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
     }
   };
 
+  const handleRespondToSuggestion = async (response: PersonSuggestionResponse) => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      const updated = await suggestionsApi.respondToProfile(profile.id, response);
+      onSuggestionUpdate?.(updated);
+      setActionMessage(
+        response === 'interested'
+          ? 'עדכנת את השדכן שאת/ה מעוניין/ת — ההצעה עברה לבדיקה'
+          : 'עדכנת את השדכן שאינך מעוניין/ת'
+      );
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const handleSendToShadchan = async () => {
     setIsSending(true);
     setActionMessage(null);
@@ -76,7 +104,7 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
     }
   };
 
-  const handleSiteSend = async (note: string) => {
+  const handleSiteSend = async (note: string, recipientAccountId: string) => {
     setIsSending(true);
     setActionMessage(null);
     try {
@@ -91,7 +119,8 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   };
 
   const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
-  const photosUnlocked = isShadchan || canFavorite;
+  const photosUnlocked = isShadchan || isSuggestedProfile || canFavorite;
+  const personResponse = suggestion?.personResponse ?? null;
 
   const openShare = (tab: ShadchanShareTab) => {
     setShareSettings(createDefaultProfileShareSettings());
@@ -140,9 +169,8 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
               settings={shareSettings}
               onSettingsChange={setShareSettings}
               onClose={() => setShareTab(null)}
-              recipientAccountId={recipientAccountId}
-              onRecipientAccountIdChange={setRecipientAccountId}
               onSiteSend={handleSiteSend}
+              onViewPersonProfile={(personProfileId) => navigate(`/profiles/${personProfileId}`)}
               isSending={isSending}
             />
           </aside>
@@ -191,21 +219,61 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
                   ? 'הסר ממועדפים'
                   : 'הוסף למועדפים'}
             </button>
-            {!canFavorite && (
+            {!canFavorite && !isSuggestedProfile && (
               <p className="profile-details-page__hint">
                 יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
               </p>
             )}
-            <button
-              type="button"
-              className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
-              onClick={handleSendToShadchan}
-              disabled={isSending}
-              aria-busy={isSending}
-            >
-              {isSending && <span className="btn__spinner" aria-hidden="true" />}
-              {isSending ? 'שולח...' : 'שלח לשדכן'}
-            </button>
+            {isSuggestedProfile ? (
+              <>
+                {suggestion?.shadchanNote && (
+                  <p className="profile-details-page__shadchan-note">
+                    הערת השדכן: {suggestion.shadchanNote}
+                  </p>
+                )}
+                <div className="profile-details-page__interest-actions">
+                  <button
+                    type="button"
+                    className={`btn btn--primary${isSending ? ' btn--loading' : ''}${
+                      personResponse === 'interested' ? ' btn--selected' : ''
+                    }`}
+                    onClick={() => handleRespondToSuggestion('interested')}
+                    disabled={isSending}
+                    aria-busy={isSending}
+                  >
+                    {isSending && <span className="btn__spinner" aria-hidden="true" />}
+                    מעוניין/ת
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn--secondary${isSending ? ' btn--loading' : ''}${
+                      personResponse === 'not_interested' ? ' btn--selected' : ''
+                    }`}
+                    onClick={() => handleRespondToSuggestion('not_interested')}
+                    disabled={isSending}
+                    aria-busy={isSending}
+                  >
+                    לא מעוניין/ת
+                  </button>
+                </div>
+                {personResponse && (
+                  <p className="profile-details-page__hint profile-details-page__hint--success">
+                    עדכון שנשלח לשדכן: {getPersonSuggestionResponseLabel(personResponse)}
+                  </p>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
+                onClick={handleSendToShadchan}
+                disabled={isSending}
+                aria-busy={isSending}
+              >
+                {isSending && <span className="btn__spinner" aria-hidden="true" />}
+                {isSending ? 'שולח...' : 'שלח לשדכן'}
+              </button>
+            )}
           </>
         )}
         {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}

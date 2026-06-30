@@ -40,6 +40,7 @@ import {
 import { isFilterKeyAtDefault, normalizeFilterConfiguration } from './utils/filters';
 import { isDisplayPreferencesAtDefault, normalizeDisplayPreferences } from './utils/profileHelpers';
 import { FavoriteSortKey, isRatingsCompleteStrict } from './utils/rating';
+import { ShadchanSuggestion } from './types/suggestion';
 import { buildPersonCreateRequestBody } from './utils/profileValidation';
 import { PageState } from './components/common/PageState';
 
@@ -531,6 +532,8 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSuggestedProfile, setIsSuggestedProfile] = useState(false);
+  const [suggestion, setSuggestion] = useState<ShadchanSuggestion | null>(null);
 
   useEffect(() => {
     if (!profileId) return;
@@ -554,6 +557,33 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       cancelled = true;
     };
   }, [profileId]);
+
+  useEffect(() => {
+    if (viewerRole !== 'person' || !profileId) {
+      setIsSuggestedProfile(false);
+      setSuggestion(null);
+      return;
+    }
+
+    let cancelled = false;
+    suggestionsApi
+      .getProfileContext(profileId)
+      .then((result) => {
+        if (cancelled) return;
+        setIsSuggestedProfile(result.suggested);
+        setSuggestion(result.suggested ? result.suggestion ?? null : null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsSuggestedProfile(false);
+          setSuggestion(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewerRole, profileId]);
 
   if (!profileId) {
     return <Navigate to="/browse" replace />;
@@ -587,9 +617,12 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       onBack={() => navigate(-1)}
       onRate={(category, value) => onRate(profile.id, category, value)}
       onToggleFavorite={() => onToggleFavorite(profile.id)}
+      isSuggestedProfile={isSuggestedProfile}
+      suggestion={suggestion}
+      onSuggestionUpdate={setSuggestion}
       onSiteSend={async (note, recipientAccountId) => {
         if (!recipientAccountId.trim()) {
-          throw new Error('יש להזין מזהה חשבון משודך/ת');
+          throw new Error('יש לבחור משודך/ת מהרשימה');
         }
         await suggestionsApi.create({
           ownerAccountId: recipientAccountId.trim(),

@@ -13,6 +13,8 @@ export const SUGGESTION_CHECK_STATUSES = [
   'denied',
 ] as const;
 
+export const PERSON_SUGGESTION_RESPONSES = ['interested', 'not_interested'] as const;
+
 @Schema({ collection: 'suggestions', versionKey: false })
 export class Suggestion {
   @Prop({ required: true, unique: true, index: true })
@@ -38,6 +40,12 @@ export class Suggestion {
 
   @Prop({ type: String, enum: SUGGESTION_CHECK_STATUSES })
   checkStatus?: string;
+
+  @Prop({ type: String, default: null })
+  personResponse: string | null;
+
+  @Prop({ type: Date, default: null })
+  personRespondedAt: Date | null;
 }
 
 export const SuggestionSchema = SchemaFactory.createForClass(Suggestion);

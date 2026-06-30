@@ -54,6 +54,9 @@ export interface Profile {
   photos: string[];
   ownerAccountId?: string | null;
   addedByShadchanId?: string | null;
+  shadchanIds?: string[];
+  /** שם תצוגה מחושב (פרופיל → חשבון) */
+  displayName?: string;
 }
 
 /** Backward compatible alias */

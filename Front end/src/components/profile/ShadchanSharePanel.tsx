@@ -1,5 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { authApi } from '../../api/authApi';
+import { getApiErrorMessage } from '../../api/apiError';
 import { saveSharePrefixes } from '../../constants/profileShareOptions';
+import { PersonSummary } from '../../types/account';
 import { FullProfile } from '../../types/profile';
 import {
   ProfileShareSettings,
@@ -14,6 +17,11 @@ import {
   downloadProfileSharePdf,
   shareProfilePdf,
 } from '../../utils/profileShare';
+import {
+  getPersonDisplayName,
+  getPersonInitial,
+  getShadchanContactMeta,
+} from '../../utils/accountName';
 import { ProfileShareFieldsPanel } from './ProfileShareFieldsPanel';
 import './ShadchanSharePanel.css';
 
@@ -25,9 +33,8 @@ interface ShadchanSharePanelProps {
   settings: ProfileShareSettings;
   onSettingsChange: (next: ProfileShareSettings) => void;
   onClose: () => void;
-  recipientAccountId?: string;
-  onRecipientAccountIdChange?: (value: string) => void;
-  onSiteSend?: (note: string) => Promise<void>;
+  onSiteSend?: (note: string, recipientAccountId: string) => Promise<void>;
+  onViewPersonProfile?: (profileId: string) => void;
   isSending?: boolean;
 }
 
@@ -46,17 +53,50 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
   settings,
   onSettingsChange,
   onClose,
-  recipientAccountId = '',
-  onRecipientAccountIdChange,
   onSiteSend,
+  onViewPersonProfile,
   isSending = false,
 }) => {
   const isExport = variant === 'export';
   const [activeTab, setActiveTab] = useState<ShadchanShareTab>(isExport ? 'other' : initialTab);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [prefixSaved, setPrefixSaved] = useState(false);
+  const [linkedPersons, setLinkedPersons] = useState<PersonSummary[]>([]);
+  const [personsLoading, setPersonsLoading] = useState(false);
+  const [personsError, setPersonsError] = useState<string | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<PersonSummary | null>(null);
 
   const segments = useMemo(() => buildShareSegments(profile, settings), [profile, settings]);
+
+  useEffect(() => {
+    if (isExport || activeTab !== 'site') return;
+
+    let cancelled = false;
+    setPersonsLoading(true);
+    setPersonsError(null);
+
+    authApi
+      .getLinkedPersons()
+      .then((persons) => {
+        if (!cancelled) setLinkedPersons(persons);
+      })
+      .catch((error) => {
+        if (!cancelled) setPersonsError(getApiErrorMessage(error));
+      })
+      .finally(() => {
+        if (!cancelled) setPersonsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, isExport]);
+
+  useEffect(() => {
+    if (activeTab !== 'site') {
+      setSelectedPerson(null);
+    }
+  }, [activeTab]);
 
   const patchSettings = (patch: Partial<ProfileShareSettings>) => {
     onSettingsChange({ ...settings, ...patch });
@@ -68,11 +108,19 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
     setPrefixSaved(true);
   };
 
+  const isSiteMode = !isExport && activeTab === 'site';
+
   const handleSiteSend = async () => {
-    if (!onSiteSend) return;
-    const note = [settings.topPrefix, settings.bottomPrefix].filter(Boolean).join('\n\n').trim()
-      || `המלצה: ${profile.firstName} ${profile.lastName}`;
-    await onSiteSend(note);
+    if (!onSiteSend || !selectedPerson?.accountId) return;
+    const note = `המלצה: ${profile.firstName} ${profile.lastName}`.trim();
+    await onSiteSend(note, selectedPerson.accountId);
+    setSelectedPerson(null);
+  };
+
+  const handleViewPersonProfile = () => {
+    if (!selectedPerson?.profileId || !onViewPersonProfile) return;
+    onViewPersonProfile(selectedPerson.profileId);
+    onClose();
   };
 
   const runOtherMethod = async (method: ShadchanShareMethod) => {
@@ -127,6 +175,104 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
     return segment.type === 'image' || previous.type === 'image' ? 1 : 0;
   };
 
+  const renderSiteRecipientSection = () => (
+    <div className="shadchan-share-panel__site-send">
+      {!selectedPerson ? (
+        <>
+          <h3 className="shadchan-share-panel__section-title">בחר/י משודך/ת באחריותך</h3>
+          {personsLoading && (
+            <p className="shadchan-share-panel__status">טוען רשימת משודכים...</p>
+          )}
+          {personsError && (
+            <p className="shadchan-share-panel__status shadchan-share-panel__status--error">
+              {personsError}
+            </p>
+          )}
+          {!personsLoading && !personsError && linkedPersons.length === 0 && (
+            <p className="shadchan-share-panel__status">
+              אין משודכים באחריותך. הוסף/י פרופיל משודך/ת תחת &quot;פרופילים באחריותי&quot;.
+            </p>
+          )}
+          {!personsLoading && linkedPersons.length > 0 && (
+            <ul className="shadchan-share-panel__recipient-list" role="listbox" aria-label="משודכים באחריותך">
+              {linkedPersons.map((person) => {
+                const displayName = getPersonDisplayName(person);
+                const contactMeta =
+                  getShadchanContactMeta(person.phone) ??
+                  (!person.accountId ? 'אין חשבון באפליקציה' : null);
+                const listKey = person.accountId ?? person.profileId ?? displayName;
+
+                return (
+                  <li key={listKey}>
+                    <button
+                      type="button"
+                      role="option"
+                      className="shadchan-share-panel__recipient-option"
+                      onClick={() => setSelectedPerson(person)}
+                      disabled={isSending}
+                    >
+                      <span className="shadchan-share-panel__recipient-avatar" aria-hidden="true">
+                        {getPersonInitial(person)}
+                      </span>
+                      <span className="shadchan-share-panel__recipient-body">
+                        <strong className="shadchan-share-panel__recipient-name">{displayName}</strong>
+                        {contactMeta && (
+                          <span className="shadchan-share-panel__recipient-meta">{contactMeta}</span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm shadchan-share-panel__back"
+            onClick={() => setSelectedPerson(null)}
+            disabled={isSending}
+          >
+            חזרה לרשימה
+          </button>
+          <p className="shadchan-share-panel__selected-name">
+            נבחר/ה: <strong>{getPersonDisplayName(selectedPerson)}</strong>
+          </p>
+          <div className="shadchan-share-panel__selected-actions">
+            {selectedPerson.profileId && onViewPersonProfile && (
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={handleViewPersonProfile}
+                disabled={isSending}
+              >
+                צפה בפרופיל שלהם
+              </button>
+            )}
+            <button
+              type="button"
+              className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
+              onClick={handleSiteSend}
+              disabled={isSending || !onSiteSend || !selectedPerson.accountId}
+              aria-busy={isSending}
+            >
+              {isSending && <span className="btn__spinner" aria-hidden="true" />}
+              {isSending ? 'שולח...' : 'שלח להם את הפרופיל'}
+            </button>
+          </div>
+          {!selectedPerson.accountId && (
+            <p className="shadchan-share-panel__status">
+              למשודך/ת זה אין חשבון באפליקציה — ניתן לצפות בפרופיל, אך שליחה דרך האתר דורשת
+              שהמשודך/ת יירשם/תירשם ויקשר/תקשר אותך.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <section className="shadchan-share-panel">
       <header className="shadchan-share-panel__header">
@@ -137,7 +283,9 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
           <p className="shadchan-share-panel__subtitle">
             {isExport
               ? 'בחר שיטת שמירה, התאם שדות וצפה בתצוגה מקדימה'
-              : 'בחר שיטת שליחה, התאם שדות וצפה בתצוגה מקדימה'}
+              : isSiteMode
+                ? 'בחר/י למי לשלוח את הפרופיל'
+                : 'בחר שיטת שליחה, התאם שדות וצפה בתצוגה מקדימה'}
           </p>
         </div>
         <button type="button" className="shadchan-share-panel__close" onClick={onClose} aria-label="סגור">
@@ -168,6 +316,11 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
         </div>
       )}
 
+      {isSiteMode ? (
+        <div className="shadchan-share-panel__body shadchan-share-panel__body--site-only">
+          {renderSiteRecipientSection()}
+        </div>
+      ) : (
       <div className="shadchan-share-panel__body">
         <div className="shadchan-share-panel__config">
           <ProfileShareFieldsPanel
@@ -250,31 +403,7 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
           </div>
 
           <div className="shadchan-share-panel__actions">
-            {!isExport && activeTab === 'site' ? (
-              <>
-                <label className="shadchan-share-panel__section-title" htmlFor="recipient-account-id">
-                  מזהה חשבון משודך/ת
-                </label>
-                <input
-                  id="recipient-account-id"
-                  type="text"
-                  className="shadchan-share-panel__spacing-input"
-                  value={recipientAccountId}
-                  onChange={(event) => onRecipientAccountIdChange?.(event.target.value)}
-                  placeholder="הזן accountId של המשודך/ת"
-                />
-                <button
-                  type="button"
-                  className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
-                  onClick={handleSiteSend}
-                  disabled={isSending || !recipientAccountId.trim() || !onSiteSend}
-                  aria-busy={isSending}
-                >
-                  {isSending && <span className="btn__spinner" aria-hidden="true" />}
-                  {isSending ? 'שולח...' : 'שלח דרך האתר'}
-                </button>
-              </>
-            ) : (
+            {isExport || activeTab === 'other' ? (
               <div className="shadchan-share-panel__method-grid">
                 {OTHER_METHODS.map((method) => (
                   <button
@@ -287,12 +416,13 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
                   </button>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
           {statusMessage && <p className="shadchan-share-panel__status">{statusMessage}</p>}
         </div>
       </div>
+      )}
     </section>
   );
 };

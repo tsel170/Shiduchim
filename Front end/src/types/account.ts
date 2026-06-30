@@ -15,6 +15,16 @@ export interface ShadchanSummary {
   phone: string | null;
 }
 
+export interface PersonSummary {
+  accountId: string | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  profileId: string | null;
+  displayName: string;
+}
+
 /** Account returned from API (no password). */
 export interface AuthUser {
   accountId: string;

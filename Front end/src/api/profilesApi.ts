@@ -1,6 +1,27 @@
 import { FilterConfiguration, FullProfile } from '../types/profile';
 import { apiRequest } from './apiClient';
 
+type ProfileInput = Partial<FullProfile> & {
+  profileId?: string;
+  display_name?: string;
+};
+
+function normalizeProfile(raw: ProfileInput): FullProfile {
+  const firstName = String(raw.firstName ?? '').trim();
+  const lastName = String(raw.lastName ?? '').trim();
+  const profileName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  const displayName =
+    String(raw.displayName ?? raw.display_name ?? '').trim() || profileName;
+
+  return {
+    ...(raw as FullProfile),
+    id: String(raw.id ?? raw.profileId ?? ''),
+    firstName,
+    lastName,
+    displayName,
+  };
+}
+
 export const profilesApi = {
   getOptions() {
     return apiRequest<{
@@ -17,20 +38,31 @@ export const profilesApi = {
     });
   },
 
-  getAll(params?: { addedByShadchanId?: string; ownerAccountId?: string }) {
+  getAll(params?: {
+    addedByShadchanId?: string;
+    managedByShadchanId?: string;
+    ownerAccountId?: string;
+  }) {
     const query = new URLSearchParams();
     if (params?.addedByShadchanId) {
       query.set('addedByShadchanId', params.addedByShadchanId);
+    }
+    if (params?.managedByShadchanId) {
+      query.set('managedByShadchanId', params.managedByShadchanId);
     }
     if (params?.ownerAccountId) {
       query.set('ownerAccountId', params.ownerAccountId);
     }
     const suffix = query.toString() ? `?${query.toString()}` : '';
-    return apiRequest<FullProfile[]>(`/profiles${suffix}`);
+    return apiRequest<ProfileInput[]>(`/profiles${suffix}`).then((list) =>
+      list.map((item) => normalizeProfile(item))
+    );
   },
 
   getById(profileId: string) {
-    return apiRequest<FullProfile>(`/profiles/${profileId}`);
+    return apiRequest<ProfileInput>(`/profiles/${profileId}`).then((item) =>
+      normalizeProfile(item)
+    );
   },
 
   create(profile: Omit<FullProfile, 'id'> & { addedByShadchanId?: string | null }) {
