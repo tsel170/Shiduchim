@@ -1,13 +1,19 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { profilesApi } from '../api/profilesApi';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { PageState } from '../components/common/PageState';
+import { AccountFilterTabs } from '../components/profile/AccountFilterTabs';
 import { useAuth } from '../contexts/AuthContext';
 import { getCityLabel } from '../constants/profileOptions';
 import { FullProfile } from '../types/profile';
 import { getProfileDisplayName, getProfileInitial } from '../utils/profileDisplay';
+import {
+  AccountFilter,
+  filterProfilesByAccount,
+  getAccountFilterEmptyMessage,
+} from '../utils/profileAccount';
 import './AddedProfilesPage.css';
 import './Page.css';
 
@@ -21,6 +27,7 @@ export const AddedProfilesPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileToDelete, setProfileToDelete] = useState<FullProfile | null>(null);
@@ -76,16 +83,30 @@ export const AddedProfilesPage: React.FC = () => {
     }
   }, [profileToDelete]);
 
+  const filteredProfiles = useMemo(
+    () => filterProfilesByAccount(profiles, accountFilter),
+    [profiles, accountFilter]
+  );
+
+  const emptyMessage = getAccountFilterEmptyMessage(
+    accountFilter,
+    'אין פרופילים באחריותך כרגע.'
+  );
+
   return (
     <div className="page added-profiles-page">
       <header className="added-profiles-page__hero">
         <div className="added-profiles-page__hero-glow" aria-hidden="true" />
         <h1 className="added-profiles-page__title">פרופילים באחריותי</h1>
         <p className="added-profiles-page__subtitle">
-          <span className="added-profiles-page__count">{profiles.length}</span>
-          פרופילים באחריותך
+          <span className="added-profiles-page__count">{filteredProfiles.length}</span>
+          {accountFilter === 'all'
+            ? 'פרופילים באחריותך'
+            : `מתוך ${profiles.length} פרופילים באחריותך`}
         </p>
       </header>
+
+      <AccountFilterTabs value={accountFilter} onChange={setAccountFilter} />
 
       {toast && (
         <div
@@ -100,11 +121,11 @@ export const AddedProfilesPage: React.FC = () => {
       <PageState
         loading={loading}
         error={error}
-        isEmpty={!loading && !error && profiles.length === 0}
-        emptyMessage="אין פרופילים באחריותך כרגע."
+        isEmpty={!loading && !error && filteredProfiles.length === 0}
+        emptyMessage={emptyMessage}
       >
         <ul className="added-profiles-list">
-          {profiles.map((profile, index) => {
+          {filteredProfiles.map((profile, index) => {
             const accent = CARD_ACCENTS[index % CARD_ACCENTS.length];
             const displayName = getProfileDisplayName(profile);
 
