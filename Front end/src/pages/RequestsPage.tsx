@@ -5,6 +5,7 @@ import { ApiRequest, requestsApi } from '../api/requestsApi';
 import { suggestionsApi, ApiSuggestion } from '../api/suggestionsApi';
 import { RequestProfilePreview } from '../components/requests/RequestProfilePreview';
 import { PageState } from '../components/common/PageState';
+import { SendButton } from '../components/common/SendButton';
 import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
 import './AddedProfilesPage.css';
 import './Page.css';
@@ -159,9 +160,10 @@ export const RequestsPage: React.FC = () => {
                   {request.notes && <p className="request-card__note">{request.notes}</p>}
 
                   <div className="request-card__actions">
-                    <button
-                      type="button"
-                      className="btn btn--primary btn--sm"
+                    <SendButton
+                      variant="site"
+                      size="sm"
+                      sent={isSent}
                       disabled={isSent || !senderProfile}
                       onClick={() => senderProfile && handleSendSenderProfile(request)}
                     >
@@ -170,7 +172,7 @@ export const RequestsPage: React.FC = () => {
                         : senderProfile
                           ? `שלח את פרופיל ${senderProfile.firstName}`
                           : 'אין פרופיל משודך/ת'}
-                    </button>
+                    </SendButton>
                   </div>
                 </div>
               </li>

@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
 import { PersonSuggestionResponse, ShadchanSuggestion } from '../types/suggestion';
+import { ManagementRequestProfileContext } from '../types/managementRequest';
 import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
 import { getApiErrorMessage } from '../api/apiError';
+import { managementRequestsApi } from '../api/managementRequestsApi';
 import { suggestionsApi } from '../api/suggestionsApi';
 import { requestsApi } from '../api/requestsApi';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
+import { FavoriteButton } from '../components/common/FavoriteButton';
+import { SendButton } from '../components/common/SendButton';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
+import { ManagementRequestForm } from '../components/profile/ManagementRequestForm';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
 import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
 import { isRatingsCompleteForProfile } from '../utils/rating';
+import { profileHasUserAccount } from '../utils/profileAccount';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import './Page.css';
 import './ProfileDetailsPage.css';
@@ -60,6 +66,30 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [managementOpen, setManagementOpen] = useState(false);
+  const [managementContext, setManagementContext] =
+    useState<ManagementRequestProfileContext | null>(null);
+
+  useEffect(() => {
+    if (!isShadchan || !profile.ownerAccountId) {
+      setManagementContext(null);
+      return;
+    }
+
+    let cancelled = false;
+    managementRequestsApi
+      .getProfileContext(profile.id)
+      .then((context) => {
+        if (!cancelled) setManagementContext(context);
+      })
+      .catch(() => {
+        if (!cancelled) setManagementContext(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isShadchan, profile.id, profile.ownerAccountId]);
 
   const handleToggleFavorite = async () => {
     setIsFavoriteLoading(true);
@@ -118,14 +148,51 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
     }
   };
 
-  const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
-  const photosUnlocked = isShadchan || isSuggestedProfile || canFavorite;
-  const personResponse = suggestion?.personResponse ?? null;
+  const handleSendManagementRequest = async (message: string) => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      await managementRequestsApi.create({
+        personProfileId: profile.id,
+        message,
+      });
+      const context = await managementRequestsApi.getProfileContext(profile.id);
+      setManagementContext(context);
+      setManagementOpen(false);
+      setActionMessage('בקשת הניהול נשלחה — המשודך/ת יוכל/ה לאשר או לדחות');
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const profileHasAccount = profileHasUserAccount(profile);
+  const canSendManagementRequest = managementContext
+    ? managementContext.canSend
+    : profileHasAccount;
+  const managementStatusMessage =
+    managementContext?.alreadyLinked
+      ? 'הפרופיל כבר באחריותך'
+      : managementContext?.reason && !managementContext.canSend
+        ? managementContext.reason
+        : null;
 
   const openShare = (tab: ShadchanShareTab) => {
+    setManagementOpen(false);
     setShareSettings(createDefaultProfileShareSettings());
     setShareTab(tab);
   };
+
+  const openManagement = () => {
+    setShareTab(null);
+    setManagementOpen((open) => !open);
+    setActionMessage(null);
+  };
+
+  const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
+  const photosUnlocked = isShadchan || isSuggestedProfile || canFavorite;
+  const personResponse = suggestion?.personResponse ?? null;
 
   return (
     <div className="page profile-details-page">
@@ -190,35 +257,37 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
 
       <div className="profile-details-page__actions">
         {isShadchan ? (
-          <>
-            <button type="button" className="btn btn--primary" onClick={() => openShare('site')}>
+          <div className="profile-details-page__shadchan-actions">
+            <SendButton variant="site" onClick={() => openShare('site')}>
               שלח דרך האתר
-            </button>
-            <button type="button" className="btn btn--secondary" onClick={() => openShare('other')}>
+            </SendButton>
+            <SendButton variant="alt" onClick={() => openShare('other')}>
               שלח בשיטות אחרות
-            </button>
-          </>
+            </SendButton>
+            {profileHasAccount && (
+              <SendButton
+                variant="management"
+                selected={managementOpen}
+                onClick={openManagement}
+                disabled={!canSendManagementRequest}
+                title={!canSendManagementRequest ? managementStatusMessage ?? undefined : undefined}
+              >
+                שלח בקשת ניהול
+              </SendButton>
+            )}
+            {!canSendManagementRequest && managementStatusMessage && (
+              <p className="profile-details-page__hint">{managementStatusMessage}</p>
+            )}
+          </div>
         ) : (
           <>
-            <button
-              type="button"
-              className={`btn btn--favorite${isFavorite ? ' btn--favorite--saved' : ''}${
-                isFavoriteLoading ? ' btn--loading' : ''
-              }`}
+            <FavoriteButton
+              isFavorite={isFavorite}
+              isLoading={isFavoriteLoading}
               onClick={handleToggleFavorite}
-              disabled={!canFavorite || isFavoriteLoading}
-              aria-busy={isFavoriteLoading}
+              disabled={!canFavorite}
               title={!canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''}
-            >
-              {isFavoriteLoading && <span className="btn__spinner" aria-hidden="true" />}
-              {isFavoriteLoading
-                ? isFavorite
-                  ? 'מסיר...'
-                  : 'מוסיף...'
-                : isFavorite
-                  ? 'הסר ממועדפים'
-                  : 'הוסף למועדפים'}
-            </button>
+            />
             {!canFavorite && !isSuggestedProfile && (
               <p className="profile-details-page__hint">
                 יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
@@ -232,29 +301,22 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
                   </p>
                 )}
                 <div className="profile-details-page__interest-actions">
-                  <button
-                    type="button"
-                    className={`btn btn--primary${isSending ? ' btn--loading' : ''}${
-                      personResponse === 'interested' ? ' btn--selected' : ''
-                    }`}
+                  <SendButton
+                    variant="interested"
+                    selected={personResponse === 'interested'}
+                    isLoading={isSending}
                     onClick={() => handleRespondToSuggestion('interested')}
-                    disabled={isSending}
-                    aria-busy={isSending}
                   >
-                    {isSending && <span className="btn__spinner" aria-hidden="true" />}
                     מעוניין/ת
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn btn--secondary${isSending ? ' btn--loading' : ''}${
-                      personResponse === 'not_interested' ? ' btn--selected' : ''
-                    }`}
+                  </SendButton>
+                  <SendButton
+                    variant="decline"
+                    selected={personResponse === 'not_interested'}
+                    isLoading={isSending}
                     onClick={() => handleRespondToSuggestion('not_interested')}
-                    disabled={isSending}
-                    aria-busy={isSending}
                   >
                     לא מעוניין/ת
-                  </button>
+                  </SendButton>
                 </div>
                 {personResponse && (
                   <p className="profile-details-page__hint profile-details-page__hint--success">
@@ -263,20 +325,26 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
                 )}
               </>
             ) : (
-              <button
-                type="button"
-                className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
+              <SendButton
+                variant="shadchan"
+                isLoading={isSending}
                 onClick={handleSendToShadchan}
-                disabled={isSending}
-                aria-busy={isSending}
               >
-                {isSending && <span className="btn__spinner" aria-hidden="true" />}
-                {isSending ? 'שולח...' : 'שלח לשדכן'}
-              </button>
+                שלח לשדכן
+              </SendButton>
             )}
           </>
         )}
         {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}
+
+        {isShadchan && managementOpen && canSendManagementRequest && (
+          <ManagementRequestForm
+            profile={profile}
+            onSend={handleSendManagementRequest}
+            onClose={() => setManagementOpen(false)}
+            isSending={isSending}
+          />
+        )}
       </div>
     </div>
   );

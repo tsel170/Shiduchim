@@ -5,6 +5,10 @@ const API_ERROR_MESSAGES_HE: Record<string, string> = {
   'Invalid email or password': 'אימייל או סיסמה שגויים',
   'לא נמצאה הצעה מהשדכן עבור פרופיל זה':
     'לא נמצאה הצעה מהשדכן עבור פרופיל זה. פתח/י פרופיל מהרשימה "הצעות מהשדכן".',
+  'request entity too large':
+    'הבקשה גדולה מדי (בדרך כלל בגלל תמונות). נסה/י תמונה קטנה יותר או פחות תמונות.',
+  'Payload Too Large':
+    'הבקשה גדולה מדי (בדרך כלל בגלל תמונות). נסה/י תמונה קטנה יותר או פחות תמונות.',
 };
 
 export class ApiError extends Error {
@@ -50,6 +54,10 @@ export function getApiErrorMessage(error: unknown): string {
     if (error.isNetworkError) return 'שגיאת רשת. בדוק את החיבור לשרת.';
     if (error.isUnauthorized) return 'פג תוקף ההתחברות. התחבר מחדש.';
     if (error.isForbidden) return 'אין הרשאה לפעולה זו.';
+    if (error.status === 413) {
+      return translateApiMessage(error.message) ||
+        'הבקשה גדולה מדי (בדרך כלל בגלל תמונות). נסה/י תמונה קטנה יותר או פחות תמונות.';
+    }
     if (error.isNotFound) {
       const message = error.message?.trim();
       if (message && !/^cannot (get|post|put|patch|delete) /i.test(message)) {

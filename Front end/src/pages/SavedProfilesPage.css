@@ -403,23 +403,8 @@
   padding-top: var(--space-xs);
 }
 
-.favorites-item__send-btn {
-  width: 100%;
-  background: linear-gradient(135deg, var(--fav-accent, #db2777), #7c3aed);
-  border: none;
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--fav-accent, #db2777) 35%, transparent);
-}
-
-.favorites-item__send-btn:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
-.favorites-item__send-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  box-shadow: none;
+.favorites-item__send-btn.send-btn--shadchan {
+  box-shadow: 0 6px 16px rgba(219, 39, 119, 0.26);
 }
 
 .favorites-item__cancel-btn {

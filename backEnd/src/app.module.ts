@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import databaseConfig from './config/database.config';
 import { FavoritesModule } from './favorites/favorites.module';
+import { ManagementRequestsModule } from './management-requests/management-requests.module';
 import { MatchRequestsModule } from './match-requests/match-requests.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SuggestionsModule } from './suggestions/suggestions.module';
@@ -30,6 +31,7 @@ import { DemoModule } from './demo/demo.module';
     FavoritesModule,
     SuggestionsModule,
     MatchRequestsModule,
+    ManagementRequestsModule,
     DemoModule,
   ],
   providers: [
