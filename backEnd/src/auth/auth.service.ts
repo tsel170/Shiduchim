@@ -19,7 +19,7 @@ export class AuthService {
       loginDto.password,
     );
     if (!account) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('אימייל או סיסמה שגויים');
     }
 
     return this.buildSession(account);

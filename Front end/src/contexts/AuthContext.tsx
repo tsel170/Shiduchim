@@ -154,9 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true };
       } catch (error) {
         const message = getApiErrorMessage(error);
-        if (message.toLowerCase().includes('already registered')) {
-          return { success: false, message: 'כתובת האימייל כבר רשומה במערכת.' };
-        }
         return { success: false, message };
       }
     },
@@ -186,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('יש להשתמש ב-useAuth בתוך AuthProvider');
   }
   return context;
 }

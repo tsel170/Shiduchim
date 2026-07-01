@@ -9,49 +9,49 @@ import {
 
 export class CreateSuggestionDto {
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'נדרש מזהה חשבון' })
   ownerAccountId: string;
 
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'נדרש מזהה פרופיל' })
   profileId: string;
 
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'נא להזין הערת שדכן' })
   shadchanNote: string;
 
   @ApiPropertyOptional({ enum: SUGGESTION_STAGES, default: 'new' })
   @IsOptional()
-  @IsIn(SUGGESTION_STAGES)
+  @IsIn(SUGGESTION_STAGES, { message: 'שלב הצעה לא תקין' })
   stage?: (typeof SUGGESTION_STAGES)[number];
 
   @ApiPropertyOptional({ enum: SUGGESTION_CHECK_STATUSES })
   @IsOptional()
-  @IsIn(SUGGESTION_CHECK_STATUSES)
+  @IsIn(SUGGESTION_CHECK_STATUSES, { message: 'סטטוס בדיקה לא תקין' })
   checkStatus?: (typeof SUGGESTION_CHECK_STATUSES)[number];
 }
 
 export class UpdateSuggestionDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  @MaxLength(4000)
+  @IsString({ message: 'הערת שדכן: ערך לא תקין' })
+  @MaxLength(4000, { message: 'הערת השדכן ארוכה מדי' })
   shadchanNote?: string;
 
   @ApiPropertyOptional({ enum: SUGGESTION_STAGES })
   @IsOptional()
-  @IsIn(SUGGESTION_STAGES)
+  @IsIn(SUGGESTION_STAGES, { message: 'שלב הצעה לא תקין' })
   stage?: (typeof SUGGESTION_STAGES)[number];
 
   @ApiPropertyOptional({ enum: SUGGESTION_CHECK_STATUSES })
   @IsOptional()
-  @IsIn(SUGGESTION_CHECK_STATUSES)
+  @IsIn(SUGGESTION_CHECK_STATUSES, { message: 'סטטוס בדיקה לא תקין' })
   checkStatus?: (typeof SUGGESTION_CHECK_STATUSES)[number];
 }
 
 export class PersonSuggestionResponseDto {
   @ApiProperty({ enum: PERSON_SUGGESTION_RESPONSES })
-  @IsIn(PERSON_SUGGESTION_RESPONSES)
+  @IsIn(PERSON_SUGGESTION_RESPONSES, { message: 'תגובה לא תקינה' })
   response: (typeof PERSON_SUGGESTION_RESPONSES)[number];
 }
 

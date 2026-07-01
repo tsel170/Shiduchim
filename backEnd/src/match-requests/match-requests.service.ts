@@ -90,7 +90,7 @@ export class MatchRequestsService {
       shadchanId,
     });
     if (!matchRequest) {
-      throw new NotFoundException(`Request "${requestId}" not found`);
+      throw new NotFoundException(`הבקשה "${requestId}" לא נמצאה`);
     }
     return this.toEnrichedResponse(matchRequest);
   }
@@ -106,7 +106,7 @@ export class MatchRequestsService {
       { new: true, runValidators: true },
     );
     if (!matchRequest) {
-      throw new NotFoundException(`Request "${requestId}" not found`);
+      throw new NotFoundException(`הבקשה "${requestId}" לא נמצאה`);
     }
     return this.toEnrichedResponse(matchRequest);
   }
@@ -114,7 +114,7 @@ export class MatchRequestsService {
   async removeForUser(user: AuthUserPayload, requestId: string) {
     const matchRequest = await this.matchRequestModel.findOne({ requestId });
     if (!matchRequest) {
-      throw new NotFoundException(`Request "${requestId}" not found`);
+      throw new NotFoundException(`הבקשה "${requestId}" לא נמצאה`);
     }
 
     const isShadchanOwner =
@@ -132,7 +132,7 @@ export class MatchRequestsService {
   async remove(requestId: string, shadchanId: string) {
     const result = await this.matchRequestModel.deleteOne({ requestId, shadchanId });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Request "${requestId}" not found`);
+      throw new NotFoundException(`הבקשה "${requestId}" לא נמצאה`);
     }
   }
 

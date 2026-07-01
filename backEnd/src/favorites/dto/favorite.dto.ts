@@ -11,43 +11,43 @@ import {
 
 export class ProfileRatingDto {
   @ApiProperty({ minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
+  @IsInt({ message: 'דירוג אישיות: חייב להיות מספר שלם' })
+  @Min(1, { message: 'דירוג אישיות: מינימום 1' })
+  @Max(5, { message: 'דירוג אישיות: מקסימום 5' })
   personality: number;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 5 })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
+  @IsInt({ message: 'דירוג תחביבים: חייב להיות מספר שלם' })
+  @Min(1, { message: 'דירוג תחביבים: מינימום 1' })
+  @Max(5, { message: 'דירוג תחביבים: מקסימום 5' })
   hobbies?: number;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 5 })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
+  @IsInt({ message: 'דירוג חזון: חייב להיות מספר שלם' })
+  @Min(1, { message: 'דירוג חזון: מינימום 1' })
+  @Max(5, { message: 'דירוג חזון: מקסימום 5' })
   familyVision?: number;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 5 })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
+  @IsInt({ message: 'דירוג מחפש/ת: חייב להיות מספר שלם' })
+  @Min(1, { message: 'דירוג מחפש/ת: מינימום 1' })
+  @Max(5, { message: 'דירוג מחפש/ת: מקסימום 5' })
   lookingFor?: number;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 5 })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
+  @IsInt({ message: 'דירוג מראה: חייב להיות מספר שלם' })
+  @Min(1, { message: 'דירוג מראה: מינימום 1' })
+  @Max(5, { message: 'דירוג מראה: מקסימום 5' })
   look?: number;
 }
 
 export class CreateFavoriteDto {
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'נדרש מזהה פרופיל' })
   profileId: string;
 
   @ApiProperty({ type: ProfileRatingDto })

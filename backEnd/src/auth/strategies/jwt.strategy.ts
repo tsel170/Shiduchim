@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   validate(payload: JwtPayload): AuthUserPayload {
     if (!payload?.sub) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('נדרשת התחברות תקינה');
     }
     return {
       accountId: payload.sub,

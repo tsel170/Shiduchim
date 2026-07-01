@@ -11,8 +11,8 @@ import {
 
 export class SignUpDto {
   @ApiProperty({ enum: ['person', 'shadchan'], example: 'person' })
-  @IsString()
-  @IsIn(['person', 'shadchan'])
+  @IsString({ message: 'נא לבחור תפקיד' })
+  @IsIn(['person', 'shadchan'], { message: 'תפקיד לא תקין' })
   role: 'person' | 'shadchan';
 
   @ApiProperty({ example: 'ישראל' })
@@ -28,13 +28,13 @@ export class SignUpDto {
   lastName?: string;
 
   @ApiProperty({ example: 'user@example.com' })
-  @IsEmail()
+  @IsEmail({}, { message: 'כתובת אימייל לא תקינה' })
   email: string;
 
   @ApiProperty({ example: 'securePassword123', minLength: 6 })
-  @IsString()
-  @MinLength(6)
-  @MaxLength(128)
+  @IsString({ message: 'נא להזין סיסמה' })
+  @MinLength(6, { message: 'הסיסמה חייבת להכיל לפחות 6 תווים' })
+  @MaxLength(128, { message: 'הסיסמה ארוכה מדי' })
   password: string;
 
   @ApiProperty({ example: '050-1234567' })

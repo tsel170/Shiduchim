@@ -13,6 +13,14 @@ const FIELD_LABELS: Record<string, string> = {
   email: 'אימייל',
   password: 'סיסמה',
   role: 'תפקיד',
+  targetProfileId: 'פרופיל יעד',
+  personProfileId: 'פרופיל משודך',
+  senderProfileId: 'פרופיל שולח',
+  profileId: 'פרופיל',
+  message: 'הודעה',
+  notes: 'הערות',
+  response: 'תגובה',
+  shadchanId: 'שדכן',
 };
 
 function flattenValidationErrors(
@@ -47,11 +55,17 @@ function toHebrewValidationMessage(label: string, message: string): string {
     return message;
   }
 
-  if (message.includes('must not be less than')) {
+  if (message.includes('must be shorter than or equal to') || message.includes('must not be greater than')) {
+    return `${label}: הערך גדול מדי`;
+  }
+  if (message.includes('must be longer than or equal to') || message.includes('must not be less than')) {
     return `${label}: הערך קטן מדי`;
   }
-  if (message.includes('must not be greater than')) {
-    return `${label}: הערך גדול מדי`;
+  if (message.includes('must be an array')) {
+    return `${label}: פורמט לא תקין`;
+  }
+  if (message.includes('each value in') || message.includes('each value must')) {
+    return `${label}: ערך לא תקין`;
   }
   if (message.includes('must be one of the following')) {
     return `${label}: ערך לא תקין`;
