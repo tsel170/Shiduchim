@@ -1,8 +1,11 @@
 import React from 'react';
 import { FavoriteProfile, FullProfile, ProfileRating } from '../../types/profile';
-import { isRatingsComplete } from '../../utils/rating';
+import { getRateableCategories, isRatingsCompleteForProfile } from '../../utils/rating';
 import { ProfileCard } from './ProfileCard';
+import { ProfileCardSkeleton } from './ProfileCardSkeleton';
 import './ProfileGrid.css';
+
+const SKELETON_CARD_COUNT = 6;
 
 interface ProfileGridProps {
   profiles: FullProfile[];
@@ -10,6 +13,7 @@ interface ProfileGridProps {
   ratingsByProfileId: Record<string, ProfileRating>;
   photosLocked?: boolean;
   showFavoriteControls?: boolean;
+  loading?: boolean;
   onToggleFavorite: (id: string) => void;
   onViewProfile: (id: string) => void;
   emptyMessage?: string;
@@ -21,10 +25,23 @@ export const ProfileGrid: React.FC<ProfileGridProps> = ({
   ratingsByProfileId,
   photosLocked = true,
   showFavoriteControls = true,
+  loading = false,
   onToggleFavorite,
   onViewProfile,
   emptyMessage = 'לא נמצאו פרופילים',
 }) => {
+  if (loading) {
+    return (
+      <div className="profile-grid profile-grid--loading" aria-busy="true" aria-label="טוען פרופילים">
+        {Array.from({ length: SKELETON_CARD_COUNT }, (_, index) => (
+          <div key={`skeleton-${index}`}>
+            <ProfileCardSkeleton />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (profiles.length === 0) {
     return (
       <div className="profile-grid__empty">
@@ -39,7 +56,7 @@ export const ProfileGrid: React.FC<ProfileGridProps> = ({
         <div key={profile.id} role="listitem">
           <ProfileCard
             profile={profile}
-            canFavorite={isRatingsComplete(ratingsByProfileId[profile.id])}
+            canFavorite={isRatingsCompleteForProfile(profile, ratingsByProfileId[profile.id])}
             photosLocked={photosLocked}
             showFavoriteControls={showFavoriteControls}
             onToggleFavorite={onToggleFavorite}

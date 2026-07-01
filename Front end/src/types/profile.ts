@@ -1,24 +1,26 @@
 /** Extensible marital status — add entries to MARITAL_STATUS_OPTIONS in constants */
 export type MaritalStatus = string;
+export type Gender = string;
 export type CityId = string;
 export type ReligiousStreamId = string;
 
 export type ProfileRatingCategory =
   | 'personality'
   | 'hobbies'
-  | 'homeVision'
+  | 'familyVision'
   | 'lookingFor'
   | 'look';
 
 export type RequiredProfileRatingCategory =
   | 'personality'
   | 'hobbies'
-  | 'homeVision'
+  | 'familyVision'
   | 'lookingFor';
 
 export type DisplayField =
   | 'city'
   | 'height'
+  | 'gender'
   | 'maritalStatus'
   | 'religiousStream'
   | 'personalityTraits'
@@ -41,6 +43,7 @@ export interface Profile {
   city: CityId;
   heightCm: number;
   religiousStream: ReligiousStreamId;
+  gender: Gender;
   maritalStatus: MaritalStatus;
   age: number;
   personalityTraits: string[];
@@ -49,6 +52,11 @@ export interface Profile {
   lookingFor: string[];
   references: ReferenceContact[];
   photos: string[];
+  ownerAccountId?: string | null;
+  addedByShadchanId?: string | null;
+  shadchanIds?: string[];
+  /** שם תצוגה מחושב (פרופיל → חשבון) */
+  displayName?: string;
 }
 
 /** Backward compatible alias */
@@ -68,7 +76,7 @@ export interface ProfileRating {
   profileId: string;
   personality?: number;
   hobbies?: number;
-  homeVision?: number;
+  familyVision?: number;
   lookingFor?: number;
   look?: number;
   updatedAt: string;
@@ -76,11 +84,11 @@ export interface ProfileRating {
 
 /** Required interface: FavoriteProfile */
 export interface FavoriteProfile {
+  favoriteId: string;
   profileId: string;
   createdAt: string;
-  rating: Required<Pick<ProfileRating, RequiredProfileRatingCategory>> & {
-    look?: number;
-  };
+  rating: Required<Pick<ProfileRating, 'personality'>> &
+    Partial<Pick<ProfileRating, 'hobbies' | 'familyVision' | 'lookingFor' | 'look'>>;
 }
 
 /** Required interface: DisplayPreferences */
@@ -95,6 +103,7 @@ export interface FilterConfiguration {
   heightRange: { min: number; max: number };
   cities: string[];
   religiousStreams: string[];
+  genders: string[];
   maritalStatuses: string[];
   personalityTraits: string[];
   hobbies: string[];
@@ -102,7 +111,10 @@ export interface FilterConfiguration {
 }
 
 export interface ProfileFormErrors {
+  firstName?: string;
   age?: string;
+  gender?: string;
+  maritalStatus?: string;
   heightCm?: string;
   photos?: string;
   references?: Record<string, { name?: string; phoneNumber?: string; countryCode?: string }>;

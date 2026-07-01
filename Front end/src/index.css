@@ -1,4 +1,6 @@
 @import './styles/buttons.css';
+@import './components/common/SendButton.css';
+@import './components/common/FavoriteButton.css';
 @import './styles/forms.css';
 
 :root {

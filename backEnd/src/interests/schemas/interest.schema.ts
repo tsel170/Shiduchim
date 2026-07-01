@@ -27,8 +27,8 @@ export class Interest {
   @Prop({ required: true, index: true })
   profileId: string;
 
-  @Prop({ required: true, enum: INTEREST_STATUSES, default: 'notRequested' })
-  status: (typeof INTEREST_STATUSES)[number];
+  @Prop({ type: String, required: true, enum: INTEREST_STATUSES, default: 'notRequested' })
+  status: string;
 
   @Prop({ required: true, default: () => new Date() })
   updatedAt: Date;

@@ -1,5 +1,6 @@
 import {
   getCityLabel,
+  getGenderLabel,
   getMaritalStatusLabel,
   getReligiousStreamLabel,
 } from '../constants/profileOptions';
@@ -29,6 +30,8 @@ function getShareFieldLine(profile: FullProfile, field: ProfileShareField): stri
       return `עיר: ${getCityLabel(profile.city)}`;
     case 'height':
       return `גובה: ${formatHeightAll(profile.heightCm)}`;
+    case 'gender':
+      return profile.gender ? `מין: ${getGenderLabel(profile.gender)}` : null;
     case 'maritalStatus':
       return `מצב משפחתי: ${getMaritalStatusLabel(profile.maritalStatus)}`;
     case 'religiousStream':

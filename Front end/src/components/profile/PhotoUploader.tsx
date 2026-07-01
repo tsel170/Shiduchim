@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { MAX_PROFILE_PHOTOS } from '../../constants/profileOptions';
+import { compressImageFile } from '../../utils/compressImage';
 import './PhotoUploader.css';
 
 interface PhotoUploaderProps {
@@ -14,17 +15,22 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   error,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const slots = Array.from({ length: MAX_PROFILE_PHOTOS }, (_, i) => photos[i] ?? null);
 
-  const handleFile = (file: File) => {
-    if (photos.length >= MAX_PROFILE_PHOTOS) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onChange([...photos, reader.result]);
-      }
-    };
-    reader.readAsDataURL(file);
+  const handleFile = async (file: File) => {
+    if (photos.length >= MAX_PROFILE_PHOTOS || isProcessing) return;
+    setUploadError(null);
+    setIsProcessing(true);
+    try {
+      const compressed = await compressImageFile(file);
+      onChange([...photos, compressed]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'לא ניתן להעלות את התמונה');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -59,11 +65,11 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
               type="button"
               className="photo-uploader__slot photo-uploader__slot--empty"
               aria-label="העלה תמונה"
-              disabled={photos.length >= MAX_PROFILE_PHOTOS}
+              disabled={photos.length >= MAX_PROFILE_PHOTOS || isProcessing}
               onClick={() => inputRef.current?.click()}
             >
               <UploadIcon />
-              <span>הוסף תמונה</span>
+              <span>{isProcessing ? 'מעבד...' : 'הוסף תמונה'}</span>
             </button>
           )
         )}
@@ -79,8 +85,12 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           e.target.value = '';
         }}
       />
-      {error && <p className="photo-uploader__error">{error}</p>}
-      <p className="photo-uploader__hint">עד {MAX_PROFILE_PHOTOS} תמונות · JPG, PNG</p>
+      {(error || uploadError) && (
+        <p className="photo-uploader__error">{uploadError ?? error}</p>
+      )}
+      <p className="photo-uploader__hint">
+        עד {MAX_PROFILE_PHOTOS} תמונות · JPG, PNG · התמונות נדחסות אוטומטית לשמירה
+      </p>
     </div>
   );
 };

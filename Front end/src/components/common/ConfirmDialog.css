@@ -1,0 +1,183 @@
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+}
+
+.confirm-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  animation: confirm-dialog-fade-in 0.2s ease;
+}
+
+.confirm-dialog__panel {
+  position: relative;
+  width: min(100%, 420px);
+  padding: var(--space-lg);
+  border-radius: calc(var(--radius-lg) + 2px);
+  background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+  animation: confirm-dialog-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  text-align: center;
+}
+
+.confirm-dialog__panel--danger {
+  border-color: #fecaca;
+  background: linear-gradient(160deg, #fff5f5 0%, #ffffff 55%, #fff1f2 100%);
+}
+
+.confirm-dialog__panel--primary {
+  border-color: #c7d2fe;
+  background: linear-gradient(160deg, #eef2ff 0%, #ffffff 55%, #f5f3ff 100%);
+}
+
+.confirm-dialog__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--space-md);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-dialog__panel--danger .confirm-dialog__icon {
+  color: #dc2626;
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.2);
+}
+
+.confirm-dialog__panel--primary .confirm-dialog__icon {
+  color: var(--color-primary);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+}
+
+.confirm-dialog__title {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.confirm-dialog__message {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.confirm-dialog__message strong {
+  color: var(--color-text);
+}
+
+.confirm-dialog__cooldown {
+  margin-top: var(--space-md);
+}
+
+.confirm-dialog__cooldown-track {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.confirm-dialog__panel--danger .confirm-dialog__cooldown-track {
+  background: #fecaca;
+}
+
+.confirm-dialog__cooldown-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 1s linear;
+}
+
+.confirm-dialog__panel--danger .confirm-dialog__cooldown-fill {
+  background: linear-gradient(90deg, #f87171, #dc2626);
+}
+
+.confirm-dialog__panel--primary .confirm-dialog__cooldown-fill {
+  background: linear-gradient(90deg, #818cf8, #4f46e5);
+}
+
+.confirm-dialog__cooldown-text {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.confirm-dialog__cooldown-text strong {
+  color: #dc2626;
+  font-size: 1rem;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.confirm-dialog__btn {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.confirm-dialog__btn--confirm {
+  color: #fff;
+  border-color: transparent;
+}
+
+.confirm-dialog__btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.confirm-dialog__btn--danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.confirm-dialog__btn--primary {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+}
+
+.confirm-dialog__btn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.confirm-dialog__btn--confirm:disabled {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #6b7280;
+  box-shadow: none;
+}
+
+@keyframes confirm-dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes confirm-dialog-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

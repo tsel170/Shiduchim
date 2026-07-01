@@ -1,5 +1,14 @@
 export type AccountRole = 'person' | 'shadchan';
 
+export type SuggestionStage = 'new' | 'in_check' | 'checked';
+
+export type SuggestionCheckStatus =
+  | 'sending_profile'
+  | 'dor_yesharim_checking'
+  | 'phone_checking'
+  | 'ready_to_meet'
+  | 'denied';
+
 export type InterestStatus =
   | 'Dating'
   | 'notRequested'
@@ -12,38 +21,40 @@ export type InterestStatus =
   | 'declined';
 
 export interface ReferenceContact {
+  id: string;
   name: string;
   countryCode: string;
   phoneNumber: string;
 }
 
-export interface FilterCriteria {
-  maritalStatuses?: string[];
-  religiousStreams?: string[];
-  hobbies?: string[];
-  personalityTraits?: string[];
+export interface ProfileRating {
+  personality: number;
+  hobbies: number;
+  familyVision: number;
+  lookingFor: number;
+  look?: number;
+  averageRating: number;
 }
 
-export interface FilterSettings {
-  minAge?: number;
-  maxAge?: number;
-  cities?: string[];
-  maxDistanceKm?: number;
-  mustHave?: FilterCriteria;
-  mustNotHave?: FilterCriteria;
-  minHeightCm?: number;
-  maxHeightCm?: number;
+export interface FilterConfiguration {
+  ageRange: { min: number; max: number };
+  heightRange: { min: number; max: number };
+  cities: string[];
+  religiousStreams: string[];
+  genders: string[];
+  maritalStatuses: string[];
+  personalityTraits: string[];
+  hobbies: string[];
+  lookingFor: string[];
 }
 
 export interface DisplayPreferences {
-  visibleFields: string[];
-  hiddenFields: string[];
+  visibleFields: Record<string, boolean>;
   fieldOrder: string[];
-  rankableFields: string[];
 }
 
 export interface AccountSettings {
-  filters: FilterSettings;
+  filters: FilterConfiguration;
   displayPreferences: DisplayPreferences;
 }
 
@@ -61,39 +72,24 @@ export interface Profile {
   ownerAccountId: string | null;
   addedByShadchanId: string | null;
   firstName: string;
-  lastName?: string;
-  city?: string;
+  lastName: string;
+  city: string;
   age: number;
-  heightCm?: number;
-  religiousStream?: string;
+  heightCm: number;
+  religiousStream: string;
+  gender: string;
   maritalStatus: string;
-  personalityTraits?: string[];
-  hobbies?: string[];
-  homeVision?: string;
-  lookingFor?: string[];
-  references?: ReferenceContact[];
-  photos?: string[];
+  personalityTraits: string[];
+  hobbies: string[];
+  familyVision: string;
+  lookingFor: string[];
+  references: ReferenceContact[];
+  photos: string[];
   shadchanIds?: string[];
   aboutMe?: string;
   aboutMyFamily?: string;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface ProfileRating {
-  firstName: number;
-  lastName: number;
-  city: number;
-  age: number;
-  heightCm: number;
-  religiousStream: number;
-  maritalStatus: number;
-  personalityTraits: number;
-  hobbies: number;
-  homeVision: number;
-  lookingFor: number;
-  photos: number;
-  averageRating: number;
 }
 
 export interface FavoriteProfile {
@@ -102,14 +98,18 @@ export interface FavoriteProfile {
   profileId: string;
   rating: ProfileRating;
   requestId: string | null;
+  createdAt: Date;
 }
 
-export interface Interest {
-  interestId: string;
+export interface Suggestion {
+  suggestionId: string;
   ownerAccountId: string;
   profileId: string;
-  status: InterestStatus;
-  updatedAt: Date;
+  shadchanId: string;
+  shadchanNote: string;
+  sentAt: Date;
+  stage: SuggestionStage;
+  checkStatus?: SuggestionCheckStatus;
 }
 
 export interface MatchRequest {

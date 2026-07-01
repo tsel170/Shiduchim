@@ -53,17 +53,52 @@
 
 .profile-details-page__actions {
   display: flex;
+  flex-direction: column;
   gap: var(--space-sm);
-  align-items: center;
-  flex-wrap: wrap;
   margin-top: var(--space-lg);
   padding: var(--space-md) 0 var(--space-xl);
   border-top: 1px solid var(--color-border);
+}
+
+.profile-details-page__shadchan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  width: 100%;
+}
+
+.profile-details-page__shadchan-actions .send-btn,
+.profile-details-page__interest-actions .send-btn {
+  flex: 1 1 180px;
+}
+
+.profile-details-page__actions > .send-btn {
+  width: auto;
+  align-self: flex-start;
 }
 
 .profile-details-page__hint {
   margin: 0;
   font-size: 0.8rem;
   color: #92400e;
+}
+
+.profile-details-page__hint--success {
+  color: #166534;
+}
+
+.profile-details-page__shadchan-note {
+  margin: 0;
+  width: 100%;
+  font-size: 0.9rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.profile-details-page__interest-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  width: 100%;
 }
 

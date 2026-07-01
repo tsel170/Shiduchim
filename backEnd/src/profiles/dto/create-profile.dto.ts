@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -10,16 +10,32 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import {
   CITIES,
+  GENDERS,
   HOBBIES,
   LOOKING_FOR_TRAITS,
+  MARITAL_STATUSES,
+  MIN_PROFILE_AGE,
   PERSONALITY_TRAITS,
-  STREAMS,
+  RELIGIOUS_STREAMS,
 } from '../constants/profile-options';
 import { ReferenceContactDto } from './reference-contact.dto';
+
+function emptyToUndefined({ value }: { value: unknown }) {
+  if (value === '' || value === null) return undefined;
+  return value;
+}
+
+function emptyNumberToUndefined({ value }: { value: unknown }) {
+  if (value === '' || value === null || value === undefined) return undefined;
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return undefined;
+  return num;
+}
 
 export class CreateProfileDto {
   @ApiPropertyOptional({ nullable: true })
@@ -33,67 +49,78 @@ export class CreateProfileDto {
   addedByShadchanId?: string | null;
 
   @ApiProperty({ example: 'שרה' })
-  @IsString()
-  @MaxLength(255)
+  @IsString({ message: 'שם פרטי: שדה חובה' })
+  @MaxLength(255, { message: 'שם פרטי: ארוך מדי' })
   firstName: string;
 
   @ApiPropertyOptional({ example: 'כהן' })
   @IsOptional()
+  @Transform(emptyToUndefined)
   @IsString()
-  @MaxLength(255)
+  @MaxLength(255, { message: 'שם משפחה: ארוך מדי' })
   lastName?: string;
 
-  @ApiPropertyOptional({ example: 'ירושלים', enum: CITIES })
+  @ApiPropertyOptional({ example: 'jerusalem', enum: CITIES })
   @IsOptional()
-  @IsString()
-  @IsIn(CITIES)
+  @Transform(emptyToUndefined)
+  @ValidateIf((_, value) => value !== undefined)
+  @IsIn(CITIES, { message: 'עיר: ערך לא תקין' })
   city?: string;
 
   @ApiProperty({ example: 22 })
-  @IsInt()
-  @Min(16)
-  @Max(120)
+  @IsInt({ message: 'גיל: חייב להיות מספר שלם' })
+  @Min(MIN_PROFILE_AGE, { message: `גיל מינימלי הוא ${MIN_PROFILE_AGE}` })
+  @Max(120, { message: 'גיל: ערך לא תקין' })
   age: number;
 
   @ApiPropertyOptional({ example: 165 })
   @IsOptional()
-  @IsInt()
-  @Min(100)
-  @Max(250)
+  @Transform(emptyNumberToUndefined)
+  @ValidateIf((_, value) => value !== undefined)
+  @IsInt({ message: 'גובה: חייב להיות מספר שלם' })
+  @Min(100, { message: 'גובה חייב להיות לפחות 100 ס"מ' })
+  @Max(250, { message: 'גובה: ערך לא תקין' })
   heightCm?: number;
 
-  @ApiPropertyOptional({ example: 'ליטאי', enum: STREAMS })
+  @ApiPropertyOptional({ example: 'haredi', enum: RELIGIOUS_STREAMS })
   @IsOptional()
-  @IsString()
-  @IsIn(STREAMS)
+  @Transform(emptyToUndefined)
+  @ValidateIf((_, value) => value !== undefined)
+  @IsIn(RELIGIOUS_STREAMS, { message: 'זרם דתי: ערך לא תקין' })
   religiousStream?: string;
 
-  @ApiProperty({ example: 'רווקה' })
+  @ApiProperty({ example: 'female', enum: GENDERS })
   @IsString()
-  @MaxLength(100)
+  @IsIn(GENDERS, { message: 'נא לבחור מין תקין' })
+  gender: (typeof GENDERS)[number];
+
+  @ApiProperty({ example: 'single', enum: MARITAL_STATUSES })
+  @IsString()
+  @IsIn(MARITAL_STATUSES, { message: 'נא לבחור מצב משפחתי תקין' })
   maritalStatus: string;
 
-  @ApiPropertyOptional({ type: [String], example: ['חמה', 'שמחה'] })
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   @IsIn(PERSONALITY_TRAITS, { each: true })
   personalityTraits?: string[];
 
-  @ApiPropertyOptional({ type: [String], example: ['קריאה', 'בישול'] })
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   @IsIn(HOBBIES, { each: true })
   hobbies?: string[];
 
-  @ApiPropertyOptional({ example: 'בית חם ותורני עם אווירה משפחתית' })
+  @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyToUndefined)
   @IsString()
   @MaxLength(4000)
-  homeVision?: string;
+  familyVision?: string;
 
-  @ApiPropertyOptional({ type: [String], example: ['לומד', 'רציני'] })
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -103,7 +130,7 @@ export class CreateProfileDto {
   @ApiPropertyOptional({ type: [ReferenceContactDto] })
   @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ValidateNested({ each: true })
   @Type(() => ReferenceContactDto)
   references?: ReferenceContactDto[];
@@ -122,12 +149,14 @@ export class CreateProfileDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyToUndefined)
   @IsString()
   @MaxLength(4000)
   aboutMe?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyToUndefined)
   @IsString()
   @MaxLength(4000)
   aboutMyFamily?: string;

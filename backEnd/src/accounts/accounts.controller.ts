@@ -8,14 +8,17 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { AccountsService } from './accounts.service';
@@ -25,8 +28,10 @@ import {
   UpdateAccountDto,
   UpdateAccountSettingsDto,
 } from './dto/account.dto';
+import { ShadchanSummaryDto } from './dto/shadchan-summary.dto';
 
 @ApiTags('accounts')
+@ApiBearerAuth()
 @Controller('accounts')
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
@@ -39,10 +44,18 @@ export class AccountsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all accounts' })
+  @ApiOperation({ summary: 'Get accounts (optional role filter)' })
+  @ApiQuery({ name: 'role', required: false, enum: ['person', 'shadchan'] })
   @ApiOkResponse({ type: AccountResponseDto, isArray: true })
-  findAll() {
-    return this.accountsService.findAll();
+  findAll(@Query('role') role?: 'person' | 'shadchan') {
+    return this.accountsService.findAll(role);
+  }
+
+  @Get('shadchanim')
+  @ApiOperation({ summary: 'List shadchan accounts' })
+  @ApiOkResponse({ type: ShadchanSummaryDto, isArray: true })
+  findShadchanim() {
+    return this.accountsService.findShadchanim();
   }
 
   @Get(':accountId')

@@ -9,12 +9,14 @@ import {
 import {
   DEFAULT_DISPLAY_PREFERENCES,
   getCityLabel,
+  getGenderLabel,
   getMaritalStatusLabel,
   getReligiousStreamLabel,
 } from '../../constants/profileOptions';
 import { AccountRole } from '../../types/account';
 import { formatHeightAll } from '../../utils/height';
 import { getFullName, getOrderedVisibleFields } from '../../utils/profileHelpers';
+import { getRateableCategories } from '../../utils/rating';
 import { ChipList } from '../common/ChipList';
 import { ProfileGallery } from './ProfileGallery';
 import './ProfileDetails.css';
@@ -143,8 +145,19 @@ function ProfileFieldSection({
     DisplayField,
     { title: string; content: React.ReactNode; ratingCategory?: ProfileRatingCategory }
   > = {
-    city: { title: 'עיר', content: <p className="profile-details__text">{getCityLabel(profile.city)}</p> },
-    height: { title: 'גובה', content: <p className="profile-details__text">{formatHeightAll(profile.heightCm)}</p> },
+    city: { title: 'עיר', content: <p className="profile-details__text">{getCityLabel(profile.city) || 'לא צוין'}</p> },
+    height: {
+      title: 'גובה',
+      content: (
+        <p className="profile-details__text">
+          {profile.heightCm > 0 ? formatHeightAll(profile.heightCm) : 'לא צוין'}
+        </p>
+      ),
+    },
+    gender: {
+      title: 'מין',
+      content: <p className="profile-details__text">{getGenderLabel(profile.gender) || 'לא צוין'}</p>,
+    },
     maritalStatus: {
       title: 'מצב משפחתי',
       content: <p className="profile-details__text">{getMaritalStatusLabel(profile.maritalStatus)}</p>,
@@ -166,7 +179,7 @@ function ProfileFieldSection({
     familyVision: {
       title: 'חזון לבית ומשפחה',
       content: <p className="profile-details__text">{profile.familyVision || 'לא צוין'}</p>,
-      ratingCategory: 'homeVision',
+      ratingCategory: 'familyVision',
     },
     lookingFor: {
       title: 'מחפש/ת',
@@ -176,11 +189,19 @@ function ProfileFieldSection({
   };
 
   const section = map[field];
+  const rateableCategories = getRateableCategories(profile);
+  const ratingCategory = section.ratingCategory;
+  const showRating =
+    canRate &&
+    ratingCategory &&
+    ratingCategory !== 'look' &&
+    rateableCategories.includes(ratingCategory);
+
   return (
     <section className={`profile-details__section profile-details__section--${field}`}>
       <h2 className="profile-details__section-title">{section.title}</h2>
       {section.content}
-      {canRate && section.ratingCategory && (
+      {showRating && section.ratingCategory && (
         <InlineRating
           label={`דירוג ${section.title}`}
           category={section.ratingCategory}
