@@ -10,6 +10,7 @@ export type NavItem =
   | 'suggestions'
   | 'added-profiles'
   | 'add-profile'
+  | 'ai-import'
   | 'requests'
   | 'my-profile'
   | 'settings';
@@ -20,17 +21,34 @@ interface NavConfig {
   label: string;
   icon: React.ReactNode;
   roles: AccountRole[];
+  group: 'main' | 'manage' | 'account';
+  highlight?: boolean;
 }
 
 const NAV_ITEMS: NavConfig[] = [
-  { id: 'browse', path: '/browse', label: 'עיון בפרופילים', icon: <GridIcon />, roles: ['person', 'shadchan'] },
-  { id: 'saved', path: '/favorites', label: 'מועדפים', icon: <HeartIcon />, roles: ['person'] },
+  {
+    id: 'browse',
+    path: '/browse',
+    label: 'עיון בפרופילים',
+    icon: <GridIcon />,
+    roles: ['person', 'shadchan'],
+    group: 'main',
+  },
+  {
+    id: 'saved',
+    path: '/favorites',
+    label: 'מועדפים',
+    icon: <HeartIcon />,
+    roles: ['person'],
+    group: 'main',
+  },
   {
     id: 'suggestions',
     path: '/suggestions',
     label: 'הצעות מהשדכן',
     icon: <InboxIcon />,
     roles: ['person'],
+    group: 'main',
   },
   {
     id: 'added-profiles',
@@ -38,6 +56,16 @@ const NAV_ITEMS: NavConfig[] = [
     label: 'פרופילים באחריותי',
     icon: <FolderIcon />,
     roles: ['shadchan'],
+    group: 'manage',
+  },
+  {
+    id: 'ai-import',
+    path: '/ai-import',
+    label: 'ייבוא AI',
+    icon: <SparklesIcon />,
+    roles: ['shadchan'],
+    group: 'manage',
+    highlight: true,
   },
   {
     id: 'add-profile',
@@ -45,6 +73,7 @@ const NAV_ITEMS: NavConfig[] = [
     label: 'הוספת פרופיל',
     icon: <PlusIcon />,
     roles: ['shadchan'],
+    group: 'manage',
   },
   {
     id: 'requests',
@@ -52,14 +81,37 @@ const NAV_ITEMS: NavConfig[] = [
     label: 'בקשות',
     icon: <RequestIcon />,
     roles: ['shadchan'],
+    group: 'manage',
   },
-  { id: 'my-profile', path: '/my-profile', label: 'הפרופיל שלי', icon: <UserIcon />, roles: ['person'] },
-  { id: 'settings', path: '/settings', label: 'הגדרות', icon: <SettingsIcon />, roles: ['person', 'shadchan'] },
+  {
+    id: 'my-profile',
+    path: '/my-profile',
+    label: 'הפרופיל שלי',
+    icon: <UserIcon />,
+    roles: ['person'],
+    group: 'account',
+  },
+  {
+    id: 'settings',
+    path: '/settings',
+    label: 'הגדרות',
+    icon: <SettingsIcon />,
+    roles: ['person', 'shadchan'],
+    group: 'account',
+  },
 ];
+
+const GROUP_LABELS: Record<NavConfig['group'], string> = {
+  main: 'ראשי',
+  manage: 'ניהול',
+  account: 'חשבון',
+};
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onLogout: () => void;
+  userLabel?: string;
 }
 
 function pathToNavItem(pathname: string): NavItem {
@@ -67,6 +119,7 @@ function pathToNavItem(pathname: string): NavItem {
   if (pathname.startsWith('/favorites')) return 'saved';
   if (pathname.startsWith('/suggestions')) return 'suggestions';
   if (pathname.startsWith('/added-profiles')) return 'added-profiles';
+  if (pathname.startsWith('/ai-import')) return 'ai-import';
   if (pathname.startsWith('/add-profile')) return 'add-profile';
   if (pathname.startsWith('/requests')) return 'requests';
   if (pathname.startsWith('/my-profile')) return 'my-profile';
@@ -74,7 +127,7 @@ function pathToNavItem(pathname: string): NavItem {
   return 'browse';
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, userLabel }) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,28 +137,64 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     currentUser ? item.roles.includes(currentUser.role) : false
   );
 
+  const groups: NavConfig['group'][] = ['main', 'manage', 'account'];
+
   return (
     <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`} aria-label="ניווט ראשי">
+      <div className="sidebar__brand">
+        <span className="sidebar__brand-logo" aria-hidden="true">
+          ש
+        </span>
+        <span className="sidebar__brand-text">שידוכים</span>
+      </div>
+
       <nav className="sidebar__nav">
-        <ul className="sidebar__list">
-          {items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className={`sidebar__link${activeItem === item.id ? ' sidebar__link--active' : ''}`}
-                onClick={() => {
-                  navigate(item.path);
-                  onClose();
-                }}
-                aria-current={activeItem === item.id ? 'page' : undefined}
-              >
-                <span className="sidebar__icon">{item.icon}</span>
-                <span className="sidebar__label">{item.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {groups.map((group) => {
+          const groupItems = items.filter((item) => item.group === group);
+          if (groupItems.length === 0) return null;
+
+          return (
+            <div key={group} className="sidebar__group">
+              <span className="sidebar__group-label">{GROUP_LABELS[group]}</span>
+              <ul className="sidebar__list">
+                {groupItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={`sidebar__link${
+                        activeItem === item.id ? ' sidebar__link--active' : ''
+                      }${item.highlight ? ' sidebar__link--highlight' : ''}`}
+                      onClick={() => {
+                        navigate(item.path);
+                        onClose();
+                      }}
+                      aria-current={activeItem === item.id ? 'page' : undefined}
+                    >
+                      <span className="sidebar__icon">{item.icon}</span>
+                      <span className="sidebar__label">{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </nav>
+
+      <div className="sidebar__footer">
+        {userLabel && <p className="sidebar__user-label">{userLabel}</p>}
+        <button
+          type="button"
+          className="sidebar__logout"
+          onClick={() => {
+            onClose();
+            onLogout();
+          }}
+        >
+          <LogoutIcon />
+          <span>התנתקות</span>
+        </button>
+      </div>
     </aside>
   );
 };
@@ -146,6 +235,15 @@ function FolderIcon() {
   );
 }
 
+function SparklesIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 14l.75 2.25L22 17l-2.25.75L19 20l-.75-2.25L16 17l2.25-.75L19 14z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function PlusIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -181,3 +279,11 @@ function UserIcon() {
   );
 }
 
+function LogoutIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

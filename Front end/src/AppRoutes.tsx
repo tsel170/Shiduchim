@@ -23,6 +23,7 @@ import { BrowseProfilesPage } from './pages/BrowseProfilesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { AddedProfilesPage } from './pages/AddedProfilesPage';
 import { AddProfilePage } from './pages/AddProfilePage';
+import { AiImportPage } from './pages/AiImportPage';
 import { EditAddedProfilePage } from './pages/EditAddedProfilePage';
 import { MyProfilePage } from './pages/MyProfilePage';
 import { RequestsPage } from './pages/RequestsPage';
@@ -432,6 +433,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <RoleRoute allowed={['shadchan']}>
               <AddedProfilesPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/ai-import"
+          element={
+            <RoleRoute allowed={['shadchan']}>
+              <AiImportPage />
             </RoleRoute>
           }
         />

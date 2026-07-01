@@ -97,12 +97,20 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="header__actions">
-        <button type="button" className="header__icon-btn" aria-label="התראות">
+        <button type="button" className="header__icon-btn header__icon-btn--notifications" aria-label="התראות">
           <BellIcon />
           <span className="header__badge" aria-hidden="true" />
         </button>
-        <button type="button" className="header__logout" onClick={onLogout}>
-          התנתקות
+        <button
+          type="button"
+          className="header__logout"
+          onClick={onLogout}
+          aria-label="התנתקות"
+        >
+          <span className="header__logout-icon" aria-hidden="true">
+            <LogoutIcon />
+          </span>
+          <span className="header__logout-text">התנתקות</span>
         </button>
         <button type="button" className="header__profile" aria-label="פרופיל משתמש">
           <span className="header__avatar" aria-hidden="true">
@@ -153,6 +161,15 @@ function BellIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M13.73 21a2 2 0 01-3.46 0" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
