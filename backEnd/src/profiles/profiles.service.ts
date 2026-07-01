@@ -131,7 +131,7 @@ export class ProfilesService {
   async findOne(profileId: string) {
     const profile = await this.profileModel.findOne({ profileId });
     if (!profile) {
-      throw new NotFoundException(`Profile "${profileId}" not found`);
+      throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
     return toProfileResponse(profile);
   }
@@ -143,7 +143,7 @@ export class ProfilesService {
       { new: true, runValidators: true },
     );
     if (!profile) {
-      throw new NotFoundException(`Profile "${profileId}" not found`);
+      throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
     return toProfileResponse(profile);
   }
@@ -155,7 +155,7 @@ export class ProfilesService {
   ) {
     const existing = await this.profileModel.findOne({ profileId });
     if (!existing) {
-      throw new NotFoundException(`Profile "${profileId}" not found`);
+      throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
 
     if (user.role === 'shadchan') {
@@ -175,7 +175,7 @@ export class ProfilesService {
       { new: true, runValidators: true },
     );
     if (!profile) {
-      throw new NotFoundException(`Profile "${profileId}" not found`);
+      throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
     return toProfileResponse(profile);
   }
@@ -211,14 +211,14 @@ export class ProfilesService {
   async remove(profileId: string) {
     const result = await this.profileModel.deleteOne({ profileId });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Profile "${profileId}" not found`);
+      throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
   }
 
   async removeForUser(profileId: string, user: AuthUserPayload) {
     const existing = await this.profileModel.findOne({ profileId });
     if (!existing) {
-      throw new NotFoundException(`Profile "${profileId}" not found`);
+      throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
 
     if (user.role !== 'shadchan') {

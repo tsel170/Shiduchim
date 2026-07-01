@@ -94,7 +94,7 @@ export class SuggestionsService {
       ownerAccountId,
     });
     if (!suggestion) {
-      throw new NotFoundException(`Suggestion "${suggestionId}" not found`);
+      throw new NotFoundException(`ההצעה "${suggestionId}" לא נמצאה`);
     }
 
     let profile = null;
@@ -118,7 +118,7 @@ export class SuggestionsService {
       { new: true, runValidators: true },
     );
     if (!suggestion) {
-      throw new NotFoundException(`Suggestion "${suggestionId}" not found`);
+      throw new NotFoundException(`ההצעה "${suggestionId}" לא נמצאה`);
     }
 
     let profile = null;
@@ -137,7 +137,7 @@ export class SuggestionsService {
       ownerAccountId,
     });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Suggestion "${suggestionId}" not found`);
+      throw new NotFoundException(`ההצעה "${suggestionId}" לא נמצאה`);
     }
   }
 

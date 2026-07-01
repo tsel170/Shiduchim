@@ -26,7 +26,7 @@ export class FavoritesService {
       profileId: createFavoriteDto.profileId,
     });
     if (existing) {
-      throw new ConflictException('Profile already in favorites');
+      throw new ConflictException('הפרופיל כבר נמצא במועדפים');
     }
 
     const averageRating = computeAverageRating(createFavoriteDto.rating);
@@ -51,7 +51,7 @@ export class FavoritesService {
   async findOne(favoriteId: string, ownerAccountId: string) {
     const favorite = await this.favoriteModel.findOne({ favoriteId, ownerAccountId });
     if (!favorite) {
-      throw new NotFoundException(`Favorite "${favoriteId}" not found`);
+      throw new NotFoundException(`רשומת מועדפים "${favoriteId}" לא נמצאה`);
     }
     return this.toResponse(favorite);
   }
@@ -63,7 +63,7 @@ export class FavoritesService {
   ) {
     const favorite = await this.favoriteModel.findOne({ favoriteId, ownerAccountId });
     if (!favorite) {
-      throw new NotFoundException(`Favorite "${favoriteId}" not found`);
+      throw new NotFoundException(`רשומת מועדפים "${favoriteId}" לא נמצאה`);
     }
 
     if (updateFavoriteDto.rating !== undefined) {
@@ -84,7 +84,7 @@ export class FavoritesService {
   async remove(favoriteId: string, ownerAccountId: string) {
     const result = await this.favoriteModel.deleteOne({ favoriteId, ownerAccountId });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Favorite "${favoriteId}" not found`);
+      throw new NotFoundException(`רשומת מועדפים "${favoriteId}" לא נמצאה`);
     }
   }
 

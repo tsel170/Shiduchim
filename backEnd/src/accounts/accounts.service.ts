@@ -130,14 +130,14 @@ export class AccountsService {
 
   async create(createAccountDto: CreateAccountDto) {
     if (!createAccountDto.role) {
-      throw new BadRequestException('role is required');
+      throw new BadRequestException('נדרש לציין תפקיד');
     }
 
     const existing = await this.accountModel.findOne({
       email: createAccountDto.email,
     });
     if (existing) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException('כתובת האימייל כבר רשומה במערכת');
     }
 
     const passwordHash = await bcrypt.hash(createAccountDto.password, 10);
@@ -166,7 +166,7 @@ export class AccountsService {
   async findOne(accountId: string) {
     const account = await this.accountModel.findOne({ accountId });
     if (!account) {
-      throw new NotFoundException(`Account "${accountId}" not found`);
+      throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
     return this.toResponse(account);
   }
@@ -174,7 +174,7 @@ export class AccountsService {
   async linkProfile(accountId: string, profileId: string) {
     const account = await this.accountModel.findOne({ accountId });
     if (!account) {
-      throw new NotFoundException(`Account "${accountId}" not found`);
+      throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
     if (account.profileId) {
       throw new ConflictException('לחשבון זה כבר משויך פרופיל');
@@ -187,7 +187,7 @@ export class AccountsService {
   async update(accountId: string, updateAccountDto: UpdateAccountDto) {
     const account = await this.accountModel.findOne({ accountId });
     if (!account) {
-      throw new NotFoundException(`Account "${accountId}" not found`);
+      throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
 
     if (updateAccountDto.firstName !== undefined) {
@@ -204,7 +204,7 @@ export class AccountsService {
         accountId: { $ne: accountId },
       });
       if (emailTaken) {
-        throw new ConflictException('Email already registered');
+        throw new ConflictException('כתובת האימייל כבר רשומה במערכת');
       }
       account.email = updateAccountDto.email;
     }
@@ -235,7 +235,7 @@ export class AccountsService {
   ) {
     const account = await this.accountModel.findOne({ accountId });
     if (!account) {
-      throw new NotFoundException(`Account "${accountId}" not found`);
+      throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
 
     if (updateSettingsDto.filters !== undefined) {
@@ -262,7 +262,7 @@ export class AccountsService {
   ) {
     const account = await this.accountModel.findOne({ accountId });
     if (!account) {
-      throw new NotFoundException(`Account "${accountId}" not found`);
+      throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
 
     if (account.role === 'shadchan' && update.lastName !== undefined && !update.lastName.trim()) {
@@ -608,7 +608,7 @@ export class AccountsService {
   async addLinkedShadchan(personAccountId: string, shadchanAccountId: string) {
     const person = await this.accountModel.findOne({ accountId: personAccountId });
     if (!person) {
-      throw new NotFoundException(`Account "${personAccountId}" not found`);
+      throw new NotFoundException(`החשבון "${personAccountId}" לא נמצא`);
     }
     if (person.role !== 'person') {
       throw new ForbiddenException('רק משודך/ת יכול/ה לקשר שדכנים');
@@ -641,7 +641,7 @@ export class AccountsService {
   async removeLinkedShadchan(personAccountId: string, shadchanAccountId: string) {
     const person = await this.accountModel.findOne({ accountId: personAccountId });
     if (!person) {
-      throw new NotFoundException(`Account "${personAccountId}" not found`);
+      throw new NotFoundException(`החשבון "${personAccountId}" לא נמצא`);
     }
     if (person.role !== 'person') {
       throw new ForbiddenException('רק משודך/ת יכול/ה לנתק שדכנים');
@@ -665,14 +665,14 @@ export class AccountsService {
   async remove(accountId: string) {
     const result = await this.accountModel.deleteOne({ accountId });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Account "${accountId}" not found`);
+      throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
   }
 
   async findDemoShadchanAccountId(): Promise<string> {
     const account = await this.accountModel.findOne({ email: 'Shadchan' });
     if (!account) {
-      throw new NotFoundException('Demo shadchan account not found');
+      throw new NotFoundException('חשבון שדכן הדמו לא נמצא');
     }
     return account.accountId;
   }

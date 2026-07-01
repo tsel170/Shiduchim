@@ -5,19 +5,19 @@ export type ManagementRequestStatus = 'pending' | 'approved' | 'declined';
 
 export class CreateManagementRequestDto {
   @ApiProperty({ description: 'Profile id of the person with an account' })
-  @IsString()
+  @IsString({ message: 'נדרש מזהה פרופיל' })
   personProfileId: string;
 
   @ApiProperty()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(4000)
+  @IsString({ message: 'נא להזין הודעה' })
+  @MinLength(1, { message: 'נא להזין הודעה' })
+  @MaxLength(4000, { message: 'ההודעה ארוכה מדי' })
   message: string;
 }
 
 export class RespondManagementRequestDto {
   @ApiProperty({ enum: ['approved', 'declined'] })
-  @IsIn(['approved', 'declined'])
+  @IsIn(['approved', 'declined'], { message: 'תגובה לא תקינה' })
   response: 'approved' | 'declined';
 }
 

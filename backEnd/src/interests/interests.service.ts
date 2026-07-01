@@ -22,7 +22,7 @@ export class InterestsService {
       profileId: createInterestDto.profileId,
     });
     if (existing) {
-      throw new ConflictException('Interest already exists for this profile');
+      throw new ConflictException('כבר קיים עניין בפרופיל זה');
     }
 
     const interest = await this.interestModel.create({
@@ -47,7 +47,7 @@ export class InterestsService {
   async findOne(interestId: string) {
     const interest = await this.interestModel.findOne({ interestId });
     if (!interest) {
-      throw new NotFoundException(`Interest "${interestId}" not found`);
+      throw new NotFoundException(`רשומת עניין "${interestId}" לא נמצאה`);
     }
     return this.toResponse(interest);
   }
@@ -55,7 +55,7 @@ export class InterestsService {
   async update(interestId: string, updateInterestDto: UpdateInterestDto) {
     const interest = await this.interestModel.findOne({ interestId });
     if (!interest) {
-      throw new NotFoundException(`Interest "${interestId}" not found`);
+      throw new NotFoundException(`רשומת עניין "${interestId}" לא נמצאה`);
     }
 
     if (updateInterestDto.status !== undefined) {
@@ -70,7 +70,7 @@ export class InterestsService {
   async remove(interestId: string) {
     const result = await this.interestModel.deleteOne({ interestId });
     if (result.deletedCount === 0) {
-      throw new NotFoundException(`Interest "${interestId}" not found`);
+      throw new NotFoundException(`רשומת עניין "${interestId}" לא נמצאה`);
     }
   }
 

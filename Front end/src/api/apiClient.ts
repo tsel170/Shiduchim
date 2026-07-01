@@ -1,4 +1,4 @@
-import { ApiError } from './apiError';
+import { ApiError, translateClientApiMessage } from './apiError';
 
 /** In dev, use CRA proxy (package.json → 3002). Set REACT_APP_API_URL for production. */
 const API_BASE_URL =
@@ -29,12 +29,31 @@ export function setStoredToken(token: string | null) {
 async function parseErrorMessage(response: Response): Promise<string> {
   try {
     const data = (await response.json()) as { message?: string | string[] };
-    if (Array.isArray(data.message)) return data.message.join(', ');
-    if (data.message) return data.message;
+    if (Array.isArray(data.message)) {
+      return translateClientApiMessage(data.message.join(', '));
+    }
+    if (data.message) return translateClientApiMessage(String(data.message));
   } catch {
     // ignore
   }
-  return response.statusText || 'Request failed';
+  return response.statusText ? translateStatusText(response.statusText) : 'הבקשה נכשלה';
+}
+
+const STATUS_TEXT_HE: Record<string, string> = {
+  'Bad Request': 'בקשה לא תקינה',
+  Unauthorized: 'נדרשת התחברות',
+  Forbidden: 'אין הרשאה לפעולה זו',
+  'Not Found': 'הפריט המבוקש לא נמצא',
+  Conflict: 'הפעולה מתנגשת עם מצב קיים',
+  'Payload Too Large': 'הבקשה גדולה מדי',
+  'Internal Server Error': 'שגיאת שרת',
+};
+
+function translateStatusText(statusText: string): string {
+  const mapped = STATUS_TEXT_HE[statusText];
+  if (mapped) return mapped;
+  if (/[a-zA-Z]{2,}/.test(statusText)) return 'אירעה שגיאה';
+  return statusText;
 }
 
 export async function apiRequest<T>(
@@ -61,7 +80,7 @@ export async function apiRequest<T>(
       headers,
     });
   } catch {
-    throw new ApiError(0, 'Network error');
+    throw new ApiError(0, 'שגיאת רשת');
   }
 
   if (response.status === 401) {
