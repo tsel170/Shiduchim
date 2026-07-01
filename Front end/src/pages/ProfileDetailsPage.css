@@ -53,12 +53,29 @@
 
 .profile-details-page__actions {
   display: flex;
+  flex-direction: column;
   gap: var(--space-sm);
-  align-items: center;
-  flex-wrap: wrap;
   margin-top: var(--space-lg);
   padding: var(--space-md) 0 var(--space-xl);
   border-top: 1px solid var(--color-border);
+}
+
+.profile-details-page__shadchan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  width: 100%;
+}
+
+.profile-details-page__shadchan-actions .send-btn,
+.profile-details-page__interest-actions .send-btn {
+  flex: 1 1 180px;
+}
+
+.profile-details-page__actions > .send-btn {
+  width: auto;
+  align-self: flex-start;
 }
 
 .profile-details-page__hint {
@@ -83,9 +100,5 @@
   gap: var(--space-sm);
   flex-wrap: wrap;
   width: 100%;
-}
-
-.profile-details-page__interest-actions .btn--selected {
-  box-shadow: 0 0 0 2px var(--color-primary);
 }
 

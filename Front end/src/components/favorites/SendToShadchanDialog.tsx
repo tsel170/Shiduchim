@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { SendButton } from '../common/SendButton';
 import {
   ShadchanPickerGroup,
   getDefaultShadchanSelection,
@@ -218,11 +219,15 @@ export const SendToShadchanDialog: React.FC<SendToShadchanDialogProps> = ({
           >
             ביטול
           </button>
-          <button
-            type="button"
-            className={`btn btn--primary add-shadchan-dialog__btn${
-              isSubmitting ? ' btn--loading' : ''
-            }`}
+          <SendButton
+            variant="shadchan"
+            className="add-shadchan-dialog__btn"
+            isLoading={isSubmitting}
+            disabled={
+              !selectedId ||
+              selectableShadchanim.length === 0 ||
+              mustCreateProfile
+            }
             onClick={() =>
               selectedId &&
               onSend({
@@ -230,17 +235,9 @@ export const SendToShadchanDialog: React.FC<SendToShadchanDialogProps> = ({
                 includeMyProfile: includeMyProfile && canIncludeMyProfile,
               })
             }
-            disabled={
-              !selectedId ||
-              selectableShadchanim.length === 0 ||
-              isSubmitting ||
-              mustCreateProfile
-            }
-            aria-busy={isSubmitting}
           >
-            {isSubmitting && <span className="btn__spinner" aria-hidden="true" />}
-            {isSubmitting ? 'שולח...' : 'שלח לשדכן'}
-          </button>
+            שלח לשדכן
+          </SendButton>
         </div>
       </div>
     </div>

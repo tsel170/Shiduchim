@@ -6,6 +6,7 @@ import {
   SendToShadchanDialog,
   SendToShadchanOptions,
 } from '../components/favorites/SendToShadchanDialog';
+import { SendButton } from '../components/common/SendButton';
 import {
   FAVORITE_SORT_OPTIONS,
   FavoritesSortPanel,
@@ -450,18 +451,16 @@ function FavoriteCard({
               {isActionLoading ? 'מבטל...' : 'בטל שליחה'}
             </button>
           ) : (
-            <button
-              type="button"
-              className={`btn btn--primary btn--sm favorites-item__send-btn${
-                isActionLoading ? ' btn--loading' : ''
-              }`}
+            <SendButton
+              variant="shadchan"
+              size="sm"
+              fullWidth
+              className="favorites-item__send-btn"
+              isLoading={isActionLoading}
               onClick={onOpenSendDialog}
-              disabled={isActionLoading}
-              aria-busy={isActionLoading}
             >
-              {isActionLoading && <span className="btn__spinner" aria-hidden="true" />}
-              {isActionLoading ? 'שולח...' : 'שלח לשדכן'}
-            </button>
+              שלח לשדכן
+            </SendButton>
           )}
           <button
             type="button"

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { SendButton } from '../common/SendButton';
 import { authApi } from '../../api/authApi';
 import { getApiErrorMessage } from '../../api/apiError';
 import { saveSharePrefixes } from '../../constants/profileShareOptions';
@@ -251,16 +252,15 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
                 צפה בפרופיל שלהם
               </button>
             )}
-            <button
-              type="button"
-              className={`btn btn--primary${isSending ? ' btn--loading' : ''}`}
+            <SendButton
+              variant="site"
+              isLoading={isSending}
               onClick={handleSiteSend}
-              disabled={isSending || !onSiteSend || !selectedPerson.accountId}
-              aria-busy={isSending}
+              disabled={!onSiteSend || !selectedPerson.accountId}
+              fullWidth
             >
-              {isSending && <span className="btn__spinner" aria-hidden="true" />}
-              {isSending ? 'שולח...' : 'שלח להם את הפרופיל'}
-            </button>
+              שלח להם את הפרופיל
+            </SendButton>
           </div>
           {!selectedPerson.accountId && (
             <p className="shadchan-share-panel__status">

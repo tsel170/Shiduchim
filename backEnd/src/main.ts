@@ -1,11 +1,16 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { validationExceptionFactory } from './common/utils/validation-error.util';
 
+const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT ?? '20mb';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useBodyParser('json', { limit: BODY_SIZE_LIMIT });
+  app.useBodyParser('urlencoded', { limit: BODY_SIZE_LIMIT, extended: true });
 
   app.enableCors({
     origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'],

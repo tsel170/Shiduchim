@@ -410,19 +410,15 @@ export const AppRoutes: React.FC = () => {
             </RoleRoute>
           }
         />
+        <Route path="/suggestions" element={<Navigate to="/suggestions/new" replace />} />
         <Route
-          path="/suggestions"
+          path="/suggestions/*"
           element={
             <RoleRoute allowed={['person']}>
               <ShadchanSuggestionsPage />
             </RoleRoute>
           }
-        >
-          <Route index element={<Navigate to="new" replace />} />
-          <Route path="new" element={null} />
-          <Route path="in-check" element={null} />
-          <Route path="checked" element={null} />
-        </Route>
+        />
         <Route
           path="/added-profiles/:profileId/edit"
           element={
