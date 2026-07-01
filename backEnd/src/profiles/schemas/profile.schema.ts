@@ -21,44 +21,47 @@ export class Profile {
   @Prop({ required: true })
   firstName: string;
 
-  @Prop()
-  lastName?: string;
+  @Prop({ default: '' })
+  lastName: string;
 
-  @Prop()
-  city?: string;
+  @Prop({ default: '' })
+  city: string;
 
   @Prop({ required: true })
   age: number;
 
-  @Prop()
-  heightCm?: number;
+  @Prop({ default: 0 })
+  heightCm: number;
 
-  @Prop()
-  religiousStream?: string;
+  @Prop({ default: '' })
+  religiousStream: string;
+
+  @Prop({ type: String, required: true, enum: ['male', 'female'] })
+  gender: 'male' | 'female';
 
   @Prop({ required: true })
   maritalStatus: string;
 
   @Prop({ type: [String], default: [] })
-  personalityTraits?: string[];
+  personalityTraits: string[];
 
   @Prop({ type: [String], default: [] })
-  hobbies?: string[];
+  hobbies: string[];
 
-  @Prop()
-  homeVision?: string;
+  @Prop({ default: '' })
+  familyVision: string;
 
   @Prop({ type: [String], default: [] })
-  lookingFor?: string[];
+  lookingFor: string[];
 
   @Prop({ type: [ReferenceContactSchema], default: [] })
-  references?: ReferenceContact[];
+  references: ReferenceContact[];
 
   @Prop({ type: [String], default: [] })
-  photos?: string[];
+  photos: string[];
 
   @Prop({ type: [String], default: [] })
-  shadchanIds?: string[];
+  shadchanIds: string[];
 
   @Prop()
   aboutMe?: string;

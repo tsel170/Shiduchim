@@ -7,7 +7,7 @@ import {
 
 export type FavoriteDocument = HydratedDocument<Favorite>;
 
-@Schema({ collection: 'favorites', versionKey: false })
+@Schema({ collection: 'favorites', versionKey: false, timestamps: { createdAt: true, updatedAt: false } })
 export class Favorite {
   @Prop({ required: true, unique: true, index: true })
   favoriteId: string;
@@ -23,6 +23,8 @@ export class Favorite {
 
   @Prop({ type: String, default: null })
   requestId: string | null;
+
+  createdAt: Date;
 }
 
 export const FavoriteSchema = SchemaFactory.createForClass(Favorite);

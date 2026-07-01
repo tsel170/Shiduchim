@@ -97,9 +97,115 @@
   margin-top: var(--space-xs);
 }
 
+.login-form__optional {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.login-card__footer {
+  margin: var(--space-lg) 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.login-card__footer-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-card__footer-link:hover {
+  text-decoration: underline;
+}
+
 .login-card__hint {
   margin: var(--space-lg) 0 0;
   text-align: center;
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.signup-role-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.signup-role-step__intro {
+  margin: 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.signup-role-grid {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.signup-role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: var(--space-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  cursor: pointer;
+  text-align: right;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.signup-role-card:hover {
+  border-color: var(--color-primary-light);
+  background: var(--color-surface);
+}
+
+.signup-role-card--selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg, #eef2ff);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.signup-role-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.signup-role-card__description {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.signup-role-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.signup-role-badge span {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.signup-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }

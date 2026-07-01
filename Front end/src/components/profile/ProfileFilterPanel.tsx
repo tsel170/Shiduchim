@@ -10,7 +10,11 @@ import {
 
   LOOKING_FOR_OPTIONS,
 
+  MIN_PROFILE_AGE,
+
   MARITAL_STATUS_OPTIONS,
+
+  GENDER_OPTIONS,
 
   PERSONALITY_TRAIT_OPTIONS,
 
@@ -89,6 +93,14 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
 
 
 
+  const patchAgeRange = (next: { min?: number; max?: number }) => {
+    const min = Math.max(MIN_PROFILE_AGE, next.min ?? value.ageRange.min);
+    const max = Math.max(min, next.max ?? value.ageRange.max);
+    patch('ageRange', { min, max });
+  };
+
+
+
   const anyFilterActive = (Object.keys(DEFAULT_FILTER_CONFIGURATION) as FilterKey[]).some(
 
     (key) => !isFilterKeyAtDefault(value, key)
@@ -163,13 +175,13 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
 
                 type="number"
 
+                min={MIN_PROFILE_AGE}
+
+                max={value.ageRange.max}
+
                 value={value.ageRange.min}
 
-                onChange={(e) =>
-
-                  patch('ageRange', { ...value.ageRange, min: Number(e.target.value) })
-
-                }
+                onChange={(e) => patchAgeRange({ min: Number(e.target.value) })}
 
               />
 
@@ -183,13 +195,13 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
 
                 type="number"
 
+                min={value.ageRange.min}
+
+                max={120}
+
                 value={value.ageRange.max}
 
-                onChange={(e) =>
-
-                  patch('ageRange', { ...value.ageRange, max: Number(e.target.value) })
-
-                }
+                onChange={(e) => patchAgeRange({ max: Number(e.target.value) })}
 
               />
 
@@ -276,6 +288,24 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
           onReset={() => resetKey('religiousStreams')}
 
           canReset={!isFilterKeyAtDefault(value, 'religiousStreams')}
+
+        />
+
+        <FilterChipsSection
+
+          themeClass="profile-field--gender"
+
+          title="מין"
+
+          options={GENDER_OPTIONS.map((x) => ({ id: x.value, label: x.label }))}
+
+          selected={value.genders}
+
+          onToggle={(id) => toggleMulti('genders', id)}
+
+          onReset={() => resetKey('genders')}
+
+          canReset={!isFilterKeyAtDefault(value, 'genders')}
 
         />
 

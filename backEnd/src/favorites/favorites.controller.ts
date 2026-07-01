@@ -8,18 +8,22 @@ import {
   Param,
   Patch,
   Post,
-  Query,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthUserPayload } from '../auth/types/auth-user.payload';
 import {
   CreateFavoriteDto,
   FavoriteResponseDto,
@@ -28,6 +32,8 @@ import {
 import { FavoritesService } from './favorites.service';
 
 @ApiTags('favorites')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('favorites')
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
@@ -35,37 +41,53 @@ export class FavoritesController {
   @Post()
   @ApiOperation({ summary: 'Add profile to favorites' })
   @ApiCreatedResponse({ type: FavoriteResponseDto })
-  create(@Body() createFavoriteDto: CreateFavoriteDto) {
-    return this.favoritesService.create(createFavoriteDto);
+  create(
+    @CurrentUser() user: AuthUserPayload,
+    @Body() createFavoriteDto: CreateFavoriteDto,
+  ) {
+    return this.favoritesService.create(user.accountId, createFavoriteDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get favorites' })
-  @ApiQuery({ name: 'ownerAccountId', required: false })
+  @ApiOperation({ summary: 'Get favorites for current user' })
   @ApiOkResponse({ type: FavoriteResponseDto, isArray: true })
-  findAll(@Query('ownerAccountId') ownerAccountId?: string) {
-    return this.favoritesService.findAll(ownerAccountId);
+  findAll(@CurrentUser() user: AuthUserPayload) {
+    return this.favoritesService.findAll(user.accountId);
   }
 
   @Get(':favoriteId')
   @ApiOperation({ summary: 'Get favorite by id' })
   @ApiParam({ name: 'favoriteId' })
   @ApiOkResponse({ type: FavoriteResponseDto })
-  @ApiNotFoundResponse({ description: 'Favorite not found' })
-  findOne(@Param('favoriteId') favoriteId: string) {
-    return this.favoritesService.findOne(favoriteId);
+  findOne(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('favoriteId') favoriteId: string,
+  ) {
+    return this.favoritesService.findOne(favoriteId, user.accountId);
   }
 
-  @Patch(':favoriteId')
+  @Put(':favoriteId')
   @ApiOperation({ summary: 'Update favorite' })
   @ApiParam({ name: 'favoriteId' })
   @ApiOkResponse({ type: FavoriteResponseDto })
-  @ApiNotFoundResponse({ description: 'Favorite not found' })
-  update(
+  put(
+    @CurrentUser() user: AuthUserPayload,
     @Param('favoriteId') favoriteId: string,
     @Body() updateFavoriteDto: UpdateFavoriteDto,
   ) {
-    return this.favoritesService.update(favoriteId, updateFavoriteDto);
+    return this.favoritesService.update(favoriteId, user.accountId, updateFavoriteDto);
+  }
+
+  @Patch(':favoriteId')
+  @ApiOperation({ summary: 'Partially update favorite' })
+  @ApiParam({ name: 'favoriteId' })
+  @ApiOkResponse({ type: FavoriteResponseDto })
+  patch(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('favoriteId') favoriteId: string,
+    @Body() updateFavoriteDto: UpdateFavoriteDto,
+  ) {
+    return this.favoritesService.update(favoriteId, user.accountId, updateFavoriteDto);
   }
 
   @Delete(':favoriteId')
@@ -73,8 +95,10 @@ export class FavoritesController {
   @ApiOperation({ summary: 'Remove favorite' })
   @ApiParam({ name: 'favoriteId' })
   @ApiNoContentResponse({ description: 'Favorite deleted' })
-  @ApiNotFoundResponse({ description: 'Favorite not found' })
-  remove(@Param('favoriteId') favoriteId: string) {
-    return this.favoritesService.remove(favoriteId);
+  remove(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('favoriteId') favoriteId: string,
+  ) {
+    return this.favoritesService.remove(favoriteId, user.accountId);
   }
 }

@@ -8,71 +8,91 @@ import {
   Param,
   Patch,
   Post,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  CITIES,
-  HOBBIES,
-  LOOKING_FOR_TRAITS,
-  MARITAL_STATUSES,
-  PERSONALITY_TRAITS,
-  STREAMS,
-} from './constants/profile-options';
+import { Public } from '../auth/decorators/public.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthUserPayload } from '../auth/types/auth-user.payload';
+import { PROFILE_OPTIONS_RESPONSE } from './constants/profile-options';
+import { CreateShadchanProfileDto } from './dto/create-shadchan-profile.dto';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { ProfileResponseDto } from './dto/profile-response.dto';
+import { SearchProfilesDto } from './dto/search-profiles.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateShadchanProfileDto } from './dto/update-shadchan-profile.dto';
 import { ProfilesService } from './profiles.service';
+import { SanitizeProfileBodyPipe } from '../common/pipes/sanitize-profile-body.pipe';
 
 @ApiTags('profiles')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('profiles')
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
+  @Public()
   @Get('options')
-  @ApiOperation({ summary: 'Get available selection options' })
-  @ApiOkResponse({
-    schema: {
-      example: {
-        cities: CITIES,
-        religiousStreams: STREAMS,
-        maritalStatuses: MARITAL_STATUSES,
-        personalityTraits: PERSONALITY_TRAITS,
-        hobbies: HOBBIES,
-        lookingFor: LOOKING_FOR_TRAITS,
-      },
-    },
-  })
+  @ApiOperation({ summary: 'Get available selection options (slug ids)' })
   getOptions() {
-    return {
-      cities: CITIES,
-      religiousStreams: STREAMS,
-      maritalStatuses: MARITAL_STATUSES,
-      personalityTraits: PERSONALITY_TRAITS,
-      hobbies: HOBBIES,
-      lookingFor: LOOKING_FOR_TRAITS,
-    };
+    return PROFILE_OPTIONS_RESPONSE;
+  }
+
+  @Post('search')
+  @ApiOperation({ summary: 'Search profiles with filter configuration' })
+  @ApiOkResponse({ type: ProfileResponseDto, isArray: true })
+  search(@Body() searchProfilesDto: SearchProfilesDto) {
+    return this.profilesService.search(searchProfilesDto.filters);
+  }
+
+  @Post('mine')
+  @ApiOperation({ summary: 'Create personal profile for the current person account' })
+  @ApiCreatedResponse({ type: ProfileResponseDto })
+  createMine(
+    @CurrentUser() user: AuthUserPayload,
+    @Body(SanitizeProfileBodyPipe) createProfileDto: CreateProfileDto,
+  ) {
+    return this.profilesService.createForPerson(user, createProfileDto);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create profile' })
   @ApiCreatedResponse({ type: ProfileResponseDto })
-  create(@Body() createProfileDto: CreateProfileDto) {
+  create(
+    @Body(SanitizeProfileBodyPipe) createProfileDto: CreateShadchanProfileDto,
+  ) {
     return this.profilesService.create(createProfileDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all profiles' })
+  @ApiOperation({ summary: 'Get profiles' })
+  @ApiQuery({ name: 'addedByShadchanId', required: false })
+  @ApiQuery({ name: 'managedByShadchanId', required: false })
+  @ApiQuery({ name: 'ownerAccountId', required: false })
   @ApiOkResponse({ type: ProfileResponseDto, isArray: true })
-  findAll() {
-    return this.profilesService.findAll();
+  findAll(
+    @Query('addedByShadchanId') addedByShadchanId?: string,
+    @Query('managedByShadchanId') managedByShadchanId?: string,
+    @Query('ownerAccountId') ownerAccountId?: string,
+  ) {
+    return this.profilesService.findAll({
+      addedByShadchanId,
+      managedByShadchanId,
+      ownerAccountId,
+    });
   }
 
   @Get(':profileId')
@@ -84,16 +104,27 @@ export class ProfilesController {
     return this.profilesService.findOne(profileId);
   }
 
+  @Put(':profileId')
+  @ApiOperation({ summary: 'Replace profile fields' })
+  @ApiParam({ name: 'profileId' })
+  @ApiOkResponse({ type: ProfileResponseDto })
+  put(
+    @Param('profileId') profileId: string,
+    @Body() updateProfileDto: CreateProfileDto,
+  ) {
+    return this.profilesService.update(profileId, updateProfileDto);
+  }
+
   @Patch(':profileId')
   @ApiOperation({ summary: 'Update profile' })
   @ApiParam({ name: 'profileId' })
   @ApiOkResponse({ type: ProfileResponseDto })
-  @ApiNotFoundResponse({ description: 'Profile not found' })
-  update(
+  patch(
     @Param('profileId') profileId: string,
-    @Body() updateProfileDto: UpdateProfileDto,
+    @CurrentUser() user: AuthUserPayload,
+    @Body() updateProfileDto: UpdateShadchanProfileDto,
   ) {
-    return this.profilesService.update(profileId, updateProfileDto);
+    return this.profilesService.updateForUser(profileId, user, updateProfileDto);
   }
 
   @Delete(':profileId')
@@ -101,8 +132,7 @@ export class ProfilesController {
   @ApiOperation({ summary: 'Delete profile' })
   @ApiParam({ name: 'profileId' })
   @ApiNoContentResponse({ description: 'Profile deleted' })
-  @ApiNotFoundResponse({ description: 'Profile not found' })
-  remove(@Param('profileId') profileId: string) {
-    return this.profilesService.remove(profileId);
+  remove(@Param('profileId') profileId: string, @CurrentUser() user: AuthUserPayload) {
+    return this.profilesService.removeForUser(profileId, user);
   }
 }

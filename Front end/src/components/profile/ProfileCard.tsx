@@ -1,6 +1,7 @@
 import React, { KeyboardEvent } from 'react';
+import { FavoriteButton } from '../common/FavoriteButton';
 import { FullProfile } from '../../types/profile';
-import { getMaritalStatusLabel } from '../../constants/profileOptions';
+import { getGenderLabel, getMaritalStatusLabel } from '../../constants/profileOptions';
 import './ProfileCard.css';
 
 interface ProfileCardProps {
@@ -48,19 +49,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       >
         {cover ? <img src={cover} alt="" className="profile-card__image" loading="lazy" /> : null}
         {showFavoriteControls && (
-          <button
-            type="button"
-            className={`profile-card__save${isFavorite ? ' profile-card__save--active' : ''}`}
-            aria-label={isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
-            aria-pressed={isFavorite}
+          <FavoriteButton
+            variant="icon"
+            isFavorite={isFavorite}
             disabled={!canFavorite}
+            className="profile-card__favorite"
             onClick={(event) => {
               event.stopPropagation();
               onToggleFavorite(profile.id);
             }}
-          >
-            <HeartIcon filled={isFavorite} />
-          </button>
+          />
         )}
       </div>
 
@@ -69,6 +67,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <h3 className="profile-card__name">{fullName}</h3>
           <p className="profile-card__meta">
             <span>גיל {profile.age}</span>
+            <span className="profile-card__dot" aria-hidden="true">
+              ·
+            </span>
+            <span>{getGenderLabel(profile.gender) || '—'}</span>
             <span className="profile-card__dot" aria-hidden="true">
               ·
             </span>
@@ -87,22 +89,3 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     </article>
   );
 };
-
-function HeartIcon({ filled }: { filled: boolean }) {
-  if (filled) {
-    return (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path
-        d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}

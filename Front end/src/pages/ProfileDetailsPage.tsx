@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
+import { PersonSuggestionResponse, ShadchanSuggestion } from '../types/suggestion';
+import { ManagementRequestProfileContext } from '../types/managementRequest';
 import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
+import { getApiErrorMessage } from '../api/apiError';
+import { managementRequestsApi } from '../api/managementRequestsApi';
+import { suggestionsApi } from '../api/suggestionsApi';
+import { requestsApi } from '../api/requestsApi';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
+import { FavoriteButton } from '../components/common/FavoriteButton';
+import { SendButton } from '../components/common/SendButton';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
+import { ManagementRequestForm } from '../components/profile/ManagementRequestForm';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
-import { isRatingsComplete } from '../utils/rating';
+import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
+import { isRatingsCompleteForProfile } from '../utils/rating';
+import { profileHasUserAccount } from '../utils/profileAccount';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import './Page.css';
 import './ProfileDetailsPage.css';
@@ -21,7 +33,11 @@ interface ProfileDetailsPageProps {
   isFavorite: boolean;
   onBack: () => void;
   onRate: (category: ProfileRatingCategory, value: number) => void;
-  onToggleFavorite: () => void;
+  onToggleFavorite: () => void | Promise<void>;
+  onSiteSend: (note: string, recipientAccountId: string) => Promise<void>;
+  isSuggestedProfile?: boolean;
+  suggestion?: ShadchanSuggestion | null;
+  onSuggestionUpdate?: (suggestion: ShadchanSuggestion) => void;
 }
 
 export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
@@ -36,24 +52,147 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onBack,
   onRate,
   onToggleFavorite,
+  onSiteSend,
+  isSuggestedProfile = false,
+  suggestion = null,
+  onSuggestionUpdate,
 }) => {
+  const navigate = useNavigate();
   const isShadchan = viewerRole === 'shadchan';
   const [shareTab, setShareTab] = useState<ShadchanShareTab | null>(null);
   const [shareSettings, setShareSettings] = useState<ProfileShareSettings>(() =>
     createDefaultProfileShareSettings()
   );
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [managementOpen, setManagementOpen] = useState(false);
+  const [managementContext, setManagementContext] =
+    useState<ManagementRequestProfileContext | null>(null);
 
-  const handleSendToShadchan = () => {
-    window.alert('בקשה נשלחה לשדכן (הדגמה בלבד)');
+  useEffect(() => {
+    if (!isShadchan || !profile.ownerAccountId) {
+      setManagementContext(null);
+      return;
+    }
+
+    let cancelled = false;
+    managementRequestsApi
+      .getProfileContext(profile.id)
+      .then((context) => {
+        if (!cancelled) setManagementContext(context);
+      })
+      .catch(() => {
+        if (!cancelled) setManagementContext(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isShadchan, profile.id, profile.ownerAccountId]);
+
+  const handleToggleFavorite = async () => {
+    setIsFavoriteLoading(true);
+    setActionMessage(null);
+    try {
+      await onToggleFavorite();
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsFavoriteLoading(false);
+    }
   };
 
-  const canFavorite = !isShadchan && isRatingsComplete(rating);
-  const photosUnlocked = isShadchan || canFavorite;
+  const handleRespondToSuggestion = async (response: PersonSuggestionResponse) => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      const updated = await suggestionsApi.respondToProfile(profile.id, response);
+      onSuggestionUpdate?.(updated);
+      setActionMessage(
+        response === 'interested'
+          ? 'עדכנת את השדכן שאת/ה מעוניין/ת — ההצעה עברה לבדיקה'
+          : 'עדכנת את השדכן שאינך מעוניין/ת'
+      );
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSendToShadchan = async () => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      await requestsApi.create({ targetProfileId: profile.id });
+      setActionMessage('הבקשה נשלחה לשדכן בהצלחה');
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSiteSend = async (note: string, recipientAccountId: string) => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      await onSiteSend(note, recipientAccountId);
+      setActionMessage('ההצעה נשלחה בהצלחה');
+      setShareTab(null);
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSendManagementRequest = async (message: string) => {
+    setIsSending(true);
+    setActionMessage(null);
+    try {
+      await managementRequestsApi.create({
+        personProfileId: profile.id,
+        message,
+      });
+      const context = await managementRequestsApi.getProfileContext(profile.id);
+      setManagementContext(context);
+      setManagementOpen(false);
+      setActionMessage('בקשת הניהול נשלחה — המשודך/ת יוכל/ה לאשר או לדחות');
+    } catch (error) {
+      setActionMessage(getApiErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const profileHasAccount = profileHasUserAccount(profile);
+  const canSendManagementRequest = managementContext
+    ? managementContext.canSend
+    : profileHasAccount;
+  const managementStatusMessage =
+    managementContext?.alreadyLinked
+      ? 'הפרופיל כבר באחריותך'
+      : managementContext?.reason && !managementContext.canSend
+        ? managementContext.reason
+        : null;
 
   const openShare = (tab: ShadchanShareTab) => {
+    setManagementOpen(false);
     setShareSettings(createDefaultProfileShareSettings());
     setShareTab(tab);
   };
+
+  const openManagement = () => {
+    setShareTab(null);
+    setManagementOpen((open) => !open);
+    setActionMessage(null);
+  };
+
+  const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
+  const photosUnlocked = isShadchan || isSuggestedProfile || canFavorite;
+  const personResponse = suggestion?.personResponse ?? null;
 
   return (
     <div className="page profile-details-page">
@@ -97,6 +236,9 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
               settings={shareSettings}
               onSettingsChange={setShareSettings}
               onClose={() => setShareTab(null)}
+              onSiteSend={handleSiteSend}
+              onViewPersonProfile={(personProfileId) => navigate(`/profiles/${personProfileId}`)}
+              isSending={isSending}
             />
           </aside>
         </>
@@ -115,34 +257,93 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
 
       <div className="profile-details-page__actions">
         {isShadchan ? (
-          <>
-            <button type="button" className="btn btn--primary" onClick={() => openShare('site')}>
+          <div className="profile-details-page__shadchan-actions">
+            <SendButton variant="site" onClick={() => openShare('site')}>
               שלח דרך האתר
-            </button>
-            <button type="button" className="btn btn--secondary" onClick={() => openShare('other')}>
+            </SendButton>
+            <SendButton variant="alt" onClick={() => openShare('other')}>
               שלח בשיטות אחרות
-            </button>
-          </>
+            </SendButton>
+            {profileHasAccount && (
+              <SendButton
+                variant="management"
+                selected={managementOpen}
+                onClick={openManagement}
+                disabled={!canSendManagementRequest}
+                title={!canSendManagementRequest ? managementStatusMessage ?? undefined : undefined}
+              >
+                שלח בקשת ניהול
+              </SendButton>
+            )}
+            {!canSendManagementRequest && managementStatusMessage && (
+              <p className="profile-details-page__hint">{managementStatusMessage}</p>
+            )}
+          </div>
         ) : (
           <>
-            <button
-              type="button"
-              className={`btn btn--favorite${isFavorite ? ' btn--favorite--saved' : ''}`}
-              onClick={onToggleFavorite}
+            <FavoriteButton
+              isFavorite={isFavorite}
+              isLoading={isFavoriteLoading}
+              onClick={handleToggleFavorite}
               disabled={!canFavorite}
               title={!canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''}
-            >
-              {isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
-            </button>
-            {!canFavorite && (
+            />
+            {!canFavorite && !isSuggestedProfile && (
               <p className="profile-details-page__hint">
                 יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
               </p>
             )}
-            <button type="button" className="btn btn--primary" onClick={handleSendToShadchan}>
-              שלח לשדכן
-            </button>
+            {isSuggestedProfile ? (
+              <>
+                {suggestion?.shadchanNote && (
+                  <p className="profile-details-page__shadchan-note">
+                    הערת השדכן: {suggestion.shadchanNote}
+                  </p>
+                )}
+                <div className="profile-details-page__interest-actions">
+                  <SendButton
+                    variant="interested"
+                    selected={personResponse === 'interested'}
+                    isLoading={isSending}
+                    onClick={() => handleRespondToSuggestion('interested')}
+                  >
+                    מעוניין/ת
+                  </SendButton>
+                  <SendButton
+                    variant="decline"
+                    selected={personResponse === 'not_interested'}
+                    isLoading={isSending}
+                    onClick={() => handleRespondToSuggestion('not_interested')}
+                  >
+                    לא מעוניין/ת
+                  </SendButton>
+                </div>
+                {personResponse && (
+                  <p className="profile-details-page__hint profile-details-page__hint--success">
+                    עדכון שנשלח לשדכן: {getPersonSuggestionResponseLabel(personResponse)}
+                  </p>
+                )}
+              </>
+            ) : (
+              <SendButton
+                variant="shadchan"
+                isLoading={isSending}
+                onClick={handleSendToShadchan}
+              >
+                שלח לשדכן
+              </SendButton>
+            )}
           </>
+        )}
+        {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}
+
+        {isShadchan && managementOpen && canSendManagementRequest && (
+          <ManagementRequestForm
+            profile={profile}
+            onSend={handleSendManagementRequest}
+            onClose={() => setManagementOpen(false)}
+            isSending={isSending}
+          />
         )}
       </div>
     </div>

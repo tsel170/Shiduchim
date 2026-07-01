@@ -57,34 +57,11 @@
   object-fit: cover;
 }
 
-.profile-card__save {
+.profile-card__favorite {
   position: absolute;
   top: var(--space-sm);
   left: var(--space-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: color 0.15s, background 0.15s;
-}
-
-.profile-card__save:hover {
-  color: var(--color-accent);
-}
-.profile-card__save:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.profile-card__save--active {
-  color: var(--color-accent);
+  z-index: 2;
 }
 
 .profile-card__body {

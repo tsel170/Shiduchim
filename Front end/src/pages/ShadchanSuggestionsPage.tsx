@@ -1,98 +1,302 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getApiErrorMessage } from '../api/apiError';
+import { managementRequestsApi } from '../api/managementRequestsApi';
+import { profilesApi } from '../api/profilesApi';
+import { suggestionsApi } from '../api/suggestionsApi';
+import { PageState } from '../components/common/PageState';
+import { ManagementRequestList } from '../components/suggestions/ManagementRequestList';
 import { getCityLabel } from '../constants/profileOptions';
 import {
+  getManagementRequestsSubtitle,
   getSuggestionCheckStatusClassName,
   getSuggestionCheckStatusLabel,
   getSuggestionStageEmptyMessage,
   getSuggestionStageSubtitle,
-  SUGGESTION_STAGE_TABS,
+  getSuggestionsPageView,
+  MANAGEMENT_REQUESTS_EMPTY_MESSAGE,
+  SUGGESTIONS_PAGE_TABS,
 } from '../constants/suggestionOptions';
-import { getProfileById } from '../data/mockProfiles';
-import { mockShadchanSuggestions, SuggestionStage } from '../data/mockShadchanSuggestions';
+import { useAuth } from '../contexts/AuthContext';
+import { ManagementRequest } from '../types/managementRequest';
+import { ShadchanSuggestion, SuggestionStage } from '../types/suggestion';
+import { FullProfile } from '../types/profile';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
 
-function pathToStage(pathname: string): SuggestionStage {
-  if (pathname.startsWith('/suggestions/in-check')) return 'in_check';
-  if (pathname.startsWith('/suggestions/checked')) return 'checked';
-  return 'new';
-}
-
 export const ShadchanSuggestionsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const activeStage = pathToStage(location.pathname);
+  const { refreshCurrentUser, currentUser } = useAuth();
+  const activeView = getSuggestionsPageView(location.pathname);
+  const activeStage = activeView === 'management' ? 'new' : (activeView as SuggestionStage);
+  const isManagementView = activeView === 'management';
 
-  const items = mockShadchanSuggestions
-    .filter((suggestion) => suggestion.stage === activeStage)
-    .map((suggestion) => {
-      const profile = getProfileById(suggestion.profileId);
-      return profile ? { suggestion, profile } : null;
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const [suggestions, setSuggestions] = useState<ShadchanSuggestion[]>([]);
+  const [managementRequests, setManagementRequests] = useState<ManagementRequest[]>([]);
+  const [profilesById, setProfilesById] = useState<Record<string, FullProfile>>({});
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
+  const [managementLoading, setManagementLoading] = useState(true);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [managementError, setManagementError] = useState<string | null>(null);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  const loadManagementRequests = useCallback(async () => {
+    setManagementLoading(true);
+    setManagementError(null);
+    try {
+      const requests = await managementRequestsApi.list('pending');
+      setManagementRequests(requests);
+    } catch (err) {
+      setManagementError(getApiErrorMessage(err));
+      setManagementRequests([]);
+    } finally {
+      setManagementLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadManagementRequests();
+  }, [loadManagementRequests]);
+
+  useEffect(() => {
+    if (isManagementView) return;
+
+    let cancelled = false;
+
+    async function loadSuggestions() {
+      setSuggestionsLoading(true);
+      setSuggestionsError(null);
+
+      try {
+        const loadedSuggestions = await suggestionsApi.list(activeStage);
+        if (cancelled) return;
+        setSuggestions(loadedSuggestions);
+
+        const nextProfiles: Record<string, FullProfile> = {};
+        for (const suggestion of loadedSuggestions) {
+          if (suggestion.profile) {
+            nextProfiles[suggestion.profileId] = suggestion.profile;
+          }
+        }
+
+        const missingProfileIds = loadedSuggestions
+          .map((suggestion) => suggestion.profileId)
+          .filter((profileId) => !nextProfiles[profileId]);
+
+        const fetched = await Promise.allSettled(
+          missingProfileIds.map((profileId) => profilesApi.getById(profileId))
+        );
+
+        fetched.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            nextProfiles[missingProfileIds[index]] = result.value;
+          }
+        });
+
+        if (!cancelled) {
+          setProfilesById(nextProfiles);
+        }
+      } catch (err) {
+        if (!cancelled) setSuggestionsError(getApiErrorMessage(err));
+      } finally {
+        if (!cancelled) setSuggestionsLoading(false);
+      }
+    }
+
+    loadSuggestions();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeStage, isManagementView]);
+
+  const handleRespondToManagementRequest = useCallback(
+    async (requestId: string, response: 'approved' | 'declined') => {
+      setRespondingId(requestId);
+      setActionMessage(null);
+      try {
+        await managementRequestsApi.respond(requestId, response);
+        setManagementRequests((prev) => prev.filter((request) => request.requestId !== requestId));
+        if (response === 'approved') {
+          await refreshCurrentUser();
+        }
+        setActionMessage(
+          response === 'approved'
+            ? 'אישרת את בקשת הניהול — השדכן/ית נוסף/ה לרשימת השדכנים שלך'
+            : 'דחית את בקשת הניהול'
+        );
+      } catch (err) {
+        setActionMessage(getApiErrorMessage(err));
+      } finally {
+        setRespondingId(null);
+      }
+    },
+    [refreshCurrentUser]
+  );
+
+  const loading = isManagementView ? managementLoading : suggestionsLoading;
+  const error = isManagementView ? managementError : suggestionsError;
+  const pendingCount = managementRequests.length;
+
+  const subtitle = loading
+    ? 'טוען...'
+    : isManagementView
+      ? getManagementRequestsSubtitle(pendingCount)
+      : getSuggestionStageSubtitle(activeStage, suggestions.length);
+
+  const emptyMessage = isManagementView
+    ? `${MANAGEMENT_REQUESTS_EMPTY_MESSAGE} בקשות מגיעות לחשבון המחובר (${currentUser?.email ?? 'לא ידוע'}).`
+    : getSuggestionStageEmptyMessage(activeStage);
+
+  const isEmpty = isManagementView ? pendingCount === 0 : suggestions.length === 0;
+
+  const showManagementBanner = !isManagementView && pendingCount > 0;
 
   return (
-    <div className="page added-profiles-page">
-      <header className="page__header">
-        <h1 className="page__title">הצעות מהשדכן</h1>
-        <p className="page__subtitle">{getSuggestionStageSubtitle(activeStage, items.length)}</p>
-      </header>
+    <div className="page added-profiles-page shadchan-suggestions-page">
+      {isManagementView ? (
+        <header className="suggestions-page-hero suggestions-page-hero--management">
+          <div className="suggestions-page-hero__glow" aria-hidden="true" />
+          <div className="suggestions-page-hero__icon" aria-hidden="true">
+            <HandshakeIcon />
+          </div>
+          <h1 className="suggestions-page-hero__title">בקשות ניהול</h1>
+          <p className="suggestions-page-hero__subtitle">
+            {loading ? 'טוען...' : getManagementRequestsSubtitle(pendingCount)}
+          </p>
+        </header>
+      ) : (
+        <header className="page__header">
+          <h1 className="page__title">הצעות מהשדכן</h1>
+          <p className="page__subtitle">{subtitle}</p>
+        </header>
+      )}
 
       <nav className="suggestions-tabs" aria-label="סוגי הצעות">
-        {SUGGESTION_STAGE_TABS.map((tab) => (
+        {SUGGESTIONS_PAGE_TABS.map((tab) => (
           <button
-            key={tab.stage}
+            key={tab.view}
             type="button"
-            className={`suggestions-tabs__tab${activeStage === tab.stage ? ' suggestions-tabs__tab--active' : ''}`}
-            aria-current={activeStage === tab.stage ? 'page' : undefined}
+            className={`suggestions-tabs__tab${
+              activeView === tab.view ? ' suggestions-tabs__tab--active' : ''
+            }${tab.view === 'management' ? ' suggestions-tabs__tab--management' : ''}`}
+            aria-current={activeView === tab.view ? 'page' : undefined}
             onClick={() => navigate(tab.path)}
           >
             {tab.label}
+            {tab.view === 'management' && pendingCount > 0 && (
+              <span className="suggestions-tabs__badge">{pendingCount}</span>
+            )}
           </button>
         ))}
       </nav>
 
-      {items.length === 0 ? (
-        <div className="profile-grid__empty added-profiles-page__empty">
-          <p>{getSuggestionStageEmptyMessage(activeStage)}</p>
+      {actionMessage && (
+        <div className="shadchan-suggestions-page__toast" role="status">
+          {actionMessage}
         </div>
-      ) : (
-        <ul className="added-profiles-list">
-          {items.map(({ suggestion, profile }) => (
-            <li key={suggestion.suggestionId} className="added-profiles-card">
-              <div>
-                <h3 className="added-profiles-card__name">
-                  {profile.firstName} {profile.lastName}
-                </h3>
-                <p className="added-profiles-card__meta">
-                  גיל {profile.age}
-                  <span className="added-profiles-card__dot" aria-hidden="true">
-                    ·
-                  </span>
-                  {getCityLabel(profile.city)}
-                </p>
-                <p className="added-profiles-card__note">{suggestion.shadchanNote}</p>
-                {activeStage === 'in_check' && suggestion.checkStatus && (
-                  <span
-                    className={`suggestion-status-badge ${getSuggestionCheckStatusClassName(suggestion.checkStatus)}`}
-                  >
-                    {getSuggestionCheckStatusLabel(suggestion.checkStatus)}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="btn btn--secondary btn--sm"
-                onClick={() => navigate(`/profiles/${profile.id}`)}
-              >
-                צפה בפרופיל
-              </button>
-            </li>
-          ))}
-        </ul>
       )}
+
+      {showManagementBanner && (
+        <section className="management-requests-banner" aria-label="בקשות ניהול ממתינות">
+          <div className="management-requests-banner__glow" aria-hidden="true" />
+          <div className="management-requests-banner__header">
+            <div className="management-requests-banner__intro">
+              <span className="management-requests-banner__icon" aria-hidden="true">
+                <HandshakeIcon />
+              </span>
+              <div>
+                <h2 className="management-requests-banner__title">בקשות ניהול ממתינות</h2>
+                <p className="management-requests-banner__text">
+                  שדכנים מבקשים לנהל את הפרופיל שלך — אשר/י או דחה/י כאן
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="management-requests-banner__link"
+              onClick={() => navigate('/suggestions/management')}
+            >
+              הצג הכל
+            </button>
+          </div>
+          <ManagementRequestList
+            compact
+            requests={managementRequests}
+            respondingId={respondingId}
+            onRespond={handleRespondToManagementRequest}
+          />
+        </section>
+      )}
+
+      <PageState
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && isEmpty && !showManagementBanner}
+        emptyMessage={emptyMessage}
+      >
+        {isManagementView ? (
+          <ManagementRequestList
+            requests={managementRequests}
+            respondingId={respondingId}
+            onRespond={handleRespondToManagementRequest}
+          />
+        ) : (
+          <ul className="added-profiles-list">
+            {suggestions.map((suggestion) => {
+              const profile = profilesById[suggestion.profileId];
+              const displayName = profile
+                ? `${profile.firstName} ${profile.lastName}`.trim()
+                : 'פרופיל מוצע';
+
+              return (
+                <li key={suggestion.suggestionId} className="added-profiles-card">
+                  <div>
+                    <h3 className="added-profiles-card__name">{displayName}</h3>
+                    {profile && (
+                      <p className="added-profiles-card__meta">
+                        גיל {profile.age}
+                        <span className="added-profiles-card__dot" aria-hidden="true">
+                          ·
+                        </span>
+                        {getCityLabel(profile.city)}
+                      </p>
+                    )}
+                    <p className="added-profiles-card__note">{suggestion.shadchanNote}</p>
+                    {activeStage === 'in_check' && suggestion.checkStatus && (
+                      <span
+                        className={`suggestion-status-badge ${getSuggestionCheckStatusClassName(suggestion.checkStatus)}`}
+                      >
+                        {getSuggestionCheckStatusLabel(suggestion.checkStatus)}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--secondary btn--sm"
+                    onClick={() => navigate(`/profiles/${suggestion.profileId}`)}
+                  >
+                    צפה בפרופיל
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </PageState>
     </div>
   );
 };
+
+function HandshakeIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 00-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
