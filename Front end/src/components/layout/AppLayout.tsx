@@ -39,7 +39,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         panelHighlight={headerPanelHighlight}
       />
       <div className="app-shell__body">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onLogout={onLogout}
+          userLabel={userLabel}
+        />
         <button
           type="button"
           className={`app-shell__overlay${sidebarOpen ? ' app-shell__overlay--visible' : ''}`}

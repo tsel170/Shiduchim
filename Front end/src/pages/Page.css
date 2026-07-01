@@ -4,16 +4,18 @@
 
 .page__title {
   margin: 0 0 var(--space-xs);
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
   color: var(--color-text);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .page__subtitle {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  max-width: 56ch;
 }
 
 .page__placeholder {
@@ -23,10 +25,10 @@
   justify-content: center;
   gap: var(--space-md);
   min-height: 320px;
-  padding: var(--space-xl);
+  padding: var(--space-2xl);
   background: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-xl);
   color: var(--color-text-secondary);
   text-align: center;
 }
@@ -37,7 +39,7 @@
 }
 
 .page__placeholder-hint {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
@@ -45,7 +47,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  max-width: 520px;
+  max-width: 560px;
 }
 
 .settings-section {
@@ -53,18 +55,22 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
+  box-shadow: var(--shadow-xs);
 }
 
 .settings-section__title {
   margin: 0 0 var(--space-md);
-  font-size: 1rem;
-  font-weight: 600;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .settings-section__row {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 6px;
   margin-bottom: var(--space-md);
 }
 
@@ -73,17 +79,24 @@
 }
 
 .settings-section__label {
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
   color: var(--color-text-secondary);
 }
 
 .settings-section__input {
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
+  padding: 11px 14px;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   font-family: inherit;
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.settings-section__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ring);
 }
