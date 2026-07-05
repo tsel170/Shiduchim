@@ -9,17 +9,23 @@ import {
   MatchRequest,
   MatchRequestDocument,
 } from '../match-requests/schemas/match-request.schema';
+import {
+  MatchCase,
+  MatchCaseDocument,
+} from '../match-cases/schemas/match-case.schema';
 import { Profile, ProfileDocument } from '../profiles/schemas/profile.schema';
 import {
   Suggestion,
   SuggestionDocument,
 } from '../suggestions/schemas/suggestion.schema';
 import { DEMO_BROWSE_PROFILES, DEMO_PERSON_PROFILE } from './demo-seed.data';
+import { LegacyMatchMigrationService } from './legacy-match-migration.service';
 
 @Injectable()
 export class DemoSeedService implements OnModuleInit {
   constructor(
     private readonly accountsService: AccountsService,
+    private readonly legacyMigration: LegacyMatchMigrationService,
     @InjectModel(Profile.name)
     private readonly profileModel: Model<ProfileDocument>,
     @InjectModel(Account.name)
@@ -30,6 +36,8 @@ export class DemoSeedService implements OnModuleInit {
     private readonly suggestionModel: Model<SuggestionDocument>,
     @InjectModel(MatchRequest.name)
     private readonly matchRequestModel: Model<MatchRequestDocument>,
+    @InjectModel(MatchCase.name)
+    private readonly matchCaseModel: Model<MatchCaseDocument>,
   ) {}
 
   async onModuleInit() {
@@ -38,6 +46,7 @@ export class DemoSeedService implements OnModuleInit {
     await this.ensureDemoPersonUnderShadchanResponsibility();
     await this.syncDemoShadchanReferences();
     await this.accountsService.syncShadchanLinksToProfiles();
+    await this.legacyMigration.migrate();
     const existingProfiles = await this.profileModel.countDocuments();
     if (existingProfiles > 0) return;
 
@@ -110,53 +119,12 @@ export class DemoSeedService implements OnModuleInit {
       },
     ]);
 
-    await this.suggestionModel.insertMany([
-      {
-        suggestionId: 'sug-p3',
-        ownerAccountId: personAccount.accountId,
-        profileId: 'p3',
-        shadchanId: shadchanAccount.accountId,
-        shadchanNote: 'חשבתי שזה יכול להתאים לך — שווה לבדוק.',
-        sentAt: new Date('2026-06-02'),
-        stage: 'new',
-      },
-      {
-        suggestionId: 'sug-p4',
-        ownerAccountId: personAccount.accountId,
-        profileId: 'p4',
-        shadchanId: shadchanAccount.accountId,
-        shadchanNote: 'פרופיל מומלץ מהמאגר שלי.',
-        sentAt: new Date('2026-06-01'),
-        stage: 'new',
-      },
-      {
-        suggestionId: 'sug-p1',
-        ownerAccountId: personAccount.accountId,
-        profileId: 'p1',
-        shadchanId: shadchanAccount.accountId,
-        shadchanNote: 'שלחתי את הפרופיל שלך לבדיקה.',
-        sentAt: new Date('2026-05-28'),
-        stage: 'in_check',
-        checkStatus: 'sending_profile',
-      },
-    ]);
-
-    await this.matchRequestModel.insertMany([
-      {
-        requestId: 'req-1',
-        shadchanId: shadchanAccount.accountId,
-        senderProfileId: DEMO_PERSON_PROFILE.profileId,
-        targetProfileId: 'p1',
-        notes: 'מעוניין לשמוע עוד על הפרופיל.',
-      },
-      {
-        requestId: 'req-2',
-        shadchanId: shadchanAccount.accountId,
-        senderProfileId: DEMO_PERSON_PROFILE.profileId,
-        targetProfileId: 'p2',
-        notes: 'נשלח דרך "שלח לשדכן".',
-      },
-    ]);
+    const demoCases = this.legacyMigration.buildDemoMatchCases(
+      personAccount.accountId,
+      DEMO_PERSON_PROFILE.profileId,
+      shadchanAccount.accountId,
+    );
+    await this.matchCaseModel.insertMany(demoCases);
   }
 
   private async ensureDemoPersonShadchanLink() {

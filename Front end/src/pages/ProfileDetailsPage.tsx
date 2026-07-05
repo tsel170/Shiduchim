@@ -2,20 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
-import { PersonSuggestionResponse, ShadchanSuggestion } from '../types/suggestion';
 import { ManagementRequestProfileContext } from '../types/managementRequest';
 import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
 import { getApiErrorMessage } from '../api/apiError';
 import { managementRequestsApi } from '../api/managementRequestsApi';
-import { suggestionsApi } from '../api/suggestionsApi';
-import { requestsApi } from '../api/requestsApi';
+import { matchCasesApi } from '../api/matchCasesApi';
+import { canPersonActOnCase } from '../constants/matchCaseOptions';
+import { MatchCase } from '../types/matchCase';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
 import { FavoriteButton } from '../components/common/FavoriteButton';
 import { SendButton } from '../components/common/SendButton';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
 import { ManagementRequestForm } from '../components/profile/ManagementRequestForm';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
-import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
 import { isRatingsCompleteForProfile } from '../utils/rating';
 import { profileHasUserAccount } from '../utils/profileAccount';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
@@ -34,10 +33,14 @@ interface ProfileDetailsPageProps {
   onBack: () => void;
   onRate: (category: ProfileRatingCategory, value: number) => void;
   onToggleFavorite: () => void | Promise<void>;
-  onSiteSend: (note: string, recipientAccountId: string) => Promise<void>;
-  isSuggestedProfile?: boolean;
-  suggestion?: ShadchanSuggestion | null;
-  onSuggestionUpdate?: (suggestion: ShadchanSuggestion) => void;
+  onSiteSend: (
+    note: string,
+    recipientAccountId: string,
+    recipientProfileId: string
+  ) => Promise<void>;
+  isMatchCaseView?: boolean;
+  matchCase?: MatchCase | null;
+  onMatchCaseUpdate?: (matchCase: MatchCase) => void;
 }
 
 export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
@@ -53,9 +56,9 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onRate,
   onToggleFavorite,
   onSiteSend,
-  isSuggestedProfile = false,
-  suggestion = null,
-  onSuggestionUpdate,
+  isMatchCaseView = false,
+  matchCase = null,
+  onMatchCaseUpdate,
 }) => {
   const navigate = useNavigate();
   const isShadchan = viewerRole === 'shadchan';
@@ -103,15 +106,16 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
     }
   };
 
-  const handleRespondToSuggestion = async (response: PersonSuggestionResponse) => {
+  const handleRespondToMatchCase = async (action: 'interested' | 'not_interested') => {
+    if (!matchCase) return;
     setIsSending(true);
     setActionMessage(null);
     try {
-      const updated = await suggestionsApi.respondToProfile(profile.id, response);
-      onSuggestionUpdate?.(updated);
+      const updated = await matchCasesApi.personAction(matchCase.caseId, action);
+      onMatchCaseUpdate?.(updated);
       setActionMessage(
-        response === 'interested'
-          ? 'עדכנת את השדכן שאת/ה מעוניין/ת — ההצעה עברה לבדיקה'
+        action === 'interested'
+          ? 'עדכנת את השדכן שאת/ה מעוניין/ת'
           : 'עדכנת את השדכן שאינך מעוניין/ת'
       );
     } catch (error) {
@@ -121,25 +125,20 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
     }
   };
 
-  const handleSendToShadchan = async () => {
-    setIsSending(true);
-    setActionMessage(null);
-    try {
-      await requestsApi.create({ targetProfileId: profile.id });
-      setActionMessage('הבקשה נשלחה לשדכן בהצלחה');
-    } catch (error) {
-      setActionMessage(getApiErrorMessage(error));
-    } finally {
-      setIsSending(false);
-    }
+  const handleSendToShadchan = () => {
+    navigate('/favorites');
   };
 
-  const handleSiteSend = async (note: string, recipientAccountId: string) => {
+  const handleSiteSend = async (
+    note: string,
+    recipientAccountId: string,
+    recipientProfileId: string
+  ) => {
     setIsSending(true);
     setActionMessage(null);
     try {
-      await onSiteSend(note, recipientAccountId);
-      setActionMessage('ההצעה נשלחה בהצלחה');
+      await onSiteSend(note, recipientAccountId, recipientProfileId);
+      setActionMessage('תיק השידוך נפתח בהצלחה');
       setShareTab(null);
     } catch (error) {
       setActionMessage(getApiErrorMessage(error));
@@ -191,8 +190,9 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   };
 
   const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
-  const photosUnlocked = isShadchan || isSuggestedProfile || canFavorite;
-  const personResponse = suggestion?.personResponse ?? null;
+  const photosUnlocked = isShadchan || isMatchCaseView || canFavorite;
+  const showCaseActions =
+    isMatchCaseView && matchCase && canPersonActOnCase(matchCase.currentStatus);
 
   return (
     <div className="page profile-details-page">
@@ -281,7 +281,7 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
           </div>
         ) : (
           <>
-            {!isSuggestedProfile && (
+            {!isMatchCaseView && (
               <>
                 <FavoriteButton
                   isFavorite={isFavorite}
@@ -297,46 +297,33 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
                     יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
                   </p>
                 )}
-                <SendButton
-                  variant="shadchan"
-                  isLoading={isSending}
-                  onClick={handleSendToShadchan}
-                >
+                <SendButton variant="shadchan" onClick={handleSendToShadchan}>
                   שלח לשדכן
                 </SendButton>
               </>
             )}
-            {isSuggestedProfile && (
-              <>
-                {suggestion?.shadchanNote && (
-                  <p className="profile-details-page__shadchan-note">
-                    הערת השדכן: {suggestion.shadchanNote}
-                  </p>
-                )}
-                <div className="profile-details-page__interest-actions">
-                  <SendButton
-                    variant="interested"
-                    selected={personResponse === 'interested'}
-                    isLoading={isSending}
-                    onClick={() => handleRespondToSuggestion('interested')}
-                  >
-                    מעוניין/ת
-                  </SendButton>
-                  <SendButton
-                    variant="decline"
-                    selected={personResponse === 'not_interested'}
-                    isLoading={isSending}
-                    onClick={() => handleRespondToSuggestion('not_interested')}
-                  >
-                    לא מעוניין/ת
-                  </SendButton>
-                </div>
-                {personResponse && (
-                  <p className="profile-details-page__hint profile-details-page__hint--success">
-                    עדכון שנשלח לשדכן: {getPersonSuggestionResponseLabel(personResponse)}
-                  </p>
-                )}
-              </>
+            {isMatchCaseView && matchCase?.internalNotes && (
+              <p className="profile-details-page__shadchan-note">
+                הערת השדכן: {matchCase.internalNotes}
+              </p>
+            )}
+            {showCaseActions && (
+              <div className="profile-details-page__interest-actions">
+                <SendButton
+                  variant="interested"
+                  isLoading={isSending}
+                  onClick={() => handleRespondToMatchCase('interested')}
+                >
+                  מעוניין/ת
+                </SendButton>
+                <SendButton
+                  variant="decline"
+                  isLoading={isSending}
+                  onClick={() => handleRespondToMatchCase('not_interested')}
+                >
+                  לא מעוניין/ת
+                </SendButton>
+              </div>
             )}
           </>
         )}

@@ -1,5 +1,57 @@
 export type AccountRole = 'person' | 'shadchan';
 
+export type MatchPriority = 'low' | 'normal' | 'high';
+
+export type MatchStatus =
+  | 'pending'
+  | 'reviewing'
+  | 'contacting_sender'
+  | 'waiting_for_sender'
+  | 'contacting_receiver'
+  | 'waiting_for_receiver'
+  | 'matched'
+  | 'rejected'
+  | 'cancelled'
+  | 'closed';
+
+export type PersonCaseAction = 'interested' | 'not_interested';
+
+export type CaseHistoryAction =
+  | 'Created'
+  | 'Status Changed'
+  | 'Assigned'
+  | 'Reassigned'
+  | 'Note Added'
+  | 'Closed'
+  | 'Reopened';
+
+export interface MatchCase {
+  caseId: string;
+  senderProfileId: string;
+  targetProfileId: string;
+  senderAccountId: string;
+  targetAccountId: string | null;
+  assignedShadchanId: string;
+  currentStatus: MatchStatus;
+  priority: MatchPriority;
+  tags: string[];
+  internalNotes: string;
+  createdAt: Date;
+  updatedAt: Date;
+  closedAt: Date | null;
+}
+
+export interface CaseHistoryEntry {
+  historyId: string;
+  caseId: string;
+  action: CaseHistoryAction;
+  previousStatus?: MatchStatus;
+  newStatus?: MatchStatus;
+  changedByAccountId: string;
+  timestamp: Date;
+  note?: string;
+}
+
 export type SuggestionStage = 'new' | 'in_check' | 'checked';
 
 export type SuggestionCheckStatus =

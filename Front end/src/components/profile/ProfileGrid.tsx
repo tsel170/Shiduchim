@@ -1,5 +1,6 @@
 import React from 'react';
 import { FavoriteProfile, FullProfile, ProfileRating } from '../../types/profile';
+import { MatchStatus } from '../../types/matchCase';
 import { getRateableCategories, isRatingsCompleteForProfile } from '../../utils/rating';
 import { ProfileCard } from './ProfileCard';
 import { ProfileCardSkeleton } from './ProfileCardSkeleton';
@@ -17,6 +18,7 @@ interface ProfileGridProps {
   onToggleFavorite: (id: string) => void;
   onViewProfile: (id: string) => void;
   emptyMessage?: string;
+  matchStatusByProfileId?: Record<string, MatchStatus | null | undefined>;
 }
 
 export const ProfileGrid: React.FC<ProfileGridProps> = ({
@@ -29,6 +31,7 @@ export const ProfileGrid: React.FC<ProfileGridProps> = ({
   onToggleFavorite,
   onViewProfile,
   emptyMessage = 'לא נמצאו פרופילים',
+  matchStatusByProfileId = {},
 }) => {
   if (loading) {
     return (
@@ -62,6 +65,7 @@ export const ProfileGrid: React.FC<ProfileGridProps> = ({
             onToggleFavorite={onToggleFavorite}
             onViewProfile={onViewProfile}
             isFavorite={favorites.some((x) => x.profileId === profile.id)}
+            matchStatus={matchStatusByProfileId[profile.id] ?? null}
           />
         </div>
       ))}

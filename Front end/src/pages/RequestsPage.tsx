@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { ApiRequest, requestsApi } from '../api/requestsApi';
+import { matchCasesApi } from '../api/matchCasesApi';
 import { suggestionsApi, ApiSuggestion } from '../api/suggestionsApi';
 import { RequestProfilePreview } from '../components/requests/RequestProfilePreview';
 import { PageState } from '../components/common/PageState';
 import { SendButton } from '../components/common/SendButton';
 import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
+import { useAuth } from '../contexts/AuthContext';
 import { getProfileDisplayName } from '../utils/profileDisplay';
 import './AddedProfilesPage.css';
 import './Page.css';
@@ -14,6 +16,7 @@ import './RequestsPage.css';
 
 export const RequestsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [items, setItems] = useState<ApiRequest[]>([]);
   const [responses, setResponses] = useState<ApiSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,14 +67,20 @@ export const RequestsPage: React.FC = () => {
       return;
     }
 
+    if (!currentUser?.accountId) {
+      setActionError('יש להתחבר מחדש');
+      return;
+    }
+
     setActionError(null);
     try {
       const senderName = getProfileDisplayName(senderProfile);
       const targetName = getProfileDisplayName(request.targetProfile);
-      await suggestionsApi.create({
-        ownerAccountId: recipientAccountId,
-        profileId: senderProfileId,
-        shadchanNote:
+      await matchCasesApi.create({
+        senderProfileId,
+        targetProfileId: request.targetProfileId,
+        assignedShadchanId: currentUser.accountId,
+        note:
           request.notes ??
           `המלצה עבור ${targetName}: ${senderName} ביקש/ה לשמוע על הפרופיל שלך`,
       });
@@ -79,7 +88,7 @@ export const RequestsPage: React.FC = () => {
     } catch (err) {
       setActionError(getApiErrorMessage(err));
     }
-  }, []);
+  }, [currentUser?.accountId]);
 
   return (
     <div className="page added-profiles-page requests-page">
