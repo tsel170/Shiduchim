@@ -281,19 +281,32 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
           </div>
         ) : (
           <>
-            <FavoriteButton
-              isFavorite={isFavorite}
-              isLoading={isFavoriteLoading}
-              onClick={handleToggleFavorite}
-              disabled={!canFavorite}
-              title={!canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''}
-            />
-            {!canFavorite && !isSuggestedProfile && (
-              <p className="profile-details-page__hint">
-                יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
-              </p>
+            {!isSuggestedProfile && (
+              <>
+                <FavoriteButton
+                  isFavorite={isFavorite}
+                  isLoading={isFavoriteLoading}
+                  onClick={handleToggleFavorite}
+                  disabled={!canFavorite}
+                  title={
+                    !canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''
+                  }
+                />
+                {!canFavorite && (
+                  <p className="profile-details-page__hint">
+                    יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
+                  </p>
+                )}
+                <SendButton
+                  variant="shadchan"
+                  isLoading={isSending}
+                  onClick={handleSendToShadchan}
+                >
+                  שלח לשדכן
+                </SendButton>
+              </>
             )}
-            {isSuggestedProfile ? (
+            {isSuggestedProfile && (
               <>
                 {suggestion?.shadchanNote && (
                   <p className="profile-details-page__shadchan-note">
@@ -324,14 +337,6 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
                   </p>
                 )}
               </>
-            ) : (
-              <SendButton
-                variant="shadchan"
-                isLoading={isSending}
-                onClick={handleSendToShadchan}
-              >
-                שלח לשדכן
-              </SendButton>
             )}
           </>
         )}

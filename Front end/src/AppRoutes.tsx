@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
+  useSearchParams,
 } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { HeaderPanelMode } from './components/header/Header';
@@ -533,7 +534,14 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   const { currentUser } = useAuth();
   const { profileId } = useParams<{ profileId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const viewerRole = currentUser?.role ?? 'person';
+  const isSuggestionContext =
+    searchParams.get('context') === 'suggestion' ||
+    Boolean(
+      (location.state as { suggestionContext?: boolean } | null)?.suggestionContext
+    );
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -564,7 +572,7 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   }, [profileId]);
 
   useEffect(() => {
-    if (viewerRole !== 'person' || !profileId) {
+    if (viewerRole !== 'person' || !profileId || !isSuggestionContext) {
       setIsSuggestedProfile(false);
       setSuggestion(null);
       return;
@@ -588,7 +596,10 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [viewerRole, profileId]);
+  }, [viewerRole, profileId, isSuggestionContext]);
+
+  const isSuggestionView =
+    isSuggestionContext && isSuggestedProfile && suggestion !== null;
 
   if (!profileId) {
     return <Navigate to="/browse" replace />;
@@ -622,7 +633,7 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       onBack={() => navigate(-1)}
       onRate={(category, value) => onRate(profile.id, category, value)}
       onToggleFavorite={() => onToggleFavorite(profile.id)}
-      isSuggestedProfile={isSuggestedProfile}
+      isSuggestedProfile={isSuggestionView}
       suggestion={suggestion}
       onSuggestionUpdate={setSuggestion}
       onSiteSend={async (note, recipientAccountId) => {
