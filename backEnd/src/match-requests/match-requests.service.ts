@@ -155,6 +155,13 @@ export class MatchRequestsService {
       this.profilesService.findOne(matchRequest.targetProfileId),
     ]);
 
+    const targetOwnerAccountId = targetProfile
+      ? await this.accountsService.findPersonAccountIdForProfile({
+          profileId: targetProfile.profileId,
+          ownerAccountId: targetProfile.ownerAccountId ?? null,
+        })
+      : null;
+
     return {
       requestId: matchRequest.requestId,
       senderProfileId: matchRequest.senderProfileId,
@@ -165,6 +172,7 @@ export class MatchRequestsService {
       updatedAt: matchRequest.updatedAt,
       senderProfile,
       targetProfile,
+      targetOwnerAccountId,
     };
   }
 }

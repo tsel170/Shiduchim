@@ -7,6 +7,7 @@ import { RequestProfilePreview } from '../components/requests/RequestProfilePrev
 import { PageState } from '../components/common/PageState';
 import { SendButton } from '../components/common/SendButton';
 import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
+import { getProfileDisplayName } from '../utils/profileDisplay';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './RequestsPage.css';
@@ -49,20 +50,30 @@ export const RequestsPage: React.FC = () => {
   }, []);
 
   const handleSendSenderProfile = useCallback(async (request: ApiRequest) => {
-    const ownerAccountId = request.senderProfile?.ownerAccountId;
-    if (!ownerAccountId || !request.senderProfile) {
-      setActionError('לא נמצא חשבון למשודך/ת ששלח/ה את הבקשה');
+    const senderProfile = request.senderProfile;
+    const senderProfileId = request.senderProfileId ?? senderProfile?.id;
+    const recipientAccountId = request.targetOwnerAccountId;
+
+    if (!senderProfile || !senderProfileId) {
+      setActionError('לא נמצא פרופיל של המשודך/ת ששלח/ה את הבקשה');
+      return;
+    }
+
+    if (!recipientAccountId) {
+      setActionError('למשודך/ת שביקש/ה לבדוק את הפרופיל אין חשבון באפליקציה');
       return;
     }
 
     setActionError(null);
     try {
+      const senderName = getProfileDisplayName(senderProfile);
+      const targetName = getProfileDisplayName(request.targetProfile);
       await suggestionsApi.create({
-        ownerAccountId,
-        profileId: request.targetProfileId,
+        ownerAccountId: recipientAccountId,
+        profileId: senderProfileId,
         shadchanNote:
           request.notes ??
-          `המלצה עבור ${request.senderProfile.firstName} ${request.senderProfile.lastName}`,
+          `המלצה עבור ${targetName}: ${senderName} ביקש/ה לשמוע על הפרופיל שלך`,
       });
       setSentRequestIds((prev) => new Set(prev).add(request.requestId));
     } catch (err) {
@@ -132,6 +143,9 @@ export const RequestsPage: React.FC = () => {
             const senderProfile = request.senderProfile;
             const requestedProfile = request.targetProfile;
             const isSent = sentRequestIds.has(request.requestId);
+            const canSendToTarget = Boolean(
+              senderProfile && request.senderProfileId && request.targetOwnerAccountId
+            );
 
             return (
               <li key={request.requestId} className="added-profiles-card request-card">
@@ -164,14 +178,16 @@ export const RequestsPage: React.FC = () => {
                       variant="site"
                       size="sm"
                       sent={isSent}
-                      disabled={isSent || !senderProfile}
-                      onClick={() => senderProfile && handleSendSenderProfile(request)}
+                      disabled={isSent || !canSendToTarget}
+                      onClick={() => canSendToTarget && handleSendSenderProfile(request)}
                     >
                       {isSent
                         ? 'הפרופיל נשלח'
-                        : senderProfile
-                          ? `שלח את פרופיל ${senderProfile.firstName}`
-                          : 'אין פרופיל משודך/ת'}
+                        : !senderProfile || !request.senderProfileId
+                          ? 'אין פרופיל משודך/ת'
+                          : !request.targetOwnerAccountId
+                            ? 'למשודך/ת המבוקש/ת אין חשבון'
+                            : `שלח את פרופיל ${getProfileDisplayName(senderProfile)}`}
                     </SendButton>
                   </div>
                 </div>

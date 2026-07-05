@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -42,7 +41,19 @@ export class SuggestionsService {
       profileId: createSuggestionDto.profileId,
     });
     if (existing) {
-      throw new ConflictException('כבר נשלח פרופיל זה למשודך/ת');
+      existing.shadchanId = user.accountId;
+      existing.shadchanNote = createSuggestionDto.shadchanNote;
+      existing.sentAt = new Date();
+      existing.stage = createSuggestionDto.stage ?? 'new';
+      if (createSuggestionDto.checkStatus) {
+        existing.checkStatus = createSuggestionDto.checkStatus;
+      } else {
+        delete existing.checkStatus;
+      }
+      existing.personResponse = null;
+      existing.personRespondedAt = null;
+      await existing.save();
+      return this.toResponse(existing, profile);
     }
 
     const suggestion = await this.suggestionModel.create({
@@ -235,19 +246,20 @@ export class SuggestionsService {
       profiles.filter(Boolean).map((p) => [p!.profileId, p]),
     );
 
-    return suggestions.map((suggestion) => {
-      const owner = ownersById[suggestion.ownerAccountId];
-      const profile = profilesById[suggestion.profileId] ?? null;
-      const ownerName = owner
-        ? [owner.firstName, owner.lastName].filter(Boolean).join(' ').trim() ||
-          owner.email
-        : 'משודך/ת';
+    return Promise.all(
+      suggestions.map(async (suggestion) => {
+        const owner = ownersById[suggestion.ownerAccountId];
+        const profile = profilesById[suggestion.profileId] ?? null;
+        const ownerName = owner
+          ? await this.accountsService.getPersonDisplayName(owner)
+          : 'משודך/ת';
 
-      return {
-        ...this.toResponse(suggestion, profile),
-        ownerName,
-      };
-    });
+        return {
+          ...this.toResponse(suggestion, profile),
+          ownerName,
+        };
+      }),
+    );
   }
 
   private toResponse(

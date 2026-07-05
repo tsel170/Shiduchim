@@ -36,6 +36,7 @@ export class DemoSeedService implements OnModuleInit {
     await this.accountsService.seedDemoAccounts();
     await this.ensureDemoPersonShadchanLink();
     await this.ensureDemoPersonUnderShadchanResponsibility();
+    await this.syncDemoShadchanReferences();
     await this.accountsService.syncShadchanLinksToProfiles();
     const existingProfiles = await this.profileModel.countDocuments();
     if (existingProfiles > 0) return;
@@ -179,5 +180,58 @@ export class DemoSeedService implements OnModuleInit {
       { profileId: DEMO_PERSON_PROFILE.profileId },
       { $set: { addedByShadchanId: shadchanAccount.accountId } },
     );
+  }
+
+  /** Keep demo suggestions/requests pointed at the current demo account IDs. */
+  private async syncDemoShadchanReferences() {
+    const personAccount = await this.accountModel.findOne({ email: 'Person' });
+    const shadchanAccount = await this.accountModel.findOne({ email: 'Shadchan' });
+    if (!personAccount || !shadchanAccount) return;
+
+    const personAccountId = personAccount.accountId;
+    const shadchanAccountId = shadchanAccount.accountId;
+
+    await this.suggestionModel.updateMany(
+      {
+        $or: [
+          { ownerAccountId: personAccountId },
+          { suggestionId: { $in: ['sug-p1', 'sug-p3', 'sug-p4'] } },
+        ],
+      },
+      {
+        $set: {
+          ownerAccountId: personAccountId,
+          shadchanId: shadchanAccountId,
+        },
+      },
+    );
+
+    await this.matchRequestModel.updateMany(
+      {
+        $or: [
+          { senderProfileId: DEMO_PERSON_PROFILE.profileId },
+          { requestId: { $in: ['req-1', 'req-2'] } },
+        ],
+      },
+      { $set: { shadchanId: shadchanAccountId } },
+    );
+
+    await this.profileModel.updateMany(
+      {
+        $or: [
+          { profileId: DEMO_PERSON_PROFILE.profileId },
+          { profileId: { $in: ['p3', 'p4'] } },
+          { ownerAccountId: personAccountId },
+        ],
+      },
+      { $set: { addedByShadchanId: shadchanAccountId } },
+    );
+
+    if (personAccount.profileId) {
+      await this.profileModel.updateOne(
+        { profileId: personAccount.profileId },
+        { $addToSet: { shadchanIds: shadchanAccountId } },
+      );
+    }
   }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getApiErrorMessage } from '../api/apiError';
 import { authApi } from '../api/authApi';
+import { profilesApi } from '../api/profilesApi';
 import { requestsApi } from '../api/requestsApi';
 import {
   SendToShadchanDialog,
@@ -17,6 +18,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { ShadchanSummary } from '../types/account';
 import { FavoriteProfile, FullProfile, RequiredProfileRatingCategory } from '../types/profile';
 import { getShadchanPickerGroups } from '../utils/shadchanAvailability';
+import { formatAccountName } from '../utils/accountName';
+import { getProfileDisplayName } from '../utils/profileDisplay';
 import {
   calculateAverageRating,
   FavoriteSortKey,
@@ -72,6 +75,7 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
   const [pendingRequests, setPendingRequests] = useState<Record<string, string>>({});
   const [sendDialogProfile, setSendDialogProfile] = useState<FullProfile | null>(null);
   const [actionProfileId, setActionProfileId] = useState<string | null>(null);
+  const [myProfile, setMyProfile] = useState<FullProfile | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(
     null
   );
@@ -151,9 +155,30 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
     return () => window.clearTimeout(timerId);
   }, [toast]);
 
-  const senderProfileName = currentUser
-    ? `${currentUser.firstName} ${currentUser.lastName}`.trim()
-    : '';
+  useEffect(() => {
+    if (!currentUser?.profileId) {
+      setMyProfile(null);
+      return;
+    }
+
+    let cancelled = false;
+    profilesApi
+      .getById(currentUser.profileId)
+      .then((profile) => {
+        if (!cancelled) setMyProfile(profile);
+      })
+      .catch(() => {
+        if (!cancelled) setMyProfile(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.profileId]);
+
+  const senderProfileName = myProfile
+    ? getProfileDisplayName(myProfile)
+    : formatAccountName(currentUser?.firstName, currentUser?.lastName);
 
   const handleSendToShadchan = async ({ shadchanAccountId, includeMyProfile }: SendToShadchanOptions) => {
     if (!sendDialogProfile) return;
