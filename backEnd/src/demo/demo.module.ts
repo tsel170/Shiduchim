@@ -7,9 +7,12 @@ import {
   MatchRequest,
   MatchRequestSchema,
 } from '../match-requests/schemas/match-request.schema';
+import { MatchCase, MatchCaseSchema } from '../match-cases/schemas/match-case.schema';
+import { CaseHistory, CaseHistorySchema } from '../match-cases/schemas/case-history.schema';
 import { Profile, ProfileSchema } from '../profiles/schemas/profile.schema';
 import { Suggestion, SuggestionSchema } from '../suggestions/schemas/suggestion.schema';
 import { DemoSeedService } from './demo-seed.service';
+import { LegacyMatchMigrationService } from './legacy-match-migration.service';
 
 @Module({
   imports: [
@@ -20,8 +23,10 @@ import { DemoSeedService } from './demo-seed.service';
       { name: Favorite.name, schema: FavoriteSchema },
       { name: Suggestion.name, schema: SuggestionSchema },
       { name: MatchRequest.name, schema: MatchRequestSchema },
+      { name: MatchCase.name, schema: MatchCaseSchema },
+      { name: CaseHistory.name, schema: CaseHistorySchema },
     ]),
   ],
-  providers: [DemoSeedService],
+  providers: [DemoSeedService, LegacyMatchMigrationService],
 })
 export class DemoModule {}

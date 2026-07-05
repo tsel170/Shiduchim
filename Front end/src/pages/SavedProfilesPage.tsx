@@ -2,7 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getApiErrorMessage } from '../api/apiError';
 import { authApi } from '../api/authApi';
 import { profilesApi } from '../api/profilesApi';
-import { requestsApi } from '../api/requestsApi';
+import { matchCasesApi } from '../api/matchCasesApi';
+import { MatchStatusBadge } from '../components/match-cases/MatchStatusBadge';
+import { isTerminalMatchStatus } from '../constants/matchCaseOptions';
+import { useProfileMatchStatuses } from '../hooks/useProfileMatchStatuses';
 import {
   SendToShadchanDialog,
   SendToShadchanOptions,
@@ -16,6 +19,7 @@ import { FavoritesListSkeleton } from '../components/profile/FavoriteCardSkeleto
 import { getCityLabel, getMaritalStatusLabel } from '../constants/profileOptions';
 import { useAuth } from '../contexts/AuthContext';
 import { ShadchanSummary } from '../types/account';
+import { MatchStatus } from '../types/matchCase';
 import { FavoriteProfile, FullProfile, RequiredProfileRatingCategory } from '../types/profile';
 import { getShadchanPickerGroups } from '../utils/shadchanAvailability';
 import { formatAccountName } from '../utils/accountName';
@@ -72,7 +76,7 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
   const [linkedShadchanim, setLinkedShadchanim] = useState<ShadchanSummary[]>([]);
   const [allShadchanim, setAllShadchanim] = useState<ShadchanSummary[]>([]);
   const [loadingShadchanim, setLoadingShadchanim] = useState(false);
-  const [pendingRequests, setPendingRequests] = useState<Record<string, string>>({});
+  const [pendingCases, setPendingCases] = useState<Record<string, string>>({});
   const [sendDialogProfile, setSendDialogProfile] = useState<FullProfile | null>(null);
   const [actionProfileId, setActionProfileId] = useState<string | null>(null);
   const [myProfile, setMyProfile] = useState<FullProfile | null>(null);
@@ -114,29 +118,45 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
     return getShadchanPickerGroups(sendDialogProfile, linkedShadchanim, allShadchanim);
   }, [sendDialogProfile, linkedShadchanim, allShadchanim]);
 
+  const favoriteProfileIds = useMemo(
+    () => favoriteEntries.map((entry) => entry.profile.id),
+    [favoriteEntries]
+  );
+  const matchStatusByProfileId = useProfileMatchStatuses(
+    favoriteProfileIds,
+    currentUser?.accountId
+  );
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadShadchanData() {
       setLoadingShadchanim(true);
       try {
-        const [linked, all, outgoing] = await Promise.all([
+        const [linked, all, outgoingCases] = await Promise.all([
           authApi.getLinkedShadchanim(),
           authApi.getShadchanim(),
-          requestsApi.listOutgoing(),
+          matchCasesApi.list(),
         ]);
         if (!cancelled) {
           setLinkedShadchanim(linked);
           setAllShadchanim(all);
-          setPendingRequests(
-            Object.fromEntries(outgoing.map((request) => [request.targetProfileId, request.requestId]))
+          const activeOutgoing = outgoingCases.filter(
+            (matchCase) =>
+              matchCase.senderAccountId === currentUser?.accountId &&
+              !isTerminalMatchStatus(matchCase.currentStatus)
+          );
+          setPendingCases(
+            Object.fromEntries(
+              activeOutgoing.map((matchCase) => [matchCase.targetProfileId, matchCase.caseId])
+            )
           );
         }
       } catch {
         if (!cancelled) {
           setLinkedShadchanim([]);
           setAllShadchanim([]);
-          setPendingRequests({});
+          setPendingCases({});
         }
       } finally {
         if (!cancelled) setLoadingShadchanim(false);
@@ -147,7 +167,7 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentUser?.accountId]);
 
   useEffect(() => {
     if (!toast) return;
@@ -183,6 +203,14 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
   const handleSendToShadchan = async ({ shadchanAccountId, includeMyProfile }: SendToShadchanOptions) => {
     if (!sendDialogProfile) return;
 
+    if (!includeMyProfile || !currentUser?.profileId) {
+      setToast({
+        message: 'יש לצרף את הפרופיל האישי שלך כדי לפתוח תיק שידוך',
+        tone: 'error',
+      });
+      return;
+    }
+
     setActionProfileId(sendDialogProfile.id);
     setToast(null);
     try {
@@ -190,13 +218,11 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
         (shadchan) => shadchan.accountId === shadchanAccountId
       );
 
-      const created = await requestsApi.create({
+      const created = await matchCasesApi.create({
+        senderProfileId: currentUser.profileId,
         targetProfileId: sendDialogProfile.id,
-        shadchanId: shadchanAccountId,
-        ...(includeMyProfile && currentUser?.profileId
-          ? { senderProfileId: currentUser.profileId }
-          : {}),
-        notes: `המלצה ממועדפים: ${sendDialogProfile.firstName} ${sendDialogProfile.lastName}`,
+        assignedShadchanId: shadchanAccountId,
+        note: `המלצה ממועדפים: ${sendDialogProfile.firstName} ${sendDialogProfile.lastName}`,
       });
 
       if (!wasLinked) {
@@ -209,30 +235,12 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
         }
       }
 
-      setPendingRequests((prev) => ({
+      setPendingCases((prev) => ({
         ...prev,
-        [sendDialogProfile.id]: created.requestId,
+        [sendDialogProfile.id]: created.caseId,
       }));
       setSendDialogProfile(null);
-      setToast({ message: 'הפרופיל נשלח לשדכן בהצלחה', tone: 'success' });
-    } catch (error) {
-      setToast({ message: getApiErrorMessage(error), tone: 'error' });
-    } finally {
-      setActionProfileId(null);
-    }
-  };
-
-  const handleCancelRequest = async (profileId: string, requestId: string) => {
-    setActionProfileId(profileId);
-    setToast(null);
-    try {
-      await requestsApi.remove(requestId);
-      setPendingRequests((prev) => {
-        const next = { ...prev };
-        delete next[profileId];
-        return next;
-      });
-      setToast({ message: 'הבקשה בוטלה', tone: 'success' });
+      setToast({ message: 'תיק השידוך נפתח ונשלח לשדכן', tone: 'success' });
     } catch (error) {
       setToast({ message: getApiErrorMessage(error), tone: 'error' });
     } finally {
@@ -304,7 +312,8 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
       ) : (
         <div className="favorites-list">
           {sortedEntries.map(({ favorite, profile }, index) => {
-            const pendingRequestId = pendingRequests[profile.id];
+            const hasPendingCase = Boolean(pendingCases[profile.id]);
+            const matchStatus = matchStatusByProfileId[profile.id]?.currentStatus ?? null;
 
             return (
               <FavoriteCard
@@ -315,14 +324,10 @@ export const SavedProfilesPage: React.FC<SavedProfilesPageProps> = ({
                 sortTheme={sortTheme}
                 accentColor={CARD_ACCENTS[index % CARD_ACCENTS.length]}
                 isActionLoading={actionProfileId === profile.id}
-                pendingRequestId={pendingRequestId}
+                hasPendingCase={hasPendingCase}
+                matchStatus={matchStatus}
                 onViewProfile={onViewProfile}
                 onOpenSendDialog={() => setSendDialogProfile(profile)}
-                onCancelRequest={() => {
-                  if (pendingRequestId) {
-                    handleCancelRequest(profile.id, pendingRequestId);
-                  }
-                }}
               />
             );
           })}
@@ -357,10 +362,10 @@ function FavoriteCard({
   sortTheme,
   accentColor,
   isActionLoading,
-  pendingRequestId,
+  hasPendingCase,
+  matchStatus,
   onViewProfile,
   onOpenSendDialog,
-  onCancelRequest,
 }: {
   favorite: FavoriteProfile;
   profile: FullProfile;
@@ -368,10 +373,10 @@ function FavoriteCard({
   sortTheme: string;
   accentColor: string;
   isActionLoading: boolean;
-  pendingRequestId?: string;
+  hasPendingCase: boolean;
+  matchStatus: MatchStatus | null;
   onViewProfile: (id: string) => void;
   onOpenSendDialog: () => void;
-  onCancelRequest: () => void;
 }) {
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const average = calculateAverageRating(favorite.rating);
@@ -386,12 +391,11 @@ function FavoriteCard({
   const fullName = `${profile.firstName} ${profile.lastName}`;
   const cover = profile.photos[0];
   const ratingsPanelId = `favorites-ratings-${profile.id}`;
-  const hasPendingRequest = Boolean(pendingRequestId);
 
   return (
     <article
       className={`favorites-item${ratingsOpen ? ' favorites-item--ratings-open' : ''}${
-        hasPendingRequest ? ' favorites-item--sent' : ''
+        hasPendingCase ? ' favorites-item--sent' : ''
       }`}
       style={{ '--fav-accent': accentColor } as React.CSSProperties}
     >
@@ -402,7 +406,7 @@ function FavoriteCard({
         ) : (
           <div className="favorites-item__photo favorites-item__photo--empty" />
         )}
-        {hasPendingRequest && <span className="favorites-item__sent-badge">נשלח לשדכן</span>}
+        {hasPendingCase && <span className="favorites-item__sent-badge">נשלח לשדכן</span>}
       </div>
 
       <div className="favorites-item__body">
@@ -415,6 +419,9 @@ function FavoriteCard({
           <span>{getMaritalStatusLabel(profile.maritalStatus)}</span>
         </p>
         <p className="favorites-item__city">{getCityLabel(profile.city)}</p>
+        {matchStatus && (
+          <MatchStatusBadge status={matchStatus} className="favorites-item__match-status" />
+        )}
 
         <button
           type="button"
@@ -462,19 +469,8 @@ function FavoriteCard({
         )}
 
         <div className="favorites-item__actions">
-          {hasPendingRequest ? (
-            <button
-              type="button"
-              className={`btn btn--sm favorites-item__cancel-btn${
-                isActionLoading ? ' btn--loading' : ''
-              }`}
-              onClick={onCancelRequest}
-              disabled={isActionLoading}
-              aria-busy={isActionLoading}
-            >
-              {isActionLoading && <span className="btn__spinner btn__spinner--dark" aria-hidden="true" />}
-              {isActionLoading ? 'מבטל...' : 'בטל שליחה'}
-            </button>
+          {hasPendingCase ? (
+            <p className="favorites-item__pending-note">תיק שידוך פעיל — ניתן לעקוב ב«התיקים שלי»</p>
           ) : (
             <SendButton
               variant="shadchan"

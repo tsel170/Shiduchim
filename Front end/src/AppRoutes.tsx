@@ -19,7 +19,7 @@ import { useAuth } from './contexts/AuthContext';
 import { favoritesApi } from './api/favoritesApi';
 import { getApiErrorMessage } from './api/apiError';
 import { profilesApi } from './api/profilesApi';
-import { suggestionsApi } from './api/suggestionsApi';
+import { matchCasesApi } from './api/matchCasesApi';
 import { BrowseProfilesPage } from './pages/BrowseProfilesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { AddedProfilesPage } from './pages/AddedProfilesPage';
@@ -27,8 +27,10 @@ import { AddProfilePage } from './pages/AddProfilePage';
 import { AiImportPage } from './pages/AiImportPage';
 import { EditAddedProfilePage } from './pages/EditAddedProfilePage';
 import { MyProfilePage } from './pages/MyProfilePage';
-import { RequestsPage } from './pages/RequestsPage';
-import { ShadchanSuggestionsPage } from './pages/ShadchanSuggestionsPage';
+import { MyMatchCasesPage } from './pages/MyMatchCasesPage';
+import { ManagementRequestsPage } from './pages/ManagementRequestsPage';
+import { MatchCasesDashboardPage } from './pages/MatchCasesDashboardPage';
+import { MatchCaseDetailsPage } from './pages/MatchCaseDetailsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfileDetailsPage } from './pages/ProfileDetailsPage';
 import {
@@ -42,7 +44,8 @@ import {
 import { isFilterKeyAtDefault, normalizeFilterConfiguration } from './utils/filters';
 import { isDisplayPreferencesAtDefault, normalizeDisplayPreferences } from './utils/profileHelpers';
 import { FavoriteSortKey, isRatingsCompleteStrict } from './utils/rating';
-import { ShadchanSuggestion } from './types/suggestion';
+import { MatchCase } from './types/matchCase';
+import { isCounterpartyProfileInCase } from './constants/matchCaseOptions';
 import { buildPersonCreateRequestBody } from './utils/profileValidation';
 import { PageState } from './components/common/PageState';
 
@@ -412,15 +415,26 @@ export const AppRoutes: React.FC = () => {
             </RoleRoute>
           }
         />
-        <Route path="/suggestions" element={<Navigate to="/suggestions/new" replace />} />
         <Route
-          path="/suggestions/*"
+          path="/my-cases/*"
           element={
             <RoleRoute allowed={['person']}>
-              <ShadchanSuggestionsPage />
+              <MyMatchCasesPage />
             </RoleRoute>
           }
         />
+        <Route
+          path="/management-requests"
+          element={
+            <RoleRoute allowed={['person']}>
+              <ManagementRequestsPage />
+            </RoleRoute>
+          }
+        />
+        <Route path="/suggestions/management" element={<Navigate to="/management-requests" replace />} />
+        <Route path="/suggestions/*" element={<Navigate to="/my-cases" replace />} />
+        <Route path="/suggestions" element={<Navigate to="/my-cases" replace />} />
+        <Route path="/requests" element={<Navigate to="/match-cases" replace />} />
         <Route
           path="/added-profiles/:profileId/edit"
           element={
@@ -454,10 +468,19 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/requests"
+          path="/match-cases/view/:caseId"
           element={
             <RoleRoute allowed={['shadchan']}>
-              <RequestsPage />
+              <MatchCaseDetailsPage />
+            </RoleRoute>
+          }
+        />
+        <Route path="/match-cases" element={<Navigate to="/match-cases/pending" replace />} />
+        <Route
+          path="/match-cases/*"
+          element={
+            <RoleRoute allowed={['shadchan']}>
+              <MatchCasesDashboardPage />
             </RoleRoute>
           }
         />
@@ -534,19 +557,13 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   const { currentUser } = useAuth();
   const { profileId } = useParams<{ profileId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const viewerRole = currentUser?.role ?? 'person';
-  const isSuggestionContext =
-    searchParams.get('context') === 'suggestion' ||
-    Boolean(
-      (location.state as { suggestionContext?: boolean } | null)?.suggestionContext
-    );
+  const caseIdParam = searchParams.get('caseId');
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSuggestedProfile, setIsSuggestedProfile] = useState(false);
-  const [suggestion, setSuggestion] = useState<ShadchanSuggestion | null>(null);
+  const [matchCase, setMatchCase] = useState<MatchCase | null>(null);
 
   useEffect(() => {
     if (!profileId) return;
@@ -572,34 +589,42 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   }, [profileId]);
 
   useEffect(() => {
-    if (viewerRole !== 'person' || !profileId || !isSuggestionContext) {
-      setIsSuggestedProfile(false);
-      setSuggestion(null);
+    if (viewerRole !== 'person' || !profileId) {
+      setMatchCase(null);
       return;
     }
 
     let cancelled = false;
-    suggestionsApi
-      .getProfileContext(profileId)
-      .then((result) => {
-        if (cancelled) return;
-        setIsSuggestedProfile(result.suggested);
-        setSuggestion(result.suggested ? result.suggestion ?? null : null);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsSuggestedProfile(false);
-          setSuggestion(null);
-        }
-      });
 
+    async function loadCaseContext() {
+      try {
+        if (caseIdParam) {
+          const loaded = await matchCasesApi.getById(caseIdParam);
+          if (!cancelled) setMatchCase(loaded);
+          return;
+        }
+
+        const result = await matchCasesApi.getProfileContext(profileId!);
+        if (!cancelled) {
+          setMatchCase(result.hasCase ? result.matchCase ?? null : null);
+        }
+      } catch {
+        if (!cancelled) setMatchCase(null);
+      }
+    }
+
+    loadCaseContext();
     return () => {
       cancelled = true;
     };
-  }, [viewerRole, profileId, isSuggestionContext]);
+  }, [viewerRole, profileId, caseIdParam]);
 
-  const isSuggestionView =
-    isSuggestionContext && isSuggestedProfile && suggestion !== null;
+  const isMatchCaseView =
+    Boolean(profileId) &&
+    matchCase !== null &&
+    viewerRole === 'person' &&
+    Boolean(currentUser?.accountId) &&
+    isCounterpartyProfileInCase(matchCase, profileId!, currentUser!.accountId);
 
   if (!profileId) {
     return <Navigate to="/browse" replace />;
@@ -633,17 +658,24 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       onBack={() => navigate(-1)}
       onRate={(category, value) => onRate(profile.id, category, value)}
       onToggleFavorite={() => onToggleFavorite(profile.id)}
-      isSuggestedProfile={isSuggestionView}
-      suggestion={suggestion}
-      onSuggestionUpdate={setSuggestion}
-      onSiteSend={async (note, recipientAccountId) => {
+      isMatchCaseView={isMatchCaseView}
+      matchCase={matchCase}
+      onMatchCaseUpdate={setMatchCase}
+      onSiteSend={async (note, recipientAccountId, recipientProfileId) => {
         if (!recipientAccountId.trim()) {
           throw new Error('יש לבחור משודך/ת מהרשימה');
         }
-        await suggestionsApi.create({
-          ownerAccountId: recipientAccountId.trim(),
-          profileId: profile.id,
-          shadchanNote: note,
+        if (!recipientProfileId?.trim()) {
+          throw new Error('לא נמצא פרופיל למשודך/ת שנבחר/ה');
+        }
+        if (!currentUser?.accountId) {
+          throw new Error('יש להתחבר מחדש');
+        }
+        await matchCasesApi.create({
+          senderProfileId: profile.id,
+          targetProfileId: recipientProfileId.trim(),
+          assignedShadchanId: currentUser.accountId,
+          note,
         });
       }}
     />

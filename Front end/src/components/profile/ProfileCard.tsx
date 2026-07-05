@@ -1,4 +1,6 @@
 import React, { KeyboardEvent } from 'react';
+import { MatchStatus } from '../../types/matchCase';
+import { MatchStatusBadge } from '../match-cases/MatchStatusBadge';
 import { FavoriteButton } from '../common/FavoriteButton';
 import { FullProfile } from '../../types/profile';
 import { getGenderLabel, getMaritalStatusLabel } from '../../constants/profileOptions';
@@ -12,6 +14,7 @@ interface ProfileCardProps {
   onToggleFavorite: (id: string) => void;
   onViewProfile: (id: string) => void;
   isFavorite: boolean;
+  matchStatus?: MatchStatus | null;
 }
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -22,6 +25,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   onToggleFavorite,
   onViewProfile,
   isFavorite,
+  matchStatus = null,
 }) => {
   const fullName = `${profile.firstName} ${profile.lastName}`;
   const cover = profile.photos[0];
@@ -76,6 +80,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             </span>
             <span>{getMaritalStatusLabel(profile.maritalStatus)}</span>
           </p>
+          {matchStatus && (
+            <MatchStatusBadge status={matchStatus} className="profile-card__status" />
+          )}
         </header>
 
         {showFavoriteControls && !canFavorite && (

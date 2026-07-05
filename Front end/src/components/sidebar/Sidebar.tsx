@@ -7,11 +7,12 @@ import './Sidebar.css';
 export type NavItem =
   | 'browse'
   | 'saved'
-  | 'suggestions'
+  | 'my-cases'
+  | 'management-requests'
   | 'added-profiles'
   | 'add-profile'
   | 'ai-import'
-  | 'requests'
+  | 'match-cases'
   | 'my-profile'
   | 'settings';
 
@@ -43,10 +44,18 @@ const NAV_ITEMS: NavConfig[] = [
     group: 'main',
   },
   {
-    id: 'suggestions',
-    path: '/suggestions',
-    label: 'הצעות מהשדכן',
-    icon: <InboxIcon />,
+    id: 'my-cases',
+    path: '/my-cases',
+    label: 'התיקים שלי',
+    icon: <CasesIcon />,
+    roles: ['person'],
+    group: 'main',
+  },
+  {
+    id: 'management-requests',
+    path: '/management-requests',
+    label: 'בקשות ניהול',
+    icon: <HandshakeNavIcon />,
     roles: ['person'],
     group: 'main',
   },
@@ -76,10 +85,10 @@ const NAV_ITEMS: NavConfig[] = [
     group: 'manage',
   },
   {
-    id: 'requests',
-    path: '/requests',
-    label: 'בקשות',
-    icon: <RequestIcon />,
+    id: 'match-cases',
+    path: '/match-cases',
+    label: 'תיקי שידוך',
+    icon: <CasesIcon />,
     roles: ['shadchan'],
     group: 'manage',
   },
@@ -117,11 +126,12 @@ interface SidebarProps {
 function pathToNavItem(pathname: string): NavItem {
   if (pathname.startsWith('/profiles')) return 'browse';
   if (pathname.startsWith('/favorites')) return 'saved';
-  if (pathname.startsWith('/suggestions')) return 'suggestions';
+  if (pathname.startsWith('/my-cases')) return 'my-cases';
+  if (pathname.startsWith('/management-requests')) return 'management-requests';
   if (pathname.startsWith('/added-profiles')) return 'added-profiles';
   if (pathname.startsWith('/ai-import')) return 'ai-import';
   if (pathname.startsWith('/add-profile')) return 'add-profile';
-  if (pathname.startsWith('/requests')) return 'requests';
+  if (pathname.startsWith('/match-cases')) return 'match-cases';
   if (pathname.startsWith('/my-profile')) return 'my-profile';
   if (pathname.startsWith('/settings')) return 'settings';
   return 'browse';
@@ -218,11 +228,23 @@ function HeartIcon() {
   );
 }
 
-function InboxIcon() {
+function CasesIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M22 12h-6l-2 3H10l-2-3H2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 7h16v13H4z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 12h6M9 16h4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function HandshakeNavIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 00-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -248,15 +270,6 @@ function PlusIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function RequestIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M22 6l-10 7L2 6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
