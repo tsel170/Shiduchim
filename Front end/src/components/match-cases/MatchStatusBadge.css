@@ -1,6 +1,7 @@
 .match-status-badge {
   display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
   font-size: 0.72rem;
@@ -9,40 +10,48 @@
   white-space: nowrap;
 }
 
-.match-status-badge--pending {
-  background: #fef3c7;
-  color: #92400e;
+.match-status-badge--sent-to-shadchan {
+  background: #fef9c3;
+  color: #854d0e;
 }
 
-.match-status-badge--reviewing {
+.match-status-badge--waiting-for-other-side {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.match-status-badge--background-check {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.match-status-badge--contacting-sender,
-.match-status-badge--contacting-receiver {
-  background: #e0e7ff;
-  color: #3730a3;
+.match-status-badge--waiting-for-meeting-approval {
+  background: #ede9fe;
+  color: #5b21b6;
 }
 
-.match-status-badge--waiting-for-sender,
-.match-status-badge--waiting-for-receiver {
-  background: #fce7f3;
-  color: #9d174d;
-}
-
-.match-status-badge--matched {
+.match-status-badge--meeting-scheduled {
   background: #d1fae5;
   color: #065f46;
 }
 
-.match-status-badge--rejected,
+.match-status-badge--waiting-after-meeting {
+  background: #ede9d5;
+  color: #78350f;
+}
+
+.match-status-badge--matched {
+  background: #bbf7d0;
+  color: #14532d;
+}
+
+.match-status-badge--denied,
 .match-status-badge--cancelled {
   background: #fee2e2;
   color: #991b1b;
 }
 
-.match-status-badge--closed {
+.match-status-badge--on-hold {
   background: #f3f4f6;
   color: #374151;
 }

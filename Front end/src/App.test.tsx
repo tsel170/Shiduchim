@@ -140,6 +140,6 @@ test('opens profile details from grid', async () => {
   const profileCards = screen.getAllByRole('button', { name: /צפייה בפרופיל של/ });
   await userEvent.click(profileCards[0]);
   await waitFor(() => {
-    expect(screen.getByRole('button', { name: /חזרה לרשימה/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^חזרה$/ })).toBeInTheDocument();
   });
 });

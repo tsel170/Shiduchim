@@ -125,7 +125,12 @@ export class LegacyMatchMigrationService {
         senderAccountId,
         targetAccountId: null,
         assignedShadchanId: request.shadchanId,
-        currentStatus: 'pending',
+        currentStatus: 'waiting_for_other_side',
+        stage: 'profile_check',
+        profileAStatus: 'approved',
+        profileBStatus: 'waiting',
+        personBReleased: true,
+        initiatedBy: 'person',
         priority: 'normal',
         tags: ['person-request'],
         internalNotes: request.notes ?? '',
@@ -149,13 +154,13 @@ export class LegacyMatchMigrationService {
   private mapSuggestionStatus(suggestion: {
     stage: string;
     personResponse?: string | null;
-  }): MatchStatus {
-    if (suggestion.personResponse === 'not_interested') return 'rejected';
+  }): string {
+    if (suggestion.personResponse === 'not_interested') return 'denied';
     if (suggestion.stage === 'checked') return 'matched';
     if (suggestion.stage === 'in_check' || suggestion.personResponse === 'interested') {
-      return 'reviewing';
+      return 'background_check';
     }
-    return 'pending';
+    return 'waiting_for_other_side';
   }
 
   /** Demo seed helper — same shape as migrated shadchan suggestions. */
@@ -172,7 +177,12 @@ export class LegacyMatchMigrationService {
         senderAccountId: personAccountId,
         targetAccountId: null,
         assignedShadchanId: shadchanAccountId,
-        currentStatus: 'pending',
+        currentStatus: 'waiting_for_other_side',
+        stage: 'profile_check',
+        profileAStatus: 'approved',
+        profileBStatus: 'waiting',
+        personBReleased: true,
+        initiatedBy: 'person',
         priority: 'normal',
         tags: [SHADCHAN_PUSH_TAG],
         internalNotes: 'חשבתי שזה יכול להתאים לך — שווה לבדוק.',
@@ -187,7 +197,12 @@ export class LegacyMatchMigrationService {
         senderAccountId: personAccountId,
         targetAccountId: null,
         assignedShadchanId: shadchanAccountId,
-        currentStatus: 'pending',
+        currentStatus: 'waiting_for_other_side',
+        stage: 'profile_check',
+        profileAStatus: 'approved',
+        profileBStatus: 'waiting',
+        personBReleased: true,
+        initiatedBy: 'person',
         priority: 'normal',
         tags: [SHADCHAN_PUSH_TAG],
         internalNotes: 'פרופיל מומלץ מהמאגר שלי.',
@@ -202,7 +217,12 @@ export class LegacyMatchMigrationService {
         senderAccountId: personAccountId,
         targetAccountId: null,
         assignedShadchanId: shadchanAccountId,
-        currentStatus: 'reviewing',
+        currentStatus: 'background_check',
+        stage: 'background_check',
+        profileAStatus: 'waiting',
+        profileBStatus: 'waiting',
+        personBReleased: true,
+        initiatedBy: 'shadchan',
         priority: 'normal',
         tags: [SHADCHAN_PUSH_TAG],
         internalNotes: 'שלחתי את הפרופיל שלך לבדיקה.',
@@ -217,7 +237,12 @@ export class LegacyMatchMigrationService {
         senderAccountId: personAccountId,
         targetAccountId: null,
         assignedShadchanId: shadchanAccountId,
-        currentStatus: 'pending',
+        currentStatus: 'sent_to_shadchan',
+        stage: 'profile_check',
+        profileAStatus: 'approved',
+        profileBStatus: 'waiting',
+        personBReleased: false,
+        initiatedBy: 'person',
         priority: 'normal',
         tags: ['person-request'],
         internalNotes: 'נשלח דרך "שלח לשדכן".',

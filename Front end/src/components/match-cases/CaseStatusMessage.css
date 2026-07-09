@@ -1,0 +1,45 @@
+.case-status-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.case-stage-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.case-stage-badge--profile-check {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.case-stage-badge--background-check {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.case-stage-badge--ready-to-meet {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.case-stage-badge--meeting {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.case-status-message__text {
+  margin: 0;
+  color: var(--text-muted, #666);
+}
+
+.case-status-message__text--highlight {
+  color: var(--text, #1a1a1a);
+  font-weight: 600;
+}

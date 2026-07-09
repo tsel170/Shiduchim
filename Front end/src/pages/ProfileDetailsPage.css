@@ -4,6 +4,10 @@
   width: 100%;
 }
 
+.profile-details-page--modal {
+  padding: var(--space-md);
+}
+
 .profile-details-page__toolbar {
   margin-bottom: var(--space-lg);
 }
@@ -93,6 +97,15 @@
   width: 100%;
   font-size: 0.9rem;
   color: var(--color-text-muted, #64748b);
+}
+
+.profile-details-page__case-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  width: 100%;
+  margin-bottom: var(--space-sm);
 }
 
 .profile-details-page__interest-actions {

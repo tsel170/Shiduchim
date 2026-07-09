@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { AccountRole } from '../../types/account';
+import { getLayoutPathname } from '../../utils/profileNavigation';
 import './Sidebar.css';
 
 export type NavItem =
@@ -124,7 +125,6 @@ interface SidebarProps {
 }
 
 function pathToNavItem(pathname: string): NavItem {
-  if (pathname.startsWith('/profiles')) return 'browse';
   if (pathname.startsWith('/favorites')) return 'saved';
   if (pathname.startsWith('/my-cases')) return 'my-cases';
   if (pathname.startsWith('/management-requests')) return 'management-requests';
@@ -141,7 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const activeItem = pathToNavItem(location.pathname);
+  const activeItem = pathToNavItem(getLayoutPathname(location));
 
   const items = NAV_ITEMS.filter((item) =>
     currentUser ? item.roles.includes(currentUser.role) : false

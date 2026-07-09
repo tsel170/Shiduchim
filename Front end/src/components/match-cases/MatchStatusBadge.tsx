@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   getMatchStatusClassName,
-  getMatchStatusLabel,
+  getMatchStatusDisplay,
 } from '../../constants/matchCaseOptions';
 import { MatchStatus } from '../../types/matchCase';
 import './MatchStatusBadge.css';
@@ -21,7 +21,7 @@ export const MatchStatusBadge: React.FC<MatchStatusBadgeProps> = ({
     <span
       className={`match-status-badge ${getMatchStatusClassName(status)} ${className}`.trim()}
     >
-      {getMatchStatusLabel(status)}
+      {getMatchStatusDisplay(status)}
     </span>
   );
 };

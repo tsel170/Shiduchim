@@ -25,6 +25,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthUserPayload } from '../auth/types/auth-user.payload';
 import {
   BatchProfileStatusDto,
+  CaseActionDto,
   CaseHistoryResponseDto,
   CreateMatchCaseDto,
   EnrichedMatchCaseResponseDto,
@@ -34,6 +35,7 @@ import {
   UpdateMatchCaseDto,
 } from './dto/match-case.dto';
 import { MatchCasesService } from './match-cases.service';
+import { PersonSlot as SimpleSlot } from './domain/simplified-case-workflow';
 
 @ApiTags('matchCases')
 @ApiBearerAuth()
@@ -81,6 +83,13 @@ export class MatchCasesController {
     @Param('profileId') profileId: string,
   ) {
     return this.matchCasesService.getProfileCaseContext(user, profileId);
+  }
+
+  @Get(':caseId/contact-details')
+  @ApiOperation({ summary: 'View counterparty contact details (logged in history)' })
+  @ApiParam({ name: 'caseId' })
+  getContactDetails(@CurrentUser() user: AuthUserPayload, @Param('caseId') caseId: string) {
+    return this.matchCasesService.getContactDetails(user, caseId);
   }
 
   @Get(':caseId/history')
@@ -136,7 +145,26 @@ export class MatchCasesController {
       user,
       caseId,
       dto.action as 'interested' | 'not_interested',
+      dto.denialReason as import('./domain/denial-reason').DenialReason | undefined,
+      dto.note,
     );
+  }
+
+  @Post(':caseId/actions')
+  @ApiOperation({ summary: 'Unified case action — approve, deny, approve on behalf' })
+  @ApiParam({ name: 'caseId' })
+  @ApiOkResponse({ type: EnrichedMatchCaseResponseDto })
+  caseAction(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('caseId') caseId: string,
+    @Body() dto: CaseActionDto,
+  ) {
+    return this.matchCasesService.applyCaseAction(user, caseId, {
+      type: dto.type,
+      slot: dto.slot as SimpleSlot | 'PersonA' | 'PersonB' | undefined,
+      denialReason: dto.denialReason as import('./domain/denial-reason').DenialReason | undefined,
+      note: dto.note,
+    });
   }
 
   @Delete(':caseId')

@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AccountRole } from '../types/account';
 import { DisplayPreferences, FullProfile, ProfileRating, ProfileRatingCategory } from '../types/profile';
 import { ManagementRequestProfileContext } from '../types/managementRequest';
 import { ProfileShareSettings, ShadchanShareTab } from '../types/profileShare';
 import { getApiErrorMessage } from '../api/apiError';
 import { managementRequestsApi } from '../api/managementRequestsApi';
-import { matchCasesApi } from '../api/matchCasesApi';
-import { canPersonActOnCase } from '../constants/matchCaseOptions';
+import { CaseStatusMessage } from '../components/match-cases/CaseStatusMessage';
 import { MatchCase } from '../types/matchCase';
 import { ProfileDetails } from '../components/profile/ProfileDetails';
 import { FavoriteButton } from '../components/common/FavoriteButton';
@@ -15,9 +14,13 @@ import { SendButton } from '../components/common/SendButton';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
 import { ManagementRequestForm } from '../components/profile/ManagementRequestForm';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
+import { SendToShadchanDialog } from '../components/favorites/SendToShadchanDialog';
+import { useSendToShadchan } from '../hooks/useSendToShadchan';
 import { isRatingsCompleteForProfile } from '../utils/rating';
 import { profileHasUserAccount } from '../utils/profileAccount';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
+import { getProfileDisplayName } from '../utils/profileDisplay';
+import { openProfilePreview } from '../utils/profileNavigation';
 import './Page.css';
 import './ProfileDetailsPage.css';
 
@@ -31,6 +34,7 @@ interface ProfileDetailsPageProps {
   onDisplayPrefsOpenChange: (open: boolean) => void;
   isFavorite: boolean;
   onBack: () => void;
+  isModal?: boolean;
   onRate: (category: ProfileRatingCategory, value: number) => void;
   onToggleFavorite: () => void | Promise<void>;
   onSiteSend: (
@@ -53,6 +57,7 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onDisplayPrefsOpenChange,
   isFavorite,
   onBack,
+  isModal = false,
   onRate,
   onToggleFavorite,
   onSiteSend,
@@ -61,7 +66,19 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   onMatchCaseUpdate,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isShadchan = viewerRole === 'shadchan';
+  const {
+    isOpen: isSendDialogOpen,
+    dialogGroups,
+    senderProfileId,
+    senderProfileName,
+    loadingShadchanim,
+    isSubmitting: isSendSubmitting,
+    openSendDialog,
+    closeSendDialog,
+    sendToShadchan,
+  } = useSendToShadchan();
   const [shareTab, setShareTab] = useState<ShadchanShareTab | null>(null);
   const [shareSettings, setShareSettings] = useState<ProfileShareSettings>(() =>
     createDefaultProfileShareSettings()
@@ -106,27 +123,16 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
     }
   };
 
-  const handleRespondToMatchCase = async (action: 'interested' | 'not_interested') => {
-    if (!matchCase) return;
-    setIsSending(true);
+  const handleSendToShadchan = () => {
     setActionMessage(null);
-    try {
-      const updated = await matchCasesApi.personAction(matchCase.caseId, action);
-      onMatchCaseUpdate?.(updated);
-      setActionMessage(
-        action === 'interested'
-          ? 'עדכנת את השדכן שאת/ה מעוניין/ת'
-          : 'עדכנת את השדכן שאינך מעוניין/ת'
-      );
-    } catch (error) {
-      setActionMessage(getApiErrorMessage(error));
-    } finally {
-      setIsSending(false);
-    }
+    openSendDialog(profile);
   };
 
-  const handleSendToShadchan = () => {
-    navigate('/favorites');
+  const handleConfirmSendToShadchan = async (
+    options: Parameters<typeof sendToShadchan>[0]
+  ) => {
+    const result = await sendToShadchan(options);
+    setActionMessage(result.message);
   };
 
   const handleSiteSend = async (
@@ -191,15 +197,13 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
 
   const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
   const photosUnlocked = isShadchan || isMatchCaseView || canFavorite;
-  const showCaseActions =
-    isMatchCaseView && matchCase && canPersonActOnCase(matchCase.currentStatus);
 
   return (
-    <div className="page profile-details-page">
+    <div className={`page profile-details-page${isModal ? ' profile-details-page--modal' : ''}`}>
       <div className="profile-details-page__toolbar">
         <button type="button" className="profile-details-page__back" onClick={onBack}>
           <BackIcon />
-          חזרה לרשימה
+          חזרה
         </button>
       </div>
 
@@ -237,7 +241,9 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
               onSettingsChange={setShareSettings}
               onClose={() => setShareTab(null)}
               onSiteSend={handleSiteSend}
-              onViewPersonProfile={(personProfileId) => navigate(`/profiles/${personProfileId}`)}
+              onViewPersonProfile={(personProfileId) =>
+                openProfilePreview(navigate, location, personProfileId)
+              }
               isSending={isSending}
             />
           </aside>
@@ -302,32 +308,33 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
                 </SendButton>
               </>
             )}
-            {isMatchCaseView && matchCase?.internalNotes && (
-              <p className="profile-details-page__shadchan-note">
-                הערת השדכן: {matchCase.internalNotes}
-              </p>
-            )}
-            {showCaseActions && (
-              <div className="profile-details-page__interest-actions">
-                <SendButton
-                  variant="interested"
-                  isLoading={isSending}
-                  onClick={() => handleRespondToMatchCase('interested')}
+            {isMatchCaseView && matchCase && (
+              <div className="profile-details-page__case-status">
+                <CaseStatusMessage matchCase={matchCase} />
+                <button
+                  type="button"
+                  className="btn btn--primary btn--sm"
+                  onClick={() => navigate(`/my-cases/view/${matchCase.caseId}`)}
                 >
-                  מעוניין/ת
-                </SendButton>
-                <SendButton
-                  variant="decline"
-                  isLoading={isSending}
-                  onClick={() => handleRespondToMatchCase('not_interested')}
-                >
-                  לא מעוניין/ת
-                </SendButton>
+                  מעבר לתיק השידוך
+                </button>
               </div>
             )}
           </>
         )}
         {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}
+
+        <SendToShadchanDialog
+          isOpen={isSendDialogOpen}
+          profileName={getProfileDisplayName(profile)}
+          groups={dialogGroups}
+          senderProfileId={senderProfileId}
+          senderProfileName={senderProfileName}
+          isLoading={loadingShadchanim}
+          isSubmitting={isSendSubmitting}
+          onSend={handleConfirmSendToShadchan}
+          onClose={closeSendDialog}
+        />
 
         {isShadchan && managementOpen && canSendManagementRequest && (
           <ManagementRequestForm

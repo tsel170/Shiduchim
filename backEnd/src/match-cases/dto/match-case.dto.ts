@@ -13,7 +13,19 @@ import {
   MATCH_PRIORITIES,
   MATCH_STATUSES,
   PERSON_CASE_ACTIONS,
+  WAITING_FOR_TARGETS,
 } from '../constants/match-status';
+import { DENIAL_REASONS } from '../domain/denial-reason';
+import {
+  CASE_STAGES,
+  PROFILE_DECISIONS,
+} from '../domain/simplified-case-workflow';
+import {
+  APPROVAL_STATUSES,
+  PARTICIPANT_ROLES,
+  PERSON_SLOTS,
+  WAITING_FOR_PARTICIPANTS,
+} from '../domain/case-participant.types';
 
 export class CreateMatchCaseDto {
   @ApiProperty()
@@ -85,6 +97,134 @@ export class PersonMatchCaseActionDto {
   @ApiProperty({ enum: PERSON_CASE_ACTIONS })
   @IsIn(PERSON_CASE_ACTIONS, { message: 'פעולה לא תקינה' })
   action: string;
+
+  @ApiPropertyOptional({ enum: DENIAL_REASONS })
+  @IsOptional()
+  @IsIn(DENIAL_REASONS, { message: 'סיבת דחייה לא תקינה' })
+  denialReason?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'הערה: ערך לא תקין' })
+  @MaxLength(2000, { message: 'ההערה ארוכה מדי' })
+  note?: string;
+}
+
+export class CaseActionDto {
+  @ApiProperty({
+    enum: ['approve', 'deny', 'approve_for', 'release_to_person_b', 'advance_stage'],
+  })
+  @IsIn(['approve', 'deny', 'approve_for', 'release_to_person_b', 'advance_stage'], {
+    message: 'פעולה לא תקינה',
+  })
+  type: 'approve' | 'deny' | 'approve_for' | 'release_to_person_b' | 'advance_stage';
+
+  @ApiPropertyOptional({ enum: ['A', 'B', ...PERSON_SLOTS] })
+  @IsOptional()
+  @IsIn(['A', 'B', ...PERSON_SLOTS], { message: 'משתתף לא תקין' })
+  slot?: string;
+
+  @ApiPropertyOptional({ enum: DENIAL_REASONS })
+  @IsOptional()
+  @IsIn(DENIAL_REASONS, { message: 'סיבת דחייה לא תקינה' })
+  denialReason?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'הערה: ערך לא תקין' })
+  @MaxLength(2000, { message: 'ההערה ארוכה מדי' })
+  note?: string;
+}
+
+export class AvailableActionsDto {
+  @ApiProperty()
+  canApprove: boolean;
+
+  @ApiProperty()
+  canDeny: boolean;
+
+  @ApiProperty()
+  canViewContactDetails: boolean;
+
+  @ApiPropertyOptional()
+  contactDetailsBlockedReason?: string;
+
+  @ApiProperty()
+  canReleaseToPersonB: boolean;
+
+  @ApiProperty()
+  canApproveForA: boolean;
+
+  @ApiProperty()
+  canApproveForB: boolean;
+
+  @ApiProperty()
+  canAdvanceStage: boolean;
+
+  @ApiPropertyOptional()
+  nextStageLabel?: string;
+
+  @ApiProperty()
+  canCancel: boolean;
+}
+
+export class CaseViewerContextDto {
+  @ApiProperty({ enum: CASE_STAGES })
+  stage: string;
+
+  @ApiProperty()
+  stageLabel: string;
+
+  @ApiPropertyOptional({ enum: PROFILE_DECISIONS, nullable: true })
+  profileAStatus?: string | null;
+
+  @ApiPropertyOptional({ enum: PROFILE_DECISIONS, nullable: true })
+  profileBStatus?: string | null;
+
+  @ApiPropertyOptional({ enum: ['A', 'B', 'shadchan'], nullable: true })
+  mySlot?: string | null;
+
+  @ApiPropertyOptional({ enum: PROFILE_DECISIONS, nullable: true })
+  myStatus?: string | null;
+
+  @ApiProperty()
+  statusMessage: string;
+
+  @ApiProperty()
+  isClosed: boolean;
+
+  @ApiProperty()
+  personAName: string;
+
+  @ApiProperty()
+  personBName: string;
+
+  @ApiProperty({ type: AvailableActionsDto })
+  @Type(() => AvailableActionsDto)
+  availableActions: AvailableActionsDto;
+}
+
+export class CaseParticipantDto {
+  @ApiProperty()
+  accountId: string;
+
+  @ApiPropertyOptional()
+  profileId?: string | null;
+
+  @ApiProperty({ enum: PARTICIPANT_ROLES })
+  role: string;
+
+  @ApiPropertyOptional({ enum: PERSON_SLOTS })
+  personSlot?: string | null;
+
+  @ApiProperty({ enum: APPROVAL_STATUSES })
+  approvalStatus: string;
+
+  @ApiPropertyOptional()
+  approvedAt?: Date | null;
+
+  @ApiPropertyOptional()
+  approvedByAccountId?: string | null;
 }
 
 export class ListMatchCasesQueryDto {
@@ -92,6 +232,11 @@ export class ListMatchCasesQueryDto {
   @IsOptional()
   @IsIn(MATCH_STATUSES, { message: 'סטטוס לא תקין' })
   status?: string;
+
+  @ApiPropertyOptional({ enum: CASE_STAGES })
+  @IsOptional()
+  @IsIn(CASE_STAGES, { message: 'שלב לא תקין' })
+  stage?: string;
 
   @ApiPropertyOptional({ enum: MATCH_PRIORITIES })
   @IsOptional()
@@ -149,6 +294,34 @@ export class MatchCaseResponseDto {
   @ApiProperty({ enum: MATCH_STATUSES })
   currentStatus: string;
 
+  @ApiProperty({ enum: CASE_STAGES })
+  stage: string;
+
+  @ApiPropertyOptional({ enum: PROFILE_DECISIONS, nullable: true })
+  profileAStatus?: string | null;
+
+  @ApiPropertyOptional({ enum: PROFILE_DECISIONS, nullable: true })
+  profileBStatus?: string | null;
+
+  @ApiProperty()
+  personBReleased: boolean;
+
+  @ApiPropertyOptional({ enum: ['person', 'shadchan'] })
+  initiatedBy?: string | null;
+
+  @ApiPropertyOptional({ enum: DENIAL_REASONS })
+  denialReason?: string | null;
+
+  @ApiPropertyOptional()
+  denialNote?: string | null;
+
+  @ApiPropertyOptional({ type: CaseViewerContextDto })
+  @Type(() => CaseViewerContextDto)
+  viewerContext?: CaseViewerContextDto;
+
+  @ApiPropertyOptional()
+  canViewContactDetails?: boolean;
+
   @ApiProperty({ enum: MATCH_PRIORITIES })
   priority: string;
 
@@ -200,11 +373,26 @@ export class CaseHistoryResponseDto {
 
   @ApiPropertyOptional()
   note?: string;
+
+  @ApiPropertyOptional({ enum: [...PERSON_SLOTS, 'Shadchan'] })
+  actorSlot?: string;
+
+  @ApiPropertyOptional({ enum: PERSON_SLOTS })
+  onBehalfOfSlot?: string;
+
+  @ApiPropertyOptional({ enum: DENIAL_REASONS })
+  denialReason?: string;
+
+  @ApiPropertyOptional()
+  metadata?: Record<string, unknown>;
 }
 
 export class ProfileMatchStatusDto {
   @ApiProperty()
   profileId: string;
+
+  @ApiPropertyOptional({ enum: CASE_STAGES })
+  stage?: string | null;
 
   @ApiPropertyOptional({ enum: MATCH_STATUSES })
   currentStatus?: string | null;

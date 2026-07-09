@@ -3,22 +3,24 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { managementRequestsApi } from '../api/managementRequestsApi';
 import { matchCasesApi } from '../api/matchCasesApi';
-import { MatchStatusBadge } from '../components/match-cases/MatchStatusBadge';
 import { PageState } from '../components/common/PageState';
 import { ManagementRequestList } from '../components/suggestions/ManagementRequestList';
 import {
-  getMatchStatusLabel,
   getOtherProfileInCase,
   getPersonCaseRoleLabel,
   getPersonCasesTabFromPath,
-  isTerminalMatchStatus,
+  getStageLabel,
+  getStageClassName,
+  isCaseClosed,
+  isWaitingOnMeFromContext,
   PERSON_CASE_TABS,
 } from '../constants/matchCaseOptions';
 import { useAuth } from '../contexts/AuthContext';
 import { ManagementRequest } from '../types/managementRequest';
-import { MatchCase, MatchStatus } from '../types/matchCase';
+import { CaseStage, MatchCase } from '../types/matchCase';
 import { FullProfile } from '../types/profile';
 import { getProfileDisplayName } from '../utils/profileDisplay';
+import { openProfilePreview } from '../utils/profileNavigation';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
 import './MatchCasesPage.css';
@@ -42,7 +44,7 @@ export const MyMatchCasesPage: React.FC = () => {
     setError(null);
     try {
       const [filtered, all, pendingManagement] = await Promise.all([
-        activeTab === 'all' ? matchCasesApi.list() : matchCasesApi.list({ status: activeTab }),
+        activeTab === 'all' ? matchCasesApi.list() : matchCasesApi.list({ stage: activeTab }),
         matchCasesApi.list(),
         managementRequestsApi.list('pending'),
       ]);
@@ -64,21 +66,15 @@ export const MyMatchCasesPage: React.FC = () => {
   }, [loadCases]);
 
   const tabCounts = useMemo(() => {
-    const counts: Record<MatchStatus | 'all', number> = {
+    const counts: Record<CaseStage | 'all', number> = {
       all: allCases.length,
-      pending: 0,
-      reviewing: 0,
-      waiting_for_sender: 0,
-      waiting_for_receiver: 0,
-      matched: 0,
-      contacting_sender: 0,
-      contacting_receiver: 0,
-      rejected: 0,
-      cancelled: 0,
-      closed: 0,
+      profile_check: 0,
+      background_check: 0,
+      ready_to_meet: 0,
+      meeting: 0,
     };
     for (const item of allCases) {
-      counts[item.currentStatus] += 1;
+      counts[item.stage] += 1;
     }
     return counts;
   }, [allCases]);
@@ -89,7 +85,10 @@ export const MyMatchCasesPage: React.FC = () => {
   const openCaseProfile = (matchCase: MatchCase) => {
     const other = getOtherProfile(matchCase);
     if (!other) return;
-    navigate(`/profiles/${other.id}?context=case&caseId=${matchCase.caseId}`);
+    openProfilePreview(navigate, location, other.id, {
+      context: 'case',
+      caseId: matchCase.caseId,
+    });
   };
 
   const handleRespondToManagement = async (
@@ -169,14 +168,14 @@ export const MyMatchCasesPage: React.FC = () => {
             key={tab.path}
             type="button"
             className={`suggestions-tabs__tab${
-              (tab.status === 'all' && activeTab === 'all') || tab.status === activeTab
+              (tab.stage === 'all' && activeTab === 'all') || tab.stage === activeTab
                 ? ' suggestions-tabs__tab--active'
                 : ''
             }`}
             onClick={() => navigate(tab.path)}
           >
             {tab.label}
-            <span className="suggestions-tabs__count">{tabCounts[tab.status]}</span>
+            <span className="suggestions-tabs__count">{tabCounts[tab.stage]}</span>
           </button>
         ))}
       </nav>
@@ -204,21 +203,33 @@ export const MyMatchCasesPage: React.FC = () => {
                   {matchCase.internalNotes && (
                     <p className="match-cases-list__hint">{matchCase.internalNotes}</p>
                   )}
-                  <MatchStatusBadge status={matchCase.currentStatus} />
-                  {!isTerminalMatchStatus(matchCase.currentStatus) && (
+                  <span className={`case-stage-badge ${getStageClassName(matchCase.stage)}`}>
+                    {getStageLabel(matchCase.stage)}
+                  </span>
+                  {!isCaseClosed(matchCase) && (
                     <p className="match-cases-list__hint">
-                      {getMatchStatusLabel(matchCase.currentStatus)}
+                      {matchCase.viewerContext?.statusMessage}
+                      {isWaitingOnMeFromContext(matchCase) && ' · התור שלך'}
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className="btn btn--secondary btn--sm"
-                  onClick={() => openCaseProfile(matchCase)}
-                  disabled={!other}
-                >
-                  צפייה בפרופיל
-                </button>
+                <div className="match-cases-list__actions">
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--sm"
+                    onClick={() => navigate(`/my-cases/view/${matchCase.caseId}`)}
+                  >
+                    פתיחת תיק
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--secondary btn--sm"
+                    onClick={() => openCaseProfile(matchCase)}
+                    disabled={!other}
+                  >
+                    צפייה בפרופיל
+                  </button>
+                </div>
               </li>
             );
           })}

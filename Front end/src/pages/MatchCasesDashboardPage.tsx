@@ -2,14 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { matchCasesApi } from '../api/matchCasesApi';
-import { MatchStatusBadge } from '../components/match-cases/MatchStatusBadge';
 import { PageState } from '../components/common/PageState';
 import {
   getDashboardTabFromPath,
-  getMatchStatusLabel,
+  getStageClassName,
+  getStageLabel,
+  isCaseClosed,
   MATCH_CASE_DASHBOARD_TABS,
 } from '../constants/matchCaseOptions';
-import { MatchCase, MatchStatus } from '../types/matchCase';
+import { CaseStage, MatchCase } from '../types/matchCase';
 import { getProfileDisplayName } from '../utils/profileDisplay';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
@@ -18,7 +19,7 @@ import './MatchCasesPage.css';
 export const MatchCasesDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const activeStatus = getDashboardTabFromPath(location.pathname);
+  const activeStage = getDashboardTabFromPath(location.pathname);
 
   const [cases, setCases] = useState<MatchCase[]>([]);
   const [allCases, setAllCases] = useState<MatchCase[]>([]);
@@ -29,10 +30,11 @@ export const MatchCasesDashboardPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const [filtered, all] = await Promise.all([
-        matchCasesApi.list({ status: activeStatus }),
-        matchCasesApi.list(),
-      ]);
+      const all = await matchCasesApi.list();
+      const filtered =
+        activeStage === 'closed'
+          ? all.filter((item) => isCaseClosed(item))
+          : all.filter((item) => item.stage === activeStage && !isCaseClosed(item));
       setCases(filtered);
       setAllCases(all);
     } catch (err) {
@@ -42,21 +44,32 @@ export const MatchCasesDashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeStatus]);
+  }, [activeStage]);
 
   useEffect(() => {
     loadCases();
   }, [loadCases]);
 
   const tabCounts = useMemo(() => {
-    const counts = Object.fromEntries(
-      MATCH_CASE_DASHBOARD_TABS.map((tab) => [tab.status, 0])
-    ) as Record<MatchStatus, number>;
+    const counts: Record<CaseStage | 'closed', number> = {
+      profile_check: 0,
+      background_check: 0,
+      ready_to_meet: 0,
+      meeting: 0,
+      closed: 0,
+    };
     for (const item of allCases) {
-      counts[item.currentStatus] += 1;
+      if (isCaseClosed(item)) {
+        counts.closed += 1;
+      } else {
+        counts[item.stage] += 1;
+      }
     }
     return counts;
   }, [allCases]);
+
+  const emptyLabel =
+    activeStage === 'closed' ? 'סגור' : getStageLabel(activeStage as CaseStage);
 
   return (
     <div className="page match-cases-page">
@@ -65,18 +78,18 @@ export const MatchCasesDashboardPage: React.FC = () => {
         <p className="page__subtitle">ניהול תיקים לפי שלב בתהליך</p>
       </header>
 
-      <nav className="suggestions-tabs match-cases-page__tabs" aria-label="סינון לפי סטטוס">
+      <nav className="suggestions-tabs match-cases-page__tabs" aria-label="סינון לפי שלב">
         {MATCH_CASE_DASHBOARD_TABS.map((tab) => (
           <button
             key={tab.path}
             type="button"
             className={`suggestions-tabs__tab${
-              tab.status === activeStatus ? ' suggestions-tabs__tab--active' : ''
+              tab.stage === activeStage ? ' suggestions-tabs__tab--active' : ''
             }`}
             onClick={() => navigate(tab.path)}
           >
             {tab.label}
-            <span className="suggestions-tabs__count">{tabCounts[tab.status]}</span>
+            <span className="suggestions-tabs__count">{tabCounts[tab.stage]}</span>
           </button>
         ))}
       </nav>
@@ -87,7 +100,7 @@ export const MatchCasesDashboardPage: React.FC = () => {
         <PageState error={error} />
       ) : cases.length === 0 ? (
         <div className="match-cases-page__empty">
-          <p>אין תיקים בסטטוס «{getMatchStatusLabel(activeStatus)}».</p>
+          <p>אין תיקים בשלב «{emptyLabel}».</p>
         </div>
       ) : (
         <ul className="match-cases-list">
@@ -105,9 +118,11 @@ export const MatchCasesDashboardPage: React.FC = () => {
                   <h3 className="match-cases-list__title">
                     {senderName} ← {targetName}
                   </h3>
-                  <MatchStatusBadge status={matchCase.currentStatus} />
+                  <span className={`case-stage-badge ${getStageClassName(matchCase.stage)}`}>
+                    {getStageLabel(matchCase.stage)}
+                  </span>
                   <p className="match-cases-list__meta">
-                    עודכן {new Date(matchCase.updatedAt).toLocaleDateString('he-IL')}
+                    {matchCase.viewerContext?.statusMessage}
                   </p>
                 </div>
                 <button

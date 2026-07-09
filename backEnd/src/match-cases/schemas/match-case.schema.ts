@@ -1,6 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { MATCH_PRIORITIES, MATCH_STATUSES } from '../constants/match-status';
+import {
+  MATCH_PRIORITIES,
+  SHIDDUCH_STATUSES,
+} from '../constants/shidduch-workflow';
+import {
+  CASE_STAGES,
+  PROFILE_DECISIONS,
+} from '../domain/simplified-case-workflow';
+import { DENIAL_REASONS } from '../domain/denial-reason';
 
 export type MatchCaseDocument = HydratedDocument<MatchCase>;
 
@@ -24,8 +32,49 @@ export class MatchCase {
   @Prop({ required: true, index: true })
   assignedShadchanId: string;
 
-  @Prop({ type: String, required: true, enum: MATCH_STATUSES, default: 'pending' })
+  @Prop({
+    type: String,
+    required: true,
+    enum: SHIDDUCH_STATUSES,
+    default: 'sent_to_shadchan',
+  })
   currentStatus: string;
+
+  @Prop({
+    type: String,
+    required: true,
+    enum: CASE_STAGES,
+    default: 'profile_check',
+  })
+  stage: string;
+
+  @Prop({
+    type: String,
+    required: true,
+    enum: PROFILE_DECISIONS,
+    default: 'waiting',
+  })
+  profileAStatus: string;
+
+  @Prop({
+    type: String,
+    required: true,
+    enum: PROFILE_DECISIONS,
+    default: 'waiting',
+  })
+  profileBStatus: string;
+
+  @Prop({ type: Boolean, default: false })
+  personBReleased: boolean;
+
+  @Prop({ type: String, enum: ['person', 'shadchan'], default: null })
+  initiatedBy: string | null;
+
+  @Prop({ type: String, enum: DENIAL_REASONS, default: null })
+  denialReason: string | null;
+
+  @Prop({ type: String, default: null })
+  denialNote: string | null;
 
   @Prop({ type: String, enum: MATCH_PRIORITIES, default: 'normal' })
   priority: string;

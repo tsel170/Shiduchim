@@ -25,6 +25,7 @@ export const matchCasesApi = {
 
   list(params?: {
     status?: MatchStatus;
+    stage?: import('../types/matchCase').CaseStage;
     priority?: MatchPriority;
     assignedShadchanId?: string;
     profileId?: string;
@@ -33,6 +34,7 @@ export const matchCasesApi = {
   }) {
     const query = new URLSearchParams();
     if (params?.status) query.set('status', params.status);
+    if (params?.stage) query.set('stage', params.stage);
     if (params?.priority) query.set('priority', params.priority);
     if (params?.assignedShadchanId) query.set('assignedShadchanId', params.assignedShadchanId);
     if (params?.profileId) query.set('profileId', params.profileId);
@@ -63,11 +65,32 @@ export const matchCasesApi = {
     });
   },
 
-  personAction(caseId: string, action: PersonCaseAction) {
+  personAction(caseId: string, action: PersonCaseAction, denialReason?: import('../types/matchCase').DenialReason, note?: string) {
     return apiRequest<MatchCase>(`/matchCases/${caseId}/person-action`, {
       method: 'PATCH',
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action, denialReason, note }),
     });
+  },
+
+  caseAction(
+    caseId: string,
+    payload: {
+      type: import('../types/matchCase').CaseActionType;
+      slot?: import('../types/matchCase').SimplePersonSlot;
+      denialReason?: import('../types/matchCase').DenialReason;
+      note?: string;
+    }
+  ) {
+    return apiRequest<MatchCase>(`/matchCases/${caseId}/actions`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  getContactDetails(caseId: string) {
+    return apiRequest<import('../types/matchCase').ContactDetailsPayload>(
+      `/matchCases/${caseId}/contact-details`
+    );
   },
 
   close(caseId: string) {
