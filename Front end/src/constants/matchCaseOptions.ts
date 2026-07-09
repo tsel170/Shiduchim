@@ -1,24 +1,72 @@
-import { MatchStatus } from '../types/matchCase';
+import { CaseStage, MatchCase, ProfileDecision, ShidduchStatus, STAGE_LABELS } from '../types/matchCase';
+import { FullProfile } from '../types/profile';
+import { getProfileDisplayName } from '../utils/profileDisplay';
 
-export const TERMINAL_MATCH_STATUSES: readonly MatchStatus[] = [
+export const TERMINAL_SHIDDUCH_STATUSES: readonly ShidduchStatus[] = [
   'matched',
-  'rejected',
+  'denied',
   'cancelled',
-  'closed',
 ];
 
-export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
-  pending: 'ממתין',
-  reviewing: 'בבדיקה',
-  contacting_sender: 'יצירת קשר — שולח/ת',
-  waiting_for_sender: 'ממתין/ה לשולח/ת',
-  contacting_receiver: 'יצירת קשר — מקבל/ת',
-  waiting_for_receiver: 'ממתין/ה למקבל/ת',
+export const CASE_STAGES: readonly CaseStage[] = [
+  'profile_check',
+  'background_check',
+  'ready_to_meet',
+  'meeting',
+];
+
+export const MATCH_STATUS_LABELS: Record<ShidduchStatus, string> = {
+  sent_to_shadchan: 'נשלח לשדכן',
+  waiting_for_other_side: 'ממתין לצד השני',
+  background_check: 'בדיקת רקע',
+  waiting_for_meeting_approval: 'ממתין לאישור פגישה',
+  meeting_scheduled: 'פגישה נקבעה',
+  waiting_after_meeting: 'ממתין אחרי פגישה',
   matched: 'הותאם',
-  rejected: 'נדחה',
+  denied: 'נדחה',
+  on_hold: 'בהמתנה',
   cancelled: 'בוטל',
-  closed: 'נסגר',
 };
+
+export const STAGE_APPROVE_LABELS: Record<CaseStage, string> = {
+  profile_check: 'אהבתי את הפרופיל',
+  background_check: 'נשמע/ת נחמד/ה, בואו ניפגש',
+  ready_to_meet: 'בואו ניפגש',
+  meeting: 'נפגשנו — נהניתי מהפגישה',
+};
+
+export function getStageApproveLabel(stage: CaseStage | null | undefined): string {
+  if (!stage) return 'מעוניין/ת';
+  return STAGE_APPROVE_LABELS[stage] ?? 'מעוניין/ת';
+}
+
+export function getCounterpartyInCase(
+  matchCase: {
+    senderProfileId: string;
+    targetProfileId: string;
+    senderAccountId: string;
+    targetAccountId: string | null;
+    senderProfile?: FullProfile | null;
+    targetProfile?: FullProfile | null;
+  },
+  myAccountId: string
+): { profileId: string; name: string } | null {
+  if (matchCase.senderAccountId === myAccountId) {
+    const profile = matchCase.targetProfile;
+    return {
+      profileId: matchCase.targetProfileId,
+      name: profile ? getProfileDisplayName(profile) : matchCase.targetProfileId,
+    };
+  }
+  if (matchCase.targetAccountId === myAccountId) {
+    const profile = matchCase.senderProfile;
+    return {
+      profileId: matchCase.senderProfileId,
+      name: profile ? getProfileDisplayName(profile) : matchCase.senderProfileId,
+    };
+  }
+  return null;
+}
 
 export const MATCH_PRIORITY_LABELS = {
   low: 'נמוכה',
@@ -26,84 +74,95 @@ export const MATCH_PRIORITY_LABELS = {
   high: 'גבוהה',
 } as const;
 
-/** Shadchan CRM dashboard sections */
-export const MATCH_CASE_DASHBOARD_TABS: ReadonlyArray<{
-  status: MatchStatus;
-  path: string;
-  label: string;
-}> = [
-  { status: 'pending', path: '/match-cases/pending', label: MATCH_STATUS_LABELS.pending },
-  { status: 'reviewing', path: '/match-cases/reviewing', label: MATCH_STATUS_LABELS.reviewing },
-  {
-    status: 'waiting_for_sender',
-    path: '/match-cases/waiting-sender',
-    label: 'ממתין לשולח/ת',
-  },
-  {
-    status: 'waiting_for_receiver',
-    path: '/match-cases/waiting-receiver',
-    label: 'ממתין למקבל/ת',
-  },
-  { status: 'matched', path: '/match-cases/matched', label: MATCH_STATUS_LABELS.matched },
-  { status: 'rejected', path: '/match-cases/rejected', label: MATCH_STATUS_LABELS.rejected },
-  { status: 'cancelled', path: '/match-cases/cancelled', label: MATCH_STATUS_LABELS.cancelled },
-  { status: 'closed', path: '/match-cases/closed', label: MATCH_STATUS_LABELS.closed },
-];
-
 export const PERSON_CASE_TABS: ReadonlyArray<{
-  status: MatchStatus | 'all';
+  stage: CaseStage | 'all';
   path: string;
   label: string;
 }> = [
-  { status: 'all', path: '/my-cases', label: 'הכל' },
-  { status: 'pending', path: '/my-cases/pending', label: MATCH_STATUS_LABELS.pending },
-  { status: 'reviewing', path: '/my-cases/reviewing', label: MATCH_STATUS_LABELS.reviewing },
-  {
-    status: 'waiting_for_sender',
-    path: '/my-cases/waiting-sender',
-    label: 'ממתין לי',
-  },
-  {
-    status: 'waiting_for_receiver',
-    path: '/my-cases/waiting-receiver',
-    label: 'הוצע לי',
-  },
-  { status: 'matched', path: '/my-cases/matched', label: MATCH_STATUS_LABELS.matched },
+  { stage: 'all', path: '/my-cases', label: 'הכל' },
+  { stage: 'profile_check', path: '/my-cases/profile-check', label: STAGE_LABELS.profile_check },
+  { stage: 'background_check', path: '/my-cases/background', label: STAGE_LABELS.background_check },
+  { stage: 'ready_to_meet', path: '/my-cases/ready-to-meet', label: STAGE_LABELS.ready_to_meet },
+  { stage: 'meeting', path: '/my-cases/meeting', label: STAGE_LABELS.meeting },
 ];
 
-export function getMatchStatusLabel(status: MatchStatus | null | undefined): string {
+export const MATCH_CASE_DASHBOARD_TABS: ReadonlyArray<{
+  stage: CaseStage | 'closed';
+  path: string;
+  label: string;
+}> = [
+  { stage: 'profile_check', path: '/match-cases/profile-check', label: STAGE_LABELS.profile_check },
+  { stage: 'background_check', path: '/match-cases/background', label: STAGE_LABELS.background_check },
+  { stage: 'ready_to_meet', path: '/match-cases/ready-to-meet', label: STAGE_LABELS.ready_to_meet },
+  { stage: 'meeting', path: '/match-cases/meeting', label: STAGE_LABELS.meeting },
+  { stage: 'closed', path: '/match-cases/closed', label: 'סגור' },
+];
+
+export function getStageLabel(stage: CaseStage | null | undefined): string {
+  if (!stage) return '';
+  return STAGE_LABELS[stage] ?? stage;
+}
+
+export function getMatchStatusLabel(status: ShidduchStatus | null | undefined): string {
   if (!status) return '';
   return MATCH_STATUS_LABELS[status] ?? status;
 }
 
-export function getMatchStatusClassName(status: MatchStatus): string {
+export const MATCH_STATUS_ICONS: Record<ShidduchStatus, string> = {
+  sent_to_shadchan: '🟡',
+  waiting_for_other_side: '🟠',
+  background_check: '🔵',
+  waiting_for_meeting_approval: '🟣',
+  meeting_scheduled: '🟢',
+  waiting_after_meeting: '🟤',
+  matched: '✅',
+  denied: '❌',
+  on_hold: '⏸',
+  cancelled: '⚫',
+};
+
+export function getMatchStatusDisplay(status: ShidduchStatus | null | undefined): string {
+  if (!status) return '';
+  const icon = MATCH_STATUS_ICONS[status] ?? '';
+  return `${icon} ${getMatchStatusLabel(status)}`.trim();
+}
+
+export function getMatchStatusClassName(status: ShidduchStatus): string {
   return `match-status-badge--${status.replace(/_/g, '-')}`;
 }
 
-export function isTerminalMatchStatus(status: MatchStatus): boolean {
-  return TERMINAL_MATCH_STATUSES.includes(status);
+export function getStageClassName(stage: CaseStage): string {
+  return `case-stage-badge--${stage.replace(/_/g, '-')}`;
 }
 
-const PERSON_ACTION_STATUSES: readonly MatchStatus[] = [
-  'pending',
-  'reviewing',
-  'waiting_for_sender',
-  'waiting_for_receiver',
-];
-
-export function canPersonActOnCase(status: MatchStatus): boolean {
-  return PERSON_ACTION_STATUSES.includes(status);
+export function isTerminalMatchStatus(status: ShidduchStatus): boolean {
+  return TERMINAL_SHIDDUCH_STATUSES.includes(status);
 }
 
-export function getDashboardTabFromPath(pathname: string): MatchStatus {
-  if (pathname.includes('/reviewing')) return 'reviewing';
-  if (pathname.includes('/waiting-sender')) return 'waiting_for_sender';
-  if (pathname.includes('/waiting-receiver')) return 'waiting_for_receiver';
-  if (pathname.includes('/matched')) return 'matched';
-  if (pathname.includes('/rejected')) return 'rejected';
-  if (pathname.includes('/cancelled')) return 'cancelled';
+export function isCaseClosed(
+  matchCase: Pick<MatchCase, 'viewerContext' | 'closedAt' | 'profileAStatus' | 'profileBStatus'>
+): boolean {
+  if (Boolean(matchCase.closedAt) || Boolean(matchCase.viewerContext?.isClosed)) {
+    return true;
+  }
+  return (
+    matchCase.profileAStatus === 'denied' ||
+    matchCase.profileBStatus === 'denied' ||
+    matchCase.viewerContext?.profileAStatus === 'denied' ||
+    matchCase.viewerContext?.profileBStatus === 'denied'
+  );
+}
+
+export function isWaitingOnMeFromContext(matchCase: Pick<MatchCase, 'viewerContext'>): boolean {
+  return matchCase.viewerContext?.availableActions.canApprove ?? false;
+}
+
+export function getDashboardTabFromPath(pathname: string): CaseStage | 'closed' {
+  if (pathname.includes('/background')) return 'background_check';
+  if (pathname.includes('/ready-to-meet')) return 'ready_to_meet';
+  if (pathname.includes('/meeting')) return 'meeting';
   if (pathname.includes('/closed')) return 'closed';
-  return 'pending';
+  return 'profile_check';
 }
 
 export function getPersonCaseRoleLabel(
@@ -150,21 +209,18 @@ export function isCounterpartyProfileInCase(
   return false;
 }
 
-export function getPersonCasesTabFromPath(pathname: string): MatchStatus | 'all' {
-  if (pathname.includes('/pending')) return 'pending';
-  if (pathname.includes('/reviewing')) return 'reviewing';
-  if (pathname.includes('/waiting-sender')) return 'waiting_for_sender';
-  if (pathname.includes('/waiting-receiver')) return 'waiting_for_receiver';
-  if (pathname.includes('/matched')) return 'matched';
+export function getPersonCasesTabFromPath(pathname: string): CaseStage | 'all' {
+  if (pathname.includes('/profile-check')) return 'profile_check';
+  if (pathname.includes('/background')) return 'background_check';
+  if (pathname.includes('/ready-to-meet')) return 'ready_to_meet';
+  if (pathname.includes('/meeting')) return 'meeting';
   return 'all';
 }
 
-/** Next status shadchan can set from current (for quick actions). */
-export const SHADCHAN_NEXT_STATUS: Partial<Record<MatchStatus, MatchStatus>> = {
-  pending: 'reviewing',
-  reviewing: 'contacting_sender',
-  contacting_sender: 'waiting_for_sender',
-  waiting_for_sender: 'contacting_receiver',
-  contacting_receiver: 'waiting_for_receiver',
-  waiting_for_receiver: 'matched',
-};
+export function decisionForStage(
+  matchCase: Pick<MatchCase, 'profileAStatus' | 'profileBStatus'>,
+  slot: 'A' | 'B'
+): ProfileDecision {
+  const status = slot === 'A' ? matchCase.profileAStatus : matchCase.profileBStatus;
+  return status ?? 'waiting';
+}

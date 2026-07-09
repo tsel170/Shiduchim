@@ -48,6 +48,17 @@
   color: var(--text-muted, #64748b);
 }
 
+.match-cases-list__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.match-case-details__approvals {
+  margin: 1rem 0;
+}
+
 .match-case-details__header {
   display: flex;
   align-items: center;

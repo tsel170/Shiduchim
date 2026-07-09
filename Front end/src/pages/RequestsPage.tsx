@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { ApiRequest, requestsApi } from '../api/requestsApi';
 import { matchCasesApi } from '../api/matchCasesApi';
@@ -10,12 +10,14 @@ import { SendButton } from '../components/common/SendButton';
 import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfileDisplayName } from '../utils/profileDisplay';
+import { openProfilePreview } from '../utils/profileNavigation';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './RequestsPage.css';
 
 export const RequestsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useAuth();
   const [items, setItems] = useState<ApiRequest[]>([]);
   const [responses, setResponses] = useState<ApiSuggestion[]>([]);
@@ -127,7 +129,7 @@ export const RequestsPage: React.FC = () => {
                       <button
                         type="button"
                         className="btn btn--secondary btn--sm"
-                        onClick={() => navigate(`/profiles/${item.profileId}`)}
+                        onClick={() => openProfilePreview(navigate, location, item.profileId)}
                       >
                         צפה בפרופיל
                       </button>
@@ -168,7 +170,7 @@ export const RequestsPage: React.FC = () => {
                       <RequestProfilePreview
                         label="המשודך/ת ששלח/ה"
                         profile={senderProfile}
-                        onViewProfile={(id) => navigate(`/profiles/${id}`)}
+                        onViewProfile={(id) => openProfilePreview(navigate, location, id)}
                       />
                     ) : (
                       <p className="request-card__note">בקשה ללא פרופיל משודך/ת מצורף</p>
@@ -176,7 +178,7 @@ export const RequestsPage: React.FC = () => {
                     <RequestProfilePreview
                       label="פרופיל שביקש/ה לבדוק"
                       profile={requestedProfile}
-                      onViewProfile={(id) => navigate(`/profiles/${id}`)}
+                      onViewProfile={(id) => openProfilePreview(navigate, location, id)}
                     />
                   </div>
 

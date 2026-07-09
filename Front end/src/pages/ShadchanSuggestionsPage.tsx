@@ -21,6 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ManagementRequest } from '../types/managementRequest';
 import { ShadchanSuggestion, SuggestionStage } from '../types/suggestion';
 import { FullProfile } from '../types/profile';
+import { openProfilePreview } from '../utils/profileNavigation';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
@@ -310,7 +311,9 @@ export const ShadchanSuggestionsPage: React.FC = () => {
                     type="button"
                     className="btn btn--secondary btn--sm"
                     onClick={() =>
-                      navigate(`/profiles/${suggestion.profileId}?context=suggestion`)
+                      openProfilePreview(navigate, location, suggestion.profileId, {
+                        context: 'suggestion',
+                      })
                     }
                   >
                     צפה בפרופיל

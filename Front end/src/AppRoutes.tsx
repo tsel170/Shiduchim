@@ -30,9 +30,10 @@ import { MyProfilePage } from './pages/MyProfilePage';
 import { MyMatchCasesPage } from './pages/MyMatchCasesPage';
 import { ManagementRequestsPage } from './pages/ManagementRequestsPage';
 import { MatchCasesDashboardPage } from './pages/MatchCasesDashboardPage';
-import { MatchCaseDetailsPage } from './pages/MatchCaseDetailsPage';
+import { PersonCaseDetailsPage, ShadchanCaseDetailsPage } from './pages/CaseDetailsView';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfileDetailsPage } from './pages/ProfileDetailsPage';
+import { ProfilePreviewOverlay } from './components/profile/ProfilePreviewOverlay';
 import {
   DisplayPreferences,
   FavoriteProfile,
@@ -48,6 +49,11 @@ import { MatchCase } from './types/matchCase';
 import { isCounterpartyProfileInCase } from './constants/matchCaseOptions';
 import { buildPersonCreateRequestBody } from './utils/profileValidation';
 import { PageState } from './components/common/PageState';
+import {
+  getLayoutPathname,
+  isProfilePreviewOpen,
+  ProfilePreviewLocationState,
+} from './utils/profileNavigation';
 
 const EMPTY_MY_PROFILE: FullProfile = {
   id: 'new-my-profile',
@@ -253,11 +259,15 @@ export const AppRoutes: React.FC = () => {
   );
 
   const isShadchan = currentUser?.role === 'shadchan';
-  const isProfileRoute = location.pathname.startsWith('/profiles/');
+  const profilePreviewState = location.state as ProfilePreviewLocationState | null;
+  const backgroundLocation = profilePreviewState?.background ?? null;
+  const isProfileOverlay = isProfilePreviewOpen(location);
+  const layoutPathname = getLayoutPathname(location);
+  const isProfileRoute = layoutPathname.startsWith('/profiles/');
   const isBrowseRoute =
-    location.pathname === '/' ||
-    location.pathname.startsWith('/browse');
-  const isFavoritesRoute = location.pathname.startsWith('/favorites');
+    layoutPathname === '/' ||
+    layoutPathname.startsWith('/browse');
+  const isFavoritesRoute = layoutPathname.startsWith('/favorites');
 
   const headerPanelMode: HeaderPanelMode = isProfileRoute
     ? isShadchan
@@ -306,11 +316,15 @@ export const AppRoutes: React.FC = () => {
 
   const handleViewProfile = useCallback(
     (id: string) => {
-      navigate(`/profiles/${id}`);
+      navigate(`/profiles/${id}`, { state: { background: location } });
       closeHeaderPanels();
     },
-    [navigate, closeHeaderPanels]
+    [navigate, location, closeHeaderPanels]
   );
+
+  const closeProfilePreview = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
 
   const handleRateProfile = useCallback(
     (profileId: string, category: ProfileRatingCategory, value: number) => {
@@ -346,6 +360,21 @@ export const AppRoutes: React.FC = () => {
     [favorites, ratingsByProfileId, profileCatalog]
   );
 
+  const profileDetailsRouteElement = (
+    <ProfileDetailsRoute
+      displayPreferences={displayPreferences}
+      onDisplayPreferencesChange={handleDisplayPreferencesChange}
+      isDisplayPrefsOpen={isDisplayPrefsOpen}
+      onDisplayPrefsOpenChange={setIsDisplayPrefsOpen}
+      favorites={favorites}
+      ratingsByProfileId={ratingsByProfileId}
+      onRate={handleRateProfile}
+      onToggleFavorite={handleToggleFavorite}
+      isModal={isProfileOverlay}
+      onClose={closeProfilePreview}
+    />
+  );
+
   const handleHeaderPanelToggle = useCallback(() => {
     if (headerPanelMode === 'filters') {
       setIsFiltersOpen((open) => !open);
@@ -372,7 +401,7 @@ export const AppRoutes: React.FC = () => {
         (headerPanelMode === 'favorites-sort' && hasCustomFavoritesSort)
       }
     >
-      <Routes>
+      <Routes location={backgroundLocation ?? location}>
         <Route path="/" element={<Navigate to="/browse" replace />} />
         <Route
           path="/browse"
@@ -412,6 +441,14 @@ export const AppRoutes: React.FC = () => {
                 onSortOpenChange={setIsFavoritesSortOpen}
                 onViewProfile={handleViewProfile}
               />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/my-cases/view/:caseId"
+          element={
+            <RoleRoute allowed={['person']}>
+              <PersonCaseDetailsPage />
             </RoleRoute>
           }
         />
@@ -471,11 +508,11 @@ export const AppRoutes: React.FC = () => {
           path="/match-cases/view/:caseId"
           element={
             <RoleRoute allowed={['shadchan']}>
-              <MatchCaseDetailsPage />
+              <ShadchanCaseDetailsPage />
             </RoleRoute>
           }
         />
-        <Route path="/match-cases" element={<Navigate to="/match-cases/pending" replace />} />
+        <Route path="/match-cases" element={<Navigate to="/match-cases/profile-check" replace />} />
         <Route
           path="/match-cases/*"
           element={
@@ -514,21 +551,18 @@ export const AppRoutes: React.FC = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route
           path="/profiles/:profileId"
-          element={
-            <ProfileDetailsRoute
-              displayPreferences={displayPreferences}
-              onDisplayPreferencesChange={handleDisplayPreferencesChange}
-              isDisplayPrefsOpen={isDisplayPrefsOpen}
-              onDisplayPrefsOpenChange={setIsDisplayPrefsOpen}
-              favorites={favorites}
-              ratingsByProfileId={ratingsByProfileId}
-              onRate={handleRateProfile}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          }
+          element={profileDetailsRouteElement}
         />
         <Route path="*" element={<Navigate to="/browse" replace />} />
       </Routes>
+
+      {isProfileOverlay && (
+        <ProfilePreviewOverlay onClose={closeProfilePreview}>
+          <Routes>
+            <Route path="/profiles/:profileId" element={profileDetailsRouteElement} />
+          </Routes>
+        </ProfilePreviewOverlay>
+      )}
     </AppLayout>
   );
 };
@@ -542,6 +576,8 @@ interface ProfileDetailsRouteProps {
   ratingsByProfileId: Record<string, ProfileRating>;
   onRate: (profileId: string, category: ProfileRatingCategory, value: number) => void;
   onToggleFavorite: (profileId: string) => void;
+  isModal?: boolean;
+  onClose?: () => void;
 }
 
 const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
@@ -553,6 +589,8 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   ratingsByProfileId,
   onRate,
   onToggleFavorite,
+  isModal = false,
+  onClose,
 }) => {
   const { currentUser } = useAuth();
   const { profileId } = useParams<{ profileId: string }>();
@@ -655,7 +693,8 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       isDisplayPrefsOpen={isDisplayPrefsOpen}
       onDisplayPrefsOpenChange={onDisplayPrefsOpenChange}
       isFavorite={favorites.some((f) => f.profileId === profile.id)}
-      onBack={() => navigate(-1)}
+      isModal={isModal}
+      onBack={onClose ?? (() => navigate(-1))}
       onRate={(category, value) => onRate(profile.id, category, value)}
       onToggleFavorite={() => onToggleFavorite(profile.id)}
       isMatchCaseView={isMatchCaseView}
