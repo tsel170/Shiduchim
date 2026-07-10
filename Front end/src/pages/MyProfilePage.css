@@ -1,40 +1,55 @@
 @import '../styles/floatingPanel.css';
 
 .my-profile-page {
-  max-width: 760px;
+  max-width: var(--content-medium);
+  padding-bottom: var(--space-2xl);
 }
 
 .my-profile-page__save-actions {
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .my-profile-page__save-actions .btn {
-  width: 100%;
-  justify-content: center;
+  min-width: 160px;
+}
+
+.my-profile-page__actions {
+  gap: var(--space-md);
 }
 
 .my-profile-page__toast {
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   margin-bottom: var(--space-lg);
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  background: var(--color-success-bg);
+  border: 1px solid #86efac;
   border-radius: var(--radius-md);
-  color: #065f46;
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: #166534;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-xs);
+  animation: ds-fade-in 0.3s ease;
 }
 
 .my-profile-page__message {
-  margin-top: var(--space-md);
-  font-size: 0.9rem;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.my-profile-page__message--success {
+  color: var(--color-success);
+  font-weight: 600;
 }
 
 .my-profile-page__message--error {
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   margin-bottom: var(--space-lg);
-  background: #fef2f2;
+  background: var(--color-error-bg);
   border: 1px solid #fecaca;
   border-radius: var(--radius-md);
   color: #991b1b;
+  font-weight: 500;
 }

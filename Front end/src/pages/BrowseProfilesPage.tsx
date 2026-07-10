@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfileMatchStatuses } from '../hooks/useProfileMatchStatuses';
 import { FavoriteProfile, FilterConfiguration, FullProfile, ProfileRating } from '../types/profile';
 import { AccountFilterTabs } from '../components/profile/AccountFilterTabs';
 import { ProfileGrid } from '../components/profile/ProfileGrid';
@@ -48,6 +49,25 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
     if (!isShadchan) return profiles;
     return filterProfilesByAccount(profiles, accountFilter);
   }, [profiles, accountFilter, isShadchan]);
+
+  const browseProfileIds = useMemo(
+    () => visibleProfiles.map((profile) => profile.id),
+    [visibleProfiles]
+  );
+  const matchStatusByProfileId = useProfileMatchStatuses(
+    currentUser?.role === 'person' ? browseProfileIds : [],
+    currentUser?.accountId
+  );
+  const matchStatusesForGrid = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(matchStatusByProfileId).map(([id, entry]) => [
+          id,
+          entry.currentStatus,
+        ])
+      ),
+    [matchStatusByProfileId]
+  );
 
   const subtitle = loading
     ? 'טוען פרופילים...'
@@ -100,6 +120,7 @@ export const BrowseProfilesPage: React.FC<BrowseProfilesPageProps> = ({
         emptyMessage={isShadchan ? emptyMessage : undefined}
         onToggleFavorite={onToggleFavorite}
         onViewProfile={onViewProfile}
+        matchStatusByProfileId={matchStatusesForGrid}
       />
     </div>
   );

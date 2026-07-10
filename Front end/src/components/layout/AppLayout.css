@@ -20,9 +20,13 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: var(--space-lg);
+  padding: var(--space-xl);
   min-width: 0;
   -webkit-overflow-scrolling: touch;
+  background:
+    radial-gradient(ellipse 80% 50% at 100% -20%, rgba(79, 70, 229, 0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(13, 148, 136, 0.04), transparent),
+    var(--color-bg);
 }
 
 .app-shell__overlay {
@@ -31,9 +35,11 @@
   inset: 0;
   top: var(--header-height);
   border: none;
-  background: rgba(15, 23, 42, 0.4);
-  z-index: 90;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: var(--z-overlay);
   cursor: pointer;
+  animation: ds-fade-in 0.2s ease;
 }
 
 .app-shell__overlay--visible {

@@ -11,6 +11,7 @@ export interface ApiRequest {
   updatedAt: string;
   senderProfile?: FullProfile | null;
   targetProfile: FullProfile;
+  targetOwnerAccountId?: string | null;
 }
 
 export const requestsApi = {

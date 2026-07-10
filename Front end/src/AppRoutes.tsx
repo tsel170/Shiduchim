@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
+  useSearchParams,
 } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { HeaderPanelMode } from './components/header/Header';
@@ -18,17 +19,21 @@ import { useAuth } from './contexts/AuthContext';
 import { favoritesApi } from './api/favoritesApi';
 import { getApiErrorMessage } from './api/apiError';
 import { profilesApi } from './api/profilesApi';
-import { suggestionsApi } from './api/suggestionsApi';
+import { matchCasesApi } from './api/matchCasesApi';
 import { BrowseProfilesPage } from './pages/BrowseProfilesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { AddedProfilesPage } from './pages/AddedProfilesPage';
 import { AddProfilePage } from './pages/AddProfilePage';
+import { AiImportPage } from './pages/AiImportPage';
 import { EditAddedProfilePage } from './pages/EditAddedProfilePage';
 import { MyProfilePage } from './pages/MyProfilePage';
-import { RequestsPage } from './pages/RequestsPage';
-import { ShadchanSuggestionsPage } from './pages/ShadchanSuggestionsPage';
+import { MyMatchCasesPage } from './pages/MyMatchCasesPage';
+import { ManagementRequestsPage } from './pages/ManagementRequestsPage';
+import { MatchCasesDashboardPage } from './pages/MatchCasesDashboardPage';
+import { PersonCaseDetailsPage, ShadchanCaseDetailsPage } from './pages/CaseDetailsView';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfileDetailsPage } from './pages/ProfileDetailsPage';
+import { ProfilePreviewOverlay } from './components/profile/ProfilePreviewOverlay';
 import {
   DisplayPreferences,
   FavoriteProfile,
@@ -40,9 +45,15 @@ import {
 import { isFilterKeyAtDefault, normalizeFilterConfiguration } from './utils/filters';
 import { isDisplayPreferencesAtDefault, normalizeDisplayPreferences } from './utils/profileHelpers';
 import { FavoriteSortKey, isRatingsCompleteStrict } from './utils/rating';
-import { ShadchanSuggestion } from './types/suggestion';
+import { MatchCase } from './types/matchCase';
+import { isCounterpartyProfileInCase } from './constants/matchCaseOptions';
 import { buildPersonCreateRequestBody } from './utils/profileValidation';
 import { PageState } from './components/common/PageState';
+import {
+  getLayoutPathname,
+  isProfilePreviewOpen,
+  ProfilePreviewLocationState,
+} from './utils/profileNavigation';
 
 const EMPTY_MY_PROFILE: FullProfile = {
   id: 'new-my-profile',
@@ -248,11 +259,15 @@ export const AppRoutes: React.FC = () => {
   );
 
   const isShadchan = currentUser?.role === 'shadchan';
-  const isProfileRoute = location.pathname.startsWith('/profiles/');
+  const profilePreviewState = location.state as ProfilePreviewLocationState | null;
+  const backgroundLocation = profilePreviewState?.background ?? null;
+  const isProfileOverlay = isProfilePreviewOpen(location);
+  const layoutPathname = getLayoutPathname(location);
+  const isProfileRoute = layoutPathname.startsWith('/profiles/') || isProfileOverlay;
   const isBrowseRoute =
-    location.pathname === '/' ||
-    location.pathname.startsWith('/browse');
-  const isFavoritesRoute = location.pathname.startsWith('/favorites');
+    layoutPathname === '/' ||
+    layoutPathname.startsWith('/browse');
+  const isFavoritesRoute = layoutPathname.startsWith('/favorites');
 
   const headerPanelMode: HeaderPanelMode = isProfileRoute
     ? isShadchan
@@ -301,11 +316,15 @@ export const AppRoutes: React.FC = () => {
 
   const handleViewProfile = useCallback(
     (id: string) => {
-      navigate(`/profiles/${id}`);
+      navigate(`/profiles/${id}`, { state: { background: location } });
       closeHeaderPanels();
     },
-    [navigate, closeHeaderPanels]
+    [navigate, location, closeHeaderPanels]
   );
+
+  const closeProfilePreview = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
 
   const handleRateProfile = useCallback(
     (profileId: string, category: ProfileRatingCategory, value: number) => {
@@ -341,6 +360,21 @@ export const AppRoutes: React.FC = () => {
     [favorites, ratingsByProfileId, profileCatalog]
   );
 
+  const profileDetailsRouteElement = (
+    <ProfileDetailsRoute
+      displayPreferences={displayPreferences}
+      onDisplayPreferencesChange={handleDisplayPreferencesChange}
+      isDisplayPrefsOpen={isDisplayPrefsOpen}
+      onDisplayPrefsOpenChange={setIsDisplayPrefsOpen}
+      favorites={favorites}
+      ratingsByProfileId={ratingsByProfileId}
+      onRate={handleRateProfile}
+      onToggleFavorite={handleToggleFavorite}
+      isModal={isProfileOverlay}
+      onClose={closeProfilePreview}
+    />
+  );
+
   const handleHeaderPanelToggle = useCallback(() => {
     if (headerPanelMode === 'filters') {
       setIsFiltersOpen((open) => !open);
@@ -367,7 +401,7 @@ export const AppRoutes: React.FC = () => {
         (headerPanelMode === 'favorites-sort' && hasCustomFavoritesSort)
       }
     >
-      <Routes>
+      <Routes location={backgroundLocation ?? location}>
         <Route path="/" element={<Navigate to="/browse" replace />} />
         <Route
           path="/browse"
@@ -410,15 +444,34 @@ export const AppRoutes: React.FC = () => {
             </RoleRoute>
           }
         />
-        <Route path="/suggestions" element={<Navigate to="/suggestions/new" replace />} />
         <Route
-          path="/suggestions/*"
+          path="/my-cases/view/:caseId"
           element={
             <RoleRoute allowed={['person']}>
-              <ShadchanSuggestionsPage />
+              <PersonCaseDetailsPage />
             </RoleRoute>
           }
         />
+        <Route
+          path="/my-cases/*"
+          element={
+            <RoleRoute allowed={['person']}>
+              <MyMatchCasesPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/management-requests"
+          element={
+            <RoleRoute allowed={['person']}>
+              <ManagementRequestsPage />
+            </RoleRoute>
+          }
+        />
+        <Route path="/suggestions/management" element={<Navigate to="/management-requests" replace />} />
+        <Route path="/suggestions/*" element={<Navigate to="/my-cases" replace />} />
+        <Route path="/suggestions" element={<Navigate to="/my-cases" replace />} />
+        <Route path="/requests" element={<Navigate to="/match-cases" replace />} />
         <Route
           path="/added-profiles/:profileId/edit"
           element={
@@ -436,6 +489,14 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
+          path="/ai-import"
+          element={
+            <RoleRoute allowed={['shadchan']}>
+              <AiImportPage />
+            </RoleRoute>
+          }
+        />
+        <Route
           path="/add-profile"
           element={
             <RoleRoute allowed={['shadchan']}>
@@ -444,10 +505,19 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
-          path="/requests"
+          path="/match-cases/view/:caseId"
           element={
             <RoleRoute allowed={['shadchan']}>
-              <RequestsPage />
+              <ShadchanCaseDetailsPage />
+            </RoleRoute>
+          }
+        />
+        <Route path="/match-cases" element={<Navigate to="/match-cases/profile-check" replace />} />
+        <Route
+          path="/match-cases/*"
+          element={
+            <RoleRoute allowed={['shadchan']}>
+              <MatchCasesDashboardPage />
             </RoleRoute>
           }
         />
@@ -481,21 +551,18 @@ export const AppRoutes: React.FC = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route
           path="/profiles/:profileId"
-          element={
-            <ProfileDetailsRoute
-              displayPreferences={displayPreferences}
-              onDisplayPreferencesChange={handleDisplayPreferencesChange}
-              isDisplayPrefsOpen={isDisplayPrefsOpen}
-              onDisplayPrefsOpenChange={setIsDisplayPrefsOpen}
-              favorites={favorites}
-              ratingsByProfileId={ratingsByProfileId}
-              onRate={handleRateProfile}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          }
+          element={profileDetailsRouteElement}
         />
         <Route path="*" element={<Navigate to="/browse" replace />} />
       </Routes>
+
+      {isProfileOverlay && (
+        <ProfilePreviewOverlay onClose={closeProfilePreview}>
+          <Routes>
+            <Route path="/profiles/:profileId" element={profileDetailsRouteElement} />
+          </Routes>
+        </ProfilePreviewOverlay>
+      )}
     </AppLayout>
   );
 };
@@ -509,6 +576,8 @@ interface ProfileDetailsRouteProps {
   ratingsByProfileId: Record<string, ProfileRating>;
   onRate: (profileId: string, category: ProfileRatingCategory, value: number) => void;
   onToggleFavorite: (profileId: string) => void;
+  isModal?: boolean;
+  onClose?: () => void;
 }
 
 const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
@@ -520,16 +589,19 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   ratingsByProfileId,
   onRate,
   onToggleFavorite,
+  isModal = false,
+  onClose,
 }) => {
   const { currentUser } = useAuth();
   const { profileId } = useParams<{ profileId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const viewerRole = currentUser?.role ?? 'person';
+  const caseIdParam = searchParams.get('caseId');
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSuggestedProfile, setIsSuggestedProfile] = useState(false);
-  const [suggestion, setSuggestion] = useState<ShadchanSuggestion | null>(null);
+  const [matchCase, setMatchCase] = useState<MatchCase | null>(null);
 
   useEffect(() => {
     if (!profileId) return;
@@ -556,30 +628,41 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
 
   useEffect(() => {
     if (viewerRole !== 'person' || !profileId) {
-      setIsSuggestedProfile(false);
-      setSuggestion(null);
+      setMatchCase(null);
       return;
     }
 
     let cancelled = false;
-    suggestionsApi
-      .getProfileContext(profileId)
-      .then((result) => {
-        if (cancelled) return;
-        setIsSuggestedProfile(result.suggested);
-        setSuggestion(result.suggested ? result.suggestion ?? null : null);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsSuggestedProfile(false);
-          setSuggestion(null);
-        }
-      });
 
+    async function loadCaseContext() {
+      try {
+        if (caseIdParam) {
+          const loaded = await matchCasesApi.getById(caseIdParam);
+          if (!cancelled) setMatchCase(loaded);
+          return;
+        }
+
+        const result = await matchCasesApi.getProfileContext(profileId!);
+        if (!cancelled) {
+          setMatchCase(result.hasCase ? result.matchCase ?? null : null);
+        }
+      } catch {
+        if (!cancelled) setMatchCase(null);
+      }
+    }
+
+    loadCaseContext();
     return () => {
       cancelled = true;
     };
-  }, [viewerRole, profileId]);
+  }, [viewerRole, profileId, caseIdParam]);
+
+  const isMatchCaseView =
+    Boolean(profileId) &&
+    matchCase !== null &&
+    viewerRole === 'person' &&
+    Boolean(currentUser?.accountId) &&
+    isCounterpartyProfileInCase(matchCase, profileId!, currentUser!.accountId);
 
   if (!profileId) {
     return <Navigate to="/browse" replace />;
@@ -610,20 +693,28 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
       isDisplayPrefsOpen={isDisplayPrefsOpen}
       onDisplayPrefsOpenChange={onDisplayPrefsOpenChange}
       isFavorite={favorites.some((f) => f.profileId === profile.id)}
-      onBack={() => navigate(-1)}
+      isModal={isModal}
+      onBack={onClose ?? (() => navigate(-1))}
       onRate={(category, value) => onRate(profile.id, category, value)}
       onToggleFavorite={() => onToggleFavorite(profile.id)}
-      isSuggestedProfile={isSuggestedProfile}
-      suggestion={suggestion}
-      onSuggestionUpdate={setSuggestion}
-      onSiteSend={async (note, recipientAccountId) => {
+      isMatchCaseView={isMatchCaseView}
+      matchCase={matchCase}
+      onMatchCaseUpdate={setMatchCase}
+      onSiteSend={async (note, recipientAccountId, recipientProfileId) => {
         if (!recipientAccountId.trim()) {
           throw new Error('יש לבחור משודך/ת מהרשימה');
         }
-        await suggestionsApi.create({
-          ownerAccountId: recipientAccountId.trim(),
-          profileId: profile.id,
-          shadchanNote: note,
+        if (!recipientProfileId?.trim()) {
+          throw new Error('לא נמצא פרופיל למשודך/ת שנבחר/ה');
+        }
+        if (!currentUser?.accountId) {
+          throw new Error('יש להתחבר מחדש');
+        }
+        await matchCasesApi.create({
+          senderProfileId: profile.id,
+          targetProfileId: recipientProfileId.trim(),
+          assignedShadchanId: currentUser.accountId,
+          note,
         });
       }}
     />

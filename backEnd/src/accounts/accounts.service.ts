@@ -573,16 +573,9 @@ export class AccountsService {
     };
   }
 
-  private async resolvePersonDisplayName(
+  async getPersonDisplayName(
     account: Pick<Account, 'firstName' | 'lastName' | 'email' | 'profileId'>,
   ) {
-    const accountName = [account.firstName, account.lastName]
-      .map((part) => part?.trim())
-      .filter(Boolean)
-      .join(' ')
-      .trim();
-    if (accountName) return accountName;
-
     if (account.profileId) {
       const profile = await this.profileModel.findOne({ profileId: account.profileId });
       if (profile) {
@@ -594,6 +587,13 @@ export class AccountsService {
         if (profileName) return profileName;
       }
     }
+
+    const accountName = [account.firstName, account.lastName]
+      .map((part) => part?.trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    if (accountName) return accountName;
 
     const email = account.email?.trim();
     if (email && !email.includes('@')) return email;
@@ -677,6 +677,14 @@ export class AccountsService {
     return account.accountId;
   }
 
+  async findPersonAccountIdForProfile(
+    profile: Pick<Profile, 'profileId' | 'ownerAccountId'>,
+  ): Promise<string | null> {
+    const accounts = await this.findPersonAccountsForManagedProfiles([profile]);
+    const account = this.getPersonAccountForManagedProfile(profile, accounts);
+    return account?.accountId ?? null;
+  }
+
   private toShadchanSummary(
     account: Pick<Account, 'accountId' | 'email' | 'phone' | 'firstName' | 'lastName'>,
   ) {
@@ -702,7 +710,7 @@ export class AccountsService {
       email: account.email,
       phone: account.phone ?? null,
       profileId: account.profileId ?? null,
-      displayName: await this.resolvePersonDisplayName(account),
+      displayName: await this.getPersonDisplayName(account),
     };
   }
 

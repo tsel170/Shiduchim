@@ -34,7 +34,11 @@ interface ShadchanSharePanelProps {
   settings: ProfileShareSettings;
   onSettingsChange: (next: ProfileShareSettings) => void;
   onClose: () => void;
-  onSiteSend?: (note: string, recipientAccountId: string) => Promise<void>;
+  onSiteSend?: (
+    note: string,
+    recipientAccountId: string,
+    recipientProfileId: string
+  ) => Promise<void>;
   onViewPersonProfile?: (profileId: string) => void;
   isSending?: boolean;
 }
@@ -112,9 +116,9 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
   const isSiteMode = !isExport && activeTab === 'site';
 
   const handleSiteSend = async () => {
-    if (!onSiteSend || !selectedPerson?.accountId) return;
+    if (!onSiteSend || !selectedPerson?.accountId || !selectedPerson.profileId) return;
     const note = `המלצה: ${profile.firstName} ${profile.lastName}`.trim();
-    await onSiteSend(note, selectedPerson.accountId);
+    await onSiteSend(note, selectedPerson.accountId, selectedPerson.profileId);
     setSelectedPerson(null);
   };
 

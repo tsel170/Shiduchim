@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { profilesApi } from '../api/profilesApi';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getCityLabel } from '../constants/profileOptions';
 import { FullProfile } from '../types/profile';
 import { getProfileDisplayName, getProfileInitial } from '../utils/profileDisplay';
+import { openProfilePreview } from '../utils/profileNavigation';
 import {
   AccountFilter,
   filterProfilesByAccount,
@@ -26,6 +27,7 @@ function canShadchanDeleteProfile(profile: FullProfile): boolean {
 export const AddedProfilesPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profiles, setProfiles] = useState<FullProfile[]>([]);
   const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
   const [loading, setLoading] = useState(true);
@@ -166,7 +168,7 @@ export const AddedProfilesPage: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn--sm added-profiles-card__btn added-profiles-card__btn--view"
-                    onClick={() => navigate(`/profiles/${profile.id}`)}
+                    onClick={() => openProfilePreview(navigate, location, profile.id)}
                   >
                     צפה
                   </button>
