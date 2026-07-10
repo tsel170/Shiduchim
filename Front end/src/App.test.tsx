@@ -103,7 +103,7 @@ beforeEach(() => {
 
 test('shows login page when unauthenticated', async () => {
   renderApp('/browse');
-  expect(screen.getByRole('heading', { name: 'שידוכים' })).toBeInTheDocument();
+  expect(screen.getByText('שובך')).toBeInTheDocument();
   expect(screen.getByLabelText('אימייל')).toBeInTheDocument();
 });
 
@@ -116,7 +116,7 @@ test('renders app shell with browse profiles after login', async () => {
   await waitFor(() => {
     expect(screen.getByRole('heading', { name: 'עיון בפרופילים' })).toBeInTheDocument();
   });
-  expect(screen.getByText('שידוכים')).toBeInTheDocument();
+  expect(screen.getAllByText('שובך').length).toBeGreaterThanOrEqual(1);
 });
 
 test('navigates to my profile page', async () => {

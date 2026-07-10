@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap');
 @import './styles/design-system.css';
 @import './styles/buttons.css';
+@import './components/ui/ui.css';
+@import './components/brand/BrandLogo.css';
 @import './components/common/SendButton.css';
 @import './components/common/FavoriteButton.css';
 @import './styles/forms.css';
