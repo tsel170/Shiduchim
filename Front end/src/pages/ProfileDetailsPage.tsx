@@ -21,6 +21,7 @@ import { profileHasUserAccount } from '../utils/profileAccount';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import { getProfileDisplayName } from '../utils/profileDisplay';
 import { openProfilePreview } from '../utils/profileNavigation';
+import { isDisplayPreferencesAtDefault } from '../utils/profileHelpers';
 import './Page.css';
 import './ProfileDetailsPage.css';
 
@@ -205,17 +206,40 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
           <BackIcon />
           חזרה
         </button>
+        {!isShadchan && isModal && (
+          <button
+            type="button"
+            className={`profile-details-page__prefs${
+              isDisplayPrefsOpen ? ' profile-details-page__prefs--open' : ''
+            }${
+              !isDisplayPreferencesAtDefault(displayPreferences)
+                ? ' profile-details-page__prefs--active'
+                : ''
+            }`}
+            onClick={() => onDisplayPrefsOpenChange(!isDisplayPrefsOpen)}
+            aria-expanded={isDisplayPrefsOpen}
+            aria-label="העדפות תצוגה"
+          >
+            <DisplayPrefsIcon />
+            העדפות תצוגה
+          </button>
+        )}
       </div>
 
       {!isShadchan && isDisplayPrefsOpen && (
         <>
           <button
             type="button"
-            className="floating-panel-backdrop"
+            className={`floating-panel-backdrop${
+              isModal ? ' floating-panel-backdrop--modal' : ''
+            }`}
             onClick={() => onDisplayPrefsOpenChange(false)}
             aria-label="סגור העדפות תצוגה"
           />
-          <aside className="floating-panel" aria-label="העדפות תצוגה">
+          <aside
+            className={`floating-panel${isModal ? ' floating-panel--modal' : ''}`}
+            aria-label="העדפות תצוגה"
+          >
             <DisplayPreferencesPanel
               value={displayPreferences}
               onChange={onDisplayPreferencesChange}
@@ -353,6 +377,15 @@ function BackIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DisplayPrefsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25">
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <path d="M8 10h8M8 14h5" strokeLinecap="round" />
     </svg>
   );
 }

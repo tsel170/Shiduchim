@@ -5,6 +5,7 @@ import { matchCasesApi } from '../api/matchCasesApi';
 import { CaseActionsPanel } from '../components/match-cases/CaseActionsPanel';
 import { CaseApprovalSummary } from '../components/match-cases/CaseApprovalSummary';
 import { CaseStatusMessage } from '../components/match-cases/CaseStatusMessage';
+import { CloseCaseDialog } from '../components/match-cases/CloseCaseDialog';
 import { ContactDetailsSection } from '../components/match-cases/ContactDetailsSection';
 import { PageState } from '../components/common/PageState';
 import { SendButton } from '../components/common/SendButton';
@@ -32,14 +33,16 @@ export const CaseDetailsView: React.FC<CaseDetailsViewProps> = ({
   const { matchCase, setMatchCase, history, loading, error, reload } = useMatchCase(caseId);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 
-  const handleClose = async () => {
+  const handleClose = async (reason: string) => {
     if (!matchCase) return;
     setIsUpdating(true);
     setActionError(null);
     try {
-      const updated = await matchCasesApi.close(matchCase.caseId);
+      const updated = await matchCasesApi.close(matchCase.caseId, reason);
       setMatchCase(updated);
+      setCloseDialogOpen(false);
       await reload();
     } catch (err) {
       setActionError(getApiErrorMessage(err));
@@ -132,7 +135,7 @@ export const CaseDetailsView: React.FC<CaseDetailsViewProps> = ({
         ) : null}
       </section>
 
-      <ContactDetailsSection matchCase={matchCase} />
+      {!showInternalNotes && <ContactDetailsSection matchCase={matchCase} />}
 
       <CaseActionsPanel
         matchCase={matchCase}
@@ -150,11 +153,20 @@ export const CaseDetailsView: React.FC<CaseDetailsViewProps> = ({
 
       {actions?.canCancel && !isCaseClosed(matchCase) && (
         <section className="match-case-details__actions">
-          <SendButton variant="decline" isLoading={isUpdating} onClick={handleClose}>
+          <SendButton variant="decline" onClick={() => setCloseDialogOpen(true)}>
             בטל תיק
           </SendButton>
         </section>
       )}
+
+      <CloseCaseDialog
+        isOpen={closeDialogOpen}
+        isLoading={isUpdating}
+        onConfirm={handleClose}
+        onClose={() => {
+          if (!isUpdating) setCloseDialogOpen(false);
+        }}
+      />
 
       {actionError && <p className="match-case-details__error">{actionError}</p>}
 

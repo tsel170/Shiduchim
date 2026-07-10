@@ -110,6 +110,14 @@ export class PersonMatchCaseActionDto {
   note?: string;
 }
 
+export class CloseMatchCaseDto {
+  @ApiProperty({ description: 'Reason for cancelling the case (required)' })
+  @IsString({ message: 'יש לציין סיבה לביטול התיק' })
+  @MinLength(3, { message: 'סיבת הביטול קצרה מדי' })
+  @MaxLength(2000, { message: 'סיבת הביטול ארוכה מדי' })
+  reason: string;
+}
+
 export class CaseActionDto {
   @ApiProperty({
     enum: ['approve', 'deny', 'approve_for', 'release_to_person_b', 'advance_stage'],

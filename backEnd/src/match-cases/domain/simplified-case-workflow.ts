@@ -92,14 +92,26 @@ export function slotForAccountId(
   return null;
 }
 
+/** Shadchan sent a profile to a person — waiting for receiver response only. */
+export function isShadchanPushPending(state: SimplifiedCaseState): boolean {
+  return (
+    state.initiatedBy === 'shadchan' &&
+    !isCaseClosed(state) &&
+    state.profileAStatus === 'waiting' &&
+    state.profileBStatus === 'waiting'
+  );
+}
+
 /** Person B cannot see person-initiated case until shadchan releases. */
 export function isVisibleToAccount(
   state: SimplifiedCaseState,
   accountId: string,
 ): boolean {
+  if (isShadchanPushPending(state)) {
+    return state.targetAccountId === accountId;
+  }
   if (state.senderAccountId === accountId) return true;
   if (state.targetAccountId !== accountId) return false;
-  if (state.initiatedBy === 'shadchan') return true;
   return state.personBReleased;
 }
 
@@ -114,7 +126,7 @@ export function initialStateForCreate(
       stage: 'profile_check',
       profileAStatus: 'waiting',
       profileBStatus: 'waiting',
-      personBReleased: true,
+      personBReleased: false,
     };
   }
   return {
@@ -178,6 +190,44 @@ export function canShadchanActForSlot(
   if (accountId) return false;
   const status = slot === 'A' ? state.profileAStatus : state.profileBStatus;
   return status === 'waiting';
+}
+
+/** Shadchan may deny on behalf of B before B sees the case or while deciding on a push. */
+export function isShadchanDenyOnBehalfOfB(
+  state: SimplifiedCaseState,
+  slot: PersonSlot,
+): boolean {
+  if (slot !== 'B') return false;
+  if (isShadchanPushPending(state)) return true;
+  return (
+    state.initiatedBy === 'person' &&
+    state.stage === 'profile_check' &&
+    !state.personBReleased
+  );
+}
+
+export function inferShadchanDenySlot(
+  state: SimplifiedCaseState,
+): PersonSlot | null {
+  if (isCaseClosed(state)) return null;
+
+  if (isShadchanPushPending(state)) {
+    return 'B';
+  }
+
+  if (
+    state.initiatedBy === 'person' &&
+    state.stage === 'profile_check' &&
+    !state.personBReleased &&
+    state.profileBStatus === 'waiting'
+  ) {
+    return 'B';
+  }
+
+  if (canShadchanActForSlot(state, 'B')) return 'B';
+  if (canShadchanActForSlot(state, 'A')) return 'A';
+
+  return null;
 }
 
 export function canShadchanAdvanceStage(state: SimplifiedCaseState): boolean {
@@ -323,6 +373,9 @@ function buildStatusMessage(
   const stageLabel = STAGE_LABELS[state.stage];
 
   if (mySlot === 'shadchan') {
+    if (isShadchanPushPending(state)) {
+      return `ממתין לתגובת ${names.personBName}`;
+    }
     if (state.initiatedBy === 'person' && !state.personBReleased) {
       return 'שלח/י את ההצעה לצד ב׳';
     }

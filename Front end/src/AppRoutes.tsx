@@ -263,7 +263,7 @@ export const AppRoutes: React.FC = () => {
   const backgroundLocation = profilePreviewState?.background ?? null;
   const isProfileOverlay = isProfilePreviewOpen(location);
   const layoutPathname = getLayoutPathname(location);
-  const isProfileRoute = layoutPathname.startsWith('/profiles/');
+  const isProfileRoute = layoutPathname.startsWith('/profiles/') || isProfileOverlay;
   const isBrowseRoute =
     layoutPathname === '/' ||
     layoutPathname.startsWith('/browse');

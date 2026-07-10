@@ -97,8 +97,10 @@ export class ShidduchCaseMigrationService implements OnModuleInit {
       );
 
       const personBReleased =
-        initiatedBy === 'shadchan' ||
-        matchCase.currentStatus !== 'sent_to_shadchan';
+        matchCase.personBReleased ??
+        (initiatedBy === 'shadchan'
+          ? !(profileAStatus === 'waiting' && profileBStatus === 'waiting')
+          : matchCase.currentStatus !== 'sent_to_shadchan');
 
       matchCase.stage = stage;
       matchCase.profileAStatus = profileAStatus;
