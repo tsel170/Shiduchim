@@ -32,8 +32,11 @@ import {
   CaseStage,
   computeViewerContext as computeSimplifiedViewerContext,
   deriveInitiatedBy,
+  inferShadchanDenySlot,
   initialStateForCreate,
   isCaseClosed,
+  isShadchanDenyOnBehalfOfB,
+  isShadchanPushPending,
   isVisibleToAccount,
   legacyStatusFromStage,
   PersonSlot as SimpleSlot,
@@ -367,7 +370,7 @@ export class MatchCasesService {
       return this.applyShadchanAdvanceStage(user, matchCase, previousStage);
     }
 
-    const simpleSlot = this.normalizeActionSlot(input.slot, user, matchCase);
+    let simpleSlot = this.normalizeActionSlot(input.slot, user, matchCase);
 
     if (input.type === 'approve_for') {
       if (user.role !== 'shadchan') {
@@ -393,12 +396,17 @@ export class MatchCasesService {
         }
       } else {
         this.assertShadchanAssigned(user, matchCase);
-        if (!simpleSlot) {
+        const denySlot = simpleSlot ?? inferShadchanDenySlot(state);
+        if (!denySlot) {
           throw new BadRequestException('יש לציין משתתף לדחייה');
         }
-        if (accountIdForSlot(state, simpleSlot)) {
+        if (
+          accountIdForSlot(state, denySlot) &&
+          !isShadchanDenyOnBehalfOfB(state, denySlot)
+        ) {
           throw new BadRequestException('לא ניתן לדחות בשם משתתף עם חשבון');
         }
+        simpleSlot = denySlot;
       }
 
       const slot =
@@ -451,6 +459,11 @@ export class MatchCasesService {
     previousStage: CaseStage,
   ) {
     const state = this.toSimplifiedState(matchCase);
+
+    if (isShadchanPushPending(state) && slot === 'B') {
+      return this.applyShadchanPushReceiverAccept(user, matchCase, previousStage);
+    }
+
     const result = applyApprove(state, slot);
     matchCase.profileAStatus = result.profileAStatus;
     matchCase.profileBStatus = result.profileBStatus;
@@ -481,6 +494,46 @@ export class MatchCasesService {
         payload: { waitingForShadchan: true, stage: matchCase.stage },
       });
     }
+
+    return this.toEnrichedResponse(matchCase, user);
+  }
+
+  /** Receiver accepted a shadchan push — they become person A (initiator). */
+  private async applyShadchanPushReceiverAccept(
+    user: AuthUserPayload,
+    matchCase: MatchCaseDocument,
+    previousStage: CaseStage,
+  ) {
+    const previousState = this.toSimplifiedState(matchCase);
+    const {
+      senderProfileId,
+      targetProfileId,
+      senderAccountId,
+      targetAccountId,
+    } = matchCase;
+
+    matchCase.senderProfileId = targetProfileId;
+    matchCase.targetProfileId = senderProfileId;
+    matchCase.senderAccountId = targetAccountId!;
+    matchCase.targetAccountId = senderAccountId;
+    matchCase.profileAStatus = 'approved';
+    matchCase.profileBStatus = 'waiting';
+    matchCase.personBReleased = false;
+    matchCase.initiatedBy = 'person';
+    this.syncLegacyFields(matchCase);
+    await matchCase.save();
+
+    await this.appendHistory({
+      caseId: matchCase.caseId,
+      action: 'Accepted By Other Side',
+      previousStatus: normalizeShidduchStatus(
+        legacyStatusFromStage(previousStage, previousState),
+      ),
+      newStatus: normalizeShidduchStatus(matchCase.currentStatus),
+      changedByAccountId: user.accountId,
+      note: 'המשודך/ת אישר/ה את ההצעה',
+      actorSlot: this.historySlot('B'),
+    });
 
     return this.toEnrichedResponse(matchCase, user);
   }
@@ -582,9 +635,14 @@ export class MatchCasesService {
     };
   }
 
-  async close(user: AuthUserPayload, caseId: string, note?: string) {
+  async close(user: AuthUserPayload, caseId: string, reason: string) {
     if (user.role !== 'shadchan') {
       throw new ForbiddenException('רק שדכן/ית יכול/ה לבטל תיק');
+    }
+
+    const trimmedReason = reason?.trim();
+    if (!trimmedReason || trimmedReason.length < 3) {
+      throw new BadRequestException('יש לציין סיבה לביטול התיק');
     }
 
     const matchCase = await this.findCaseOrThrow(caseId);
@@ -605,7 +663,7 @@ export class MatchCasesService {
       previousStatus,
       newStatus: 'cancelled',
       changedByAccountId: user.accountId,
-      note: note?.trim(),
+      note: trimmedReason,
       actorSlot: 'Shadchan',
     });
 
@@ -755,8 +813,12 @@ export class MatchCasesService {
 
     const personBReleased =
       matchCase.personBReleased ??
-      (initiatedBy === 'shadchan' ||
-        matchCase.currentStatus !== 'sent_to_shadchan');
+      (initiatedBy === 'shadchan'
+        ? !(
+            profileAStatus === 'waiting' &&
+            profileBStatus === 'waiting'
+          )
+        : matchCase.currentStatus !== 'sent_to_shadchan');
 
     return {
       stage,

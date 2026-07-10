@@ -27,6 +27,7 @@ import {
   BatchProfileStatusDto,
   CaseActionDto,
   CaseHistoryResponseDto,
+  CloseMatchCaseDto,
   CreateMatchCaseDto,
   EnrichedMatchCaseResponseDto,
   ListMatchCasesQueryDto,
@@ -172,7 +173,11 @@ export class MatchCasesController {
   @ApiOperation({ summary: 'Soft close match case (history preserved)' })
   @ApiParam({ name: 'caseId' })
   @ApiOkResponse({ type: EnrichedMatchCaseResponseDto })
-  close(@CurrentUser() user: AuthUserPayload, @Param('caseId') caseId: string) {
-    return this.matchCasesService.close(user, caseId);
+  close(
+    @CurrentUser() user: AuthUserPayload,
+    @Param('caseId') caseId: string,
+    @Body() dto: CloseMatchCaseDto,
+  ) {
+    return this.matchCasesService.close(user, caseId, dto.reason);
   }
 }

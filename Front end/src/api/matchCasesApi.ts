@@ -93,9 +93,10 @@ export const matchCasesApi = {
     );
   },
 
-  close(caseId: string) {
+  close(caseId: string, reason: string) {
     return apiRequest<MatchCase>(`/matchCases/${caseId}`, {
       method: 'DELETE',
+      body: JSON.stringify({ reason }),
     });
   },
 
