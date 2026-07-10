@@ -1,57 +1,58 @@
 .match-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.3;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .match-status-badge--sent-to-shadchan {
-  background: #fef9c3;
-  color: #854d0e;
+  background: var(--color-warning-bg);
+  color: #9a6b2e;
 }
 
 .match-status-badge--waiting-for-other-side {
-  background: #ffedd5;
-  color: #9a3412;
+  background: #fdf0e8;
+  color: #a05a32;
 }
 
 .match-status-badge--background-check {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
 }
 
 .match-status-badge--waiting-for-meeting-approval {
-  background: #ede9fe;
-  color: #5b21b6;
+  background: #f0ebf8;
+  color: #6b5080;
 }
 
 .match-status-badge--meeting-scheduled {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .match-status-badge--waiting-after-meeting {
-  background: #ede9d5;
-  color: #78350f;
+  background: var(--color-beige);
+  color: #7a6348;
 }
 
 .match-status-badge--matched {
-  background: #bbf7d0;
-  color: #14532d;
+  background: #dceee4;
+  color: #3d6b52;
 }
 
 .match-status-badge--denied,
 .match-status-badge--cancelled {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .match-status-badge--on-hold {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
 }

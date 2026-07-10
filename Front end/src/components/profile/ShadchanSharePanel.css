@@ -1,11 +1,83 @@
+/* ─── Fixed viewport overlay (one dialog, always on screen) ─── */
+.share-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--header-height, 68px) + 12px) 16px 16px;
+  pointer-events: none;
+}
+
+.share-panel-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(44, 52, 64, 0.5);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: ds-fade-in 0.2s ease;
+}
+
+.share-panel-overlay__dialog {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(920px, 100%);
+  height: min(86vh, calc(100vh - var(--header-height, 68px) - 28px));
+  max-height: calc(100vh - var(--header-height, 68px) - 28px);
+  pointer-events: auto;
+  animation: ds-slide-up 0.3s var(--ease-out-expo) both;
+  overflow: hidden;
+}
+
+.app-shell__main:has(.share-panel-overlay),
+.profile-preview__panel:has(.share-panel-overlay) {
+  overflow: hidden !important;
+}
+
+@media (max-width: 640px) {
+  .share-panel-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .share-panel-overlay__dialog {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* ─── Panel content ─── */
 .shadchan-share-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - var(--header-height, 64px) - 32px);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.share-panel-overlay__dialog .shadchan-share-panel {
+  height: 100%;
+  border-radius: var(--radius-xl);
+}
+
+@media (max-width: 640px) {
+  .share-panel-overlay__dialog .shadchan-share-panel {
+    border-radius: 0;
+    border: none;
+  }
 }
 
 .shadchan-share-panel__header {
@@ -15,6 +87,7 @@
   gap: var(--space-md);
   padding: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .shadchan-share-panel__title {
@@ -34,8 +107,9 @@
 .shadchan-share-panel__tabs {
   display: flex;
   gap: var(--space-sm);
-  padding: 0 var(--space-lg) var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .shadchan-share-panel__tab {
@@ -57,61 +131,28 @@
   color: var(--color-primary);
 }
 
-.shadchan-share-panel__spacing-input-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
-}
-
-.shadchan-share-panel__spacing-input {
-  width: 88px;
-  padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-family: inherit;
-  font-size: 0.9rem;
-}
-
-.shadchan-share-panel__spacing-hint {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.shadchan-share-panel__method-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.shadchan-share-panel__method-grid .btn {
-  width: 100%;
-}
-
-.shadchan-share-panel__close {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-
-.shadchan-share-panel__close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text);
-}
-
+/* Single scroll region for all panel content */
 .shadchan-share-panel__body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   gap: var(--space-lg);
   padding: var(--space-lg);
-  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shadchan-share-panel__body--site-only {
+  display: block;
+  padding: var(--space-lg);
+}
+
+.shadchan-share-panel__body--site-only .shadchan-share-panel__site-send {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .shadchan-share-panel__section-title {
@@ -145,6 +186,27 @@
   font-size: 0.92rem;
 }
 
+.shadchan-share-panel__spacing-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.shadchan-share-panel__spacing-input {
+  width: 88px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.shadchan-share-panel__spacing-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 .shadchan-share-panel__textarea {
   width: 100%;
   margin-bottom: var(--space-md);
@@ -167,8 +229,6 @@
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  max-height: 360px;
-  overflow: auto;
 }
 
 .shadchan-share-panel__preview-image {
@@ -192,6 +252,35 @@
   font-size: 1rem;
 }
 
+.shadchan-share-panel__method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.shadchan-share-panel__method-grid .btn {
+  width: 100%;
+}
+
+.shadchan-share-panel__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.shadchan-share-panel__close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
 .shadchan-share-panel__actions {
   display: flex;
   flex-wrap: wrap;
@@ -210,28 +299,11 @@
 }
 
 .shadchan-share-panel__status--error {
-  color: var(--color-danger, #b91c1c);
-}
-
-.shadchan-share-panel__body--site-only {
-  display: block;
-  padding: var(--space-lg);
-}
-
-.shadchan-share-panel__body--site-only .shadchan-share-panel__site-send {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.shadchan-share-panel__body--site-only .shadchan-share-panel__recipient-list {
-  max-height: min(420px, calc(100vh - var(--header-height, 64px) - 220px));
+  color: var(--color-error);
 }
 
 .shadchan-share-panel__site-send {
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0;
 }
 
 .shadchan-share-panel__recipient-list {
@@ -241,8 +313,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  max-height: 280px;
-  overflow-y: auto;
 }
 
 .shadchan-share-panel__recipient-option {
@@ -251,19 +321,19 @@
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
   text-align: start;
   font-family: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .shadchan-share-panel__recipient-option:hover:not(:disabled) {
-  border-color: #a5b4fc;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .shadchan-share-panel__recipient-option:disabled {
@@ -280,8 +350,8 @@
   justify-content: center;
   font-weight: 800;
   font-size: 1.1rem;
-  color: #ffffff;
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   flex-shrink: 0;
 }
 
@@ -297,20 +367,12 @@
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.35;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .shadchan-share-panel__recipient-meta {
   font-size: 0.82rem;
-  color: #64748b;
-}
-
-.shadchan-share-panel__site-send .add-shadchan-dialog__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: 220px;
-  overflow-y: auto;
+  color: var(--color-text-muted);
 }
 
 .shadchan-share-panel__back {
@@ -331,10 +393,6 @@
 
 @media (max-width: 768px) {
   .shadchan-share-panel__body {
-    grid-template-columns: 1fr;
-  }
-
-  .shadchan-share-panel__fields {
     grid-template-columns: 1fr;
   }
 }

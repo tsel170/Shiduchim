@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrandLogo } from '../brand/BrandLogo';
 import './Header.css';
 
 export type HeaderPanelMode = 'filters' | 'preferences' | 'favorites-sort' | 'none';
@@ -56,10 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
           <MenuIcon />
         </button>
         <button type="button" className="header__brand" onClick={onBrandClick}>
-          <span className="header__logo" aria-hidden="true">
-            ש
-          </span>
-          <span className="header__brand-text">שידוכים</span>
+          <BrandLogo size="sm" />
         </button>
       </div>
 

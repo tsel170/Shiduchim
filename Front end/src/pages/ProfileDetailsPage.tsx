@@ -14,6 +14,7 @@ import { SendButton } from '../components/common/SendButton';
 import { DisplayPreferencesPanel } from '../components/profile/DisplayPreferencesPanel';
 import { ManagementRequestForm } from '../components/profile/ManagementRequestForm';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
+import { SharePanelOverlay } from '../components/profile/SharePanelOverlay';
 import { SendToShadchanDialog } from '../components/favorites/SendToShadchanDialog';
 import { useSendToShadchan } from '../hooks/useSendToShadchan';
 import { isRatingsCompleteForProfile } from '../utils/rating';
@@ -250,28 +251,23 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
       )}
 
       {isShadchan && shareTab && (
-        <>
-          <button
-            type="button"
-            className="floating-panel-backdrop"
-            onClick={() => setShareTab(null)}
-            aria-label="סגור שיתוף פרופיל"
+        <SharePanelOverlay
+          onClose={() => setShareTab(null)}
+          ariaLabel="שיתוף פרופיל"
+        >
+          <ShadchanSharePanel
+            profile={profile}
+            initialTab={shareTab}
+            settings={shareSettings}
+            onSettingsChange={setShareSettings}
+            onClose={() => setShareTab(null)}
+            onSiteSend={handleSiteSend}
+            onViewPersonProfile={(personProfileId) =>
+              openProfilePreview(navigate, location, personProfileId)
+            }
+            isSending={isSending}
           />
-          <aside className="floating-panel floating-panel--share" aria-label="שיתוף פרופיל">
-            <ShadchanSharePanel
-              profile={profile}
-              initialTab={shareTab}
-              settings={shareSettings}
-              onSettingsChange={setShareSettings}
-              onClose={() => setShareTab(null)}
-              onSiteSend={handleSiteSend}
-              onViewPersonProfile={(personProfileId) =>
-                openProfilePreview(navigate, location, personProfileId)
-              }
-              isSending={isSending}
-            />
-          </aside>
-        </>
+        </SharePanelOverlay>
       )}
 
       <div className="profile-details-page__content">

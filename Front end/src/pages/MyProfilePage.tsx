@@ -4,6 +4,7 @@ import { FullProfile, ProfileFormErrors } from '../types/profile';
 import { ProfileShareSettings } from '../types/profileShare';
 import { ProfileEditor } from '../components/profile/ProfileEditor';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
+import { SharePanelOverlay } from '../components/profile/SharePanelOverlay';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import {
   validateProfile,
@@ -101,24 +102,19 @@ export const MyProfilePage: React.FC<MyProfilePageProps> = ({
       )}
 
       {isShareOpen && (
-        <>
-          <button
-            type="button"
-            className="floating-panel-backdrop"
-            onClick={() => setIsShareOpen(false)}
-            aria-label="סגור שמירת פרופיל"
+        <SharePanelOverlay
+          onClose={() => setIsShareOpen(false)}
+          ariaLabel="שמירת פרופיל"
+        >
+          <ShadchanSharePanel
+            profile={profile}
+            initialTab="other"
+            variant="export"
+            settings={shareSettings}
+            onSettingsChange={setShareSettings}
+            onClose={() => setIsShareOpen(false)}
           />
-          <aside className="floating-panel floating-panel--share" aria-label="שמירת פרופיל">
-            <ShadchanSharePanel
-              profile={profile}
-              initialTab="other"
-              variant="export"
-              settings={shareSettings}
-              onSettingsChange={setShareSettings}
-              onClose={() => setIsShareOpen(false)}
-            />
-          </aside>
-        </>
+        </SharePanelOverlay>
       )}
 
       <ProfileEditor
