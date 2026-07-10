@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { profilesApi } from '../api/profilesApi';
+import { PageHeader } from '../components/common/PageHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { FullProfile, ProfileFormErrors } from '../types/profile';
 import { ProfileEditor } from '../components/profile/ProfileEditor';
+import { clearAiImportDraft, loadAiImportDraft, AiImportDraft } from '../utils/aiProfileExtract';
 import {
   buildShadchanCreateRequestBody,
   hasValidationErrors,
@@ -31,14 +33,65 @@ const EMPTY_PROFILE: FullProfile = {
   photos: [],
 };
 
+function applyAiDraft(base: FullProfile, draft: AiImportDraft): FullProfile {
+  const next = { ...base };
+
+  if (typeof draft.firstName === 'string') next.firstName = draft.firstName;
+  if (typeof draft.lastName === 'string') next.lastName = draft.lastName;
+  if (typeof draft.city === 'string') next.city = draft.city;
+  if (typeof draft.religiousStream === 'string') next.religiousStream = draft.religiousStream;
+  if (typeof draft.familyVision === 'string') next.familyVision = draft.familyVision;
+  if (typeof draft.gender === 'string') next.gender = draft.gender;
+  if (typeof draft.maritalStatus === 'string') next.maritalStatus = draft.maritalStatus;
+
+  const age = draft.age;
+  if (typeof age === 'number') next.age = age;
+  else if (typeof age === 'string') {
+    const parsed = parseInt(age, 10);
+    if (!Number.isNaN(parsed)) next.age = parsed;
+  }
+
+  const height = draft.heightCm;
+  if (typeof height === 'number') next.heightCm = height;
+  else if (typeof height === 'string') {
+    const parsed = parseInt(height, 10);
+    if (!Number.isNaN(parsed)) next.heightCm = parsed;
+  }
+
+  if (Array.isArray(draft.personalityTraits)) {
+    next.personalityTraits = draft.personalityTraits;
+  }
+  if (Array.isArray(draft.hobbies)) {
+    next.hobbies = draft.hobbies;
+  }
+  if (Array.isArray(draft.lookingFor)) {
+    next.lookingFor = draft.lookingFor;
+  }
+
+  return next;
+}
+
 export const AddProfilePage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [profile, setProfile] = useState<FullProfile>(EMPTY_PROFILE);
   const [errors, setErrors] = useState<ProfileFormErrors>({});
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [serverWarning, setServerWarning] = useState<string | null>(null);
+  const [fromAiImport, setFromAiImport] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('from') === 'ai-import') {
+      const draft = loadAiImportDraft();
+      if (draft) {
+        setProfile(applyAiDraft(EMPTY_PROFILE, draft));
+        setFromAiImport(true);
+        clearAiImportDraft();
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +133,7 @@ export const AddProfilePage: React.FC = () => {
       );
       setSaveMessage('הפרופיל נוסף בהצלחה');
       setProfile(EMPTY_PROFILE);
+      setFromAiImport(false);
       setTimeout(() => navigate('/added-profiles'), 1500);
     } catch (error) {
       setSaveMessage(getApiErrorMessage(error));
@@ -89,18 +143,30 @@ export const AddProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="page my-profile-page">
-      <header className="page__header">
-        <h1 className="page__title">הוספת פרופיל</h1>
-        <p className="page__subtitle">
-          שדות חובה: שם פרטי, גיל, מין ומצב משפחתי. שאר השדות אופציונליים.
-        </p>
-      </header>
+    <div className="ds-page ds-page--narrow my-profile-page">
+      <PageHeader
+        title="הוספת פרופיל"
+        subtitle="שדות חובה: שם פרטי, גיל, מין ומצב משפחתי. שאר השדות אופציונליים."
+        badge={
+          fromAiImport ? (
+            <span className="ds-badge ds-badge--success">יובא מ-AI — בדקו לפני שמירה</span>
+          ) : undefined
+        }
+        actions={
+          <button
+            type="button"
+            className="btn btn--secondary btn--sm"
+            onClick={() => navigate('/ai-import')}
+          >
+            ייבוא AI
+          </button>
+        }
+      />
 
       {serverWarning && (
-        <p className="my-profile-page__message my-profile-page__message--error" role="alert">
+        <div className="ds-alert ds-alert--error" role="alert">
           {serverWarning}
-        </p>
+        </div>
       )}
 
       <ProfileEditor
@@ -110,16 +176,31 @@ export const AddProfilePage: React.FC = () => {
         mode="shadchan-add"
       />
 
-      <div className="my-profile-page__actions">
+      <div className="form-actions form-actions--sticky form-actions--end my-profile-page__actions">
         <button
           type="button"
-          className="btn btn--primary"
+          className={`btn btn--primary btn--lg${isSaving ? ' btn--loading' : ''}`}
           onClick={handleSave}
           disabled={isSaving}
         >
-          {isSaving ? 'שומר...' : 'שמור פרופיל'}
+          {isSaving ? (
+            <>
+              <span className="btn__spinner" aria-hidden="true" />
+              שומר...
+            </>
+          ) : (
+            'שמור פרופיל'
+          )}
         </button>
-        {saveMessage && <p className="my-profile-page__message">{saveMessage}</p>}
+        {saveMessage && (
+          <p
+            className={`my-profile-page__message${
+              saveMessage.includes('הצלחה') ? ' my-profile-page__message--success' : ''
+            }`}
+          >
+            {saveMessage}
+          </p>
+        )}
       </div>
     </div>
   );

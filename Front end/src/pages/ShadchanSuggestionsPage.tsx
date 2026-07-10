@@ -21,6 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ManagementRequest } from '../types/managementRequest';
 import { ShadchanSuggestion, SuggestionStage } from '../types/suggestion';
 import { FullProfile } from '../types/profile';
+import { openProfilePreview } from '../utils/profileNavigation';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
@@ -34,6 +35,11 @@ export const ShadchanSuggestionsPage: React.FC = () => {
   const isManagementView = activeView === 'management';
 
   const [suggestions, setSuggestions] = useState<ShadchanSuggestion[]>([]);
+  const [stageCounts, setStageCounts] = useState<Record<SuggestionStage, number>>({
+    new: 0,
+    in_check: 0,
+    checked: 0,
+  });
   const [managementRequests, setManagementRequests] = useState<ManagementRequest[]>([]);
   const [profilesById, setProfilesById] = useState<Record<string, FullProfile>>({});
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
@@ -66,14 +72,28 @@ export const ShadchanSuggestionsPage: React.FC = () => {
 
     let cancelled = false;
 
-    async function loadSuggestions() {
+    async function load() {
       setSuggestionsLoading(true);
       setSuggestionsError(null);
 
       try {
-        const loadedSuggestions = await suggestionsApi.list(activeStage);
+        const [loadedSuggestions, allSuggestions] = await Promise.all([
+          suggestionsApi.list(activeStage),
+          suggestionsApi.list(),
+        ]);
         if (cancelled) return;
+
         setSuggestions(loadedSuggestions);
+
+        const counts: Record<SuggestionStage, number> = {
+          new: 0,
+          in_check: 0,
+          checked: 0,
+        };
+        for (const item of allSuggestions) {
+          counts[item.stage] += 1;
+        }
+        setStageCounts(counts);
 
         const nextProfiles: Record<string, FullProfile> = {};
         for (const suggestion of loadedSuggestions) {
@@ -100,13 +120,16 @@ export const ShadchanSuggestionsPage: React.FC = () => {
           setProfilesById(nextProfiles);
         }
       } catch (err) {
-        if (!cancelled) setSuggestionsError(getApiErrorMessage(err));
+        if (!cancelled) {
+          setSuggestionsError(getApiErrorMessage(err));
+          setSuggestions([]);
+        }
       } finally {
         if (!cancelled) setSuggestionsLoading(false);
       }
     }
 
-    loadSuggestions();
+    load();
     return () => {
       cancelled = true;
     };
@@ -151,6 +174,8 @@ export const ShadchanSuggestionsPage: React.FC = () => {
     : getSuggestionStageEmptyMessage(activeStage);
 
   const isEmpty = isManagementView ? pendingCount === 0 : suggestions.length === 0;
+  const totalSuggestionCount = stageCounts.new + stageCounts.in_check + stageCounts.checked;
+  const otherStageCount = totalSuggestionCount - stageCounts[activeStage as SuggestionStage];
 
   const showManagementBanner = !isManagementView && pendingCount > 0;
 
@@ -188,6 +213,11 @@ export const ShadchanSuggestionsPage: React.FC = () => {
             {tab.label}
             {tab.view === 'management' && pendingCount > 0 && (
               <span className="suggestions-tabs__badge">{pendingCount}</span>
+            )}
+            {tab.view !== 'management' && stageCounts[tab.view as SuggestionStage] > 0 && (
+              <span className="suggestions-tabs__badge">
+                {stageCounts[tab.view as SuggestionStage]}
+              </span>
             )}
           </button>
         ))}
@@ -235,7 +265,11 @@ export const ShadchanSuggestionsPage: React.FC = () => {
         loading={loading}
         error={error}
         isEmpty={!loading && !error && isEmpty && !showManagementBanner}
-        emptyMessage={emptyMessage}
+        emptyMessage={
+          !isManagementView && isEmpty && otherStageCount > 0
+            ? `${emptyMessage} יש ${otherStageCount} הצעות בטאבים אחרים.`
+            : emptyMessage
+        }
       >
         {isManagementView ? (
           <ManagementRequestList
@@ -276,7 +310,11 @@ export const ShadchanSuggestionsPage: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn--secondary btn--sm"
-                    onClick={() => navigate(`/profiles/${suggestion.profileId}`)}
+                    onClick={() =>
+                      openProfilePreview(navigate, location, suggestion.profileId, {
+                        context: 'suggestion',
+                      })
+                    }
                   >
                     צפה בפרופיל
                   </button>

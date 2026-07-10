@@ -1,18 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { ApiRequest, requestsApi } from '../api/requestsApi';
+import { matchCasesApi } from '../api/matchCasesApi';
 import { suggestionsApi, ApiSuggestion } from '../api/suggestionsApi';
 import { RequestProfilePreview } from '../components/requests/RequestProfilePreview';
 import { PageState } from '../components/common/PageState';
 import { SendButton } from '../components/common/SendButton';
 import { getPersonSuggestionResponseLabel } from '../constants/suggestionOptions';
+import { useAuth } from '../contexts/AuthContext';
+import { getProfileDisplayName } from '../utils/profileDisplay';
+import { openProfilePreview } from '../utils/profileNavigation';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './RequestsPage.css';
 
 export const RequestsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser } = useAuth();
   const [items, setItems] = useState<ApiRequest[]>([]);
   const [responses, setResponses] = useState<ApiSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,26 +55,42 @@ export const RequestsPage: React.FC = () => {
   }, []);
 
   const handleSendSenderProfile = useCallback(async (request: ApiRequest) => {
-    const ownerAccountId = request.senderProfile?.ownerAccountId;
-    if (!ownerAccountId || !request.senderProfile) {
-      setActionError('לא נמצא חשבון למשודך/ת ששלח/ה את הבקשה');
+    const senderProfile = request.senderProfile;
+    const senderProfileId = request.senderProfileId ?? senderProfile?.id;
+    const recipientAccountId = request.targetOwnerAccountId;
+
+    if (!senderProfile || !senderProfileId) {
+      setActionError('לא נמצא פרופיל של המשודך/ת ששלח/ה את הבקשה');
+      return;
+    }
+
+    if (!recipientAccountId) {
+      setActionError('למשודך/ת שביקש/ה לבדוק את הפרופיל אין חשבון באפליקציה');
+      return;
+    }
+
+    if (!currentUser?.accountId) {
+      setActionError('יש להתחבר מחדש');
       return;
     }
 
     setActionError(null);
     try {
-      await suggestionsApi.create({
-        ownerAccountId,
-        profileId: request.targetProfileId,
-        shadchanNote:
+      const senderName = getProfileDisplayName(senderProfile);
+      const targetName = getProfileDisplayName(request.targetProfile);
+      await matchCasesApi.create({
+        senderProfileId,
+        targetProfileId: request.targetProfileId,
+        assignedShadchanId: currentUser.accountId,
+        note:
           request.notes ??
-          `המלצה עבור ${request.senderProfile.firstName} ${request.senderProfile.lastName}`,
+          `המלצה עבור ${targetName}: ${senderName} ביקש/ה לשמוע על הפרופיל שלך`,
       });
       setSentRequestIds((prev) => new Set(prev).add(request.requestId));
     } catch (err) {
       setActionError(getApiErrorMessage(err));
     }
-  }, []);
+  }, [currentUser?.accountId]);
 
   return (
     <div className="page added-profiles-page requests-page">
@@ -107,7 +129,7 @@ export const RequestsPage: React.FC = () => {
                       <button
                         type="button"
                         className="btn btn--secondary btn--sm"
-                        onClick={() => navigate(`/profiles/${item.profileId}`)}
+                        onClick={() => openProfilePreview(navigate, location, item.profileId)}
                       >
                         צפה בפרופיל
                       </button>
@@ -132,6 +154,9 @@ export const RequestsPage: React.FC = () => {
             const senderProfile = request.senderProfile;
             const requestedProfile = request.targetProfile;
             const isSent = sentRequestIds.has(request.requestId);
+            const canSendToTarget = Boolean(
+              senderProfile && request.senderProfileId && request.targetOwnerAccountId
+            );
 
             return (
               <li key={request.requestId} className="added-profiles-card request-card">
@@ -145,7 +170,7 @@ export const RequestsPage: React.FC = () => {
                       <RequestProfilePreview
                         label="המשודך/ת ששלח/ה"
                         profile={senderProfile}
-                        onViewProfile={(id) => navigate(`/profiles/${id}`)}
+                        onViewProfile={(id) => openProfilePreview(navigate, location, id)}
                       />
                     ) : (
                       <p className="request-card__note">בקשה ללא פרופיל משודך/ת מצורף</p>
@@ -153,7 +178,7 @@ export const RequestsPage: React.FC = () => {
                     <RequestProfilePreview
                       label="פרופיל שביקש/ה לבדוק"
                       profile={requestedProfile}
-                      onViewProfile={(id) => navigate(`/profiles/${id}`)}
+                      onViewProfile={(id) => openProfilePreview(navigate, location, id)}
                     />
                   </div>
 
@@ -164,14 +189,16 @@ export const RequestsPage: React.FC = () => {
                       variant="site"
                       size="sm"
                       sent={isSent}
-                      disabled={isSent || !senderProfile}
-                      onClick={() => senderProfile && handleSendSenderProfile(request)}
+                      disabled={isSent || !canSendToTarget}
+                      onClick={() => canSendToTarget && handleSendSenderProfile(request)}
                     >
                       {isSent
                         ? 'הפרופיל נשלח'
-                        : senderProfile
-                          ? `שלח את פרופיל ${senderProfile.firstName}`
-                          : 'אין פרופיל משודך/ת'}
+                        : !senderProfile || !request.senderProfileId
+                          ? 'אין פרופיל משודך/ת'
+                          : !request.targetOwnerAccountId
+                            ? 'למשודך/ת המבוקש/ת אין חשבון'
+                            : `שלח את פרופיל ${getProfileDisplayName(senderProfile)}`}
                     </SendButton>
                   </div>
                 </div>

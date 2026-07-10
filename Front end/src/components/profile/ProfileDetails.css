@@ -13,9 +13,10 @@
 
 .profile-details__name {
   margin: 0 0 var(--space-md);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: var(--line-height-tight);
 }
 
 .profile-details__meta-list {
@@ -67,8 +68,13 @@
   border: 1px solid var(--section-border, var(--color-border));
   border-inline-start: 4px solid var(--section-accent, var(--color-border));
   border-radius: var(--radius-lg);
-  padding: var(--space-md);
+  padding: var(--space-lg);
   margin-bottom: 0;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.profile-details__section:hover {
   box-shadow: var(--shadow-sm);
 }
 

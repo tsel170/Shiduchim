@@ -11,6 +11,7 @@ import { ManagementRequestsModule } from './management-requests/management-reque
 import { MatchRequestsModule } from './match-requests/match-requests.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SuggestionsModule } from './suggestions/suggestions.module';
+import { MatchCasesModule } from './match-cases/match-cases.module';
 import { DemoModule } from './demo/demo.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { DemoModule } from './demo/demo.module';
     FavoritesModule,
     SuggestionsModule,
     MatchRequestsModule,
+    MatchCasesModule,
     ManagementRequestsModule,
     DemoModule,
   ],

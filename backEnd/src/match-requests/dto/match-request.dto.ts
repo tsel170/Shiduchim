@@ -61,4 +61,9 @@ export class EnrichedMatchRequestResponseDto extends MatchRequestResponseDto {
 
   @ApiProperty({ type: ProfileResponseDto })
   targetProfile: ProfileResponseDto;
+
+  @ApiPropertyOptional({
+    description: 'Person account linked to the requested profile, if any',
+  })
+  targetOwnerAccountId?: string | null;
 }

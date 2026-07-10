@@ -1,0 +1,11 @@
+from_status,from_status_he,to_status_forward,to_status_he_forward,shadchan_side_transitions,terminal
+sent_to_shadchan,נשלח לשדכן,waiting_for_other_side,ממתין לצד השני,"denied; on_hold; cancelled",no
+waiting_for_other_side,ממתין לצד השני,background_check,בדיקת רקע,"denied; on_hold; cancelled",no
+background_check,בדיקת רקע,waiting_for_meeting_approval,ממתין לאישור פגישה,"denied; on_hold; cancelled",no
+waiting_for_meeting_approval,ממתין לאישור פגישה,meeting_scheduled,פגישה נקבעה,"denied; on_hold; cancelled",no
+meeting_scheduled,פגישה נקבעה,waiting_after_meeting,ממתין אחרי פגישה,"matched; denied; on_hold; cancelled",no
+waiting_after_meeting,ממתין אחרי פגישה,matched,הותאם,"meeting_scheduled; denied; on_hold; cancelled",no
+matched,הותאם,,,,(yes)
+denied,נדחה,,,,(yes)
+cancelled,בוטל,,,,(yes)
+on_hold,בהמתנה,,,resume to any active stage,(special)
