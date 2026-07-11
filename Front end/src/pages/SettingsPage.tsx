@@ -240,7 +240,7 @@ export const SettingsPage: React.FC = () => {
               className="settings-form__input"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              placeholder="05X-XXXXXXX"
+              placeholder="050-1234567"
               autoComplete="tel"
             />
           </label>

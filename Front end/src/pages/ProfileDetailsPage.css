@@ -5,7 +5,13 @@
 }
 
 .profile-details-page--modal {
-  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 .profile-details-page__toolbar {
@@ -14,6 +20,38 @@
   justify-content: space-between;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
+}
+
+.profile-details-page__toolbar--modal {
+  flex-shrink: 0;
+  z-index: 20;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: 0 4px 12px rgba(44, 52, 64, 0.06);
+}
+
+.profile-details-page__toolbar--modal .profile-details-page__back {
+  flex-shrink: 0;
+}
+
+.profile-details-page__toolbar--modal .header__panel-btn {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: min(280px, 52vw);
+}
+
+.profile-details-page__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--space-md);
+  -webkit-overflow-scrolling: touch;
 }
 
 .profile-details-page__back {
@@ -53,46 +91,29 @@
   flex-shrink: 0;
 }
 
-.profile-details-page__prefs {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 2px solid var(--color-border, #cbd5e1);
-  border-radius: var(--radius-md);
-  background: #fff;
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--color-text, #0f172a);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.profile-details-page__prefs:hover {
-  background: var(--color-primary-bg, #eef2ff);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.profile-details-page__prefs--open,
-.profile-details-page__prefs--active {
-  border-color: var(--color-primary);
-  background: var(--color-primary-bg, #eef2ff);
-  color: var(--color-primary);
-}
-
-.profile-details-page__prefs svg {
-  flex-shrink: 0;
-}
-
 .profile-details-page--modal .floating-panel-backdrop--modal {
   z-index: 5;
 }
 
 .profile-details-page--modal .floating-panel--modal {
   z-index: 6;
-  top: calc(var(--header-height, 64px) + 72px);
+  top: calc(var(--header-height, 64px) + 56px);
+}
+
+@media (max-width: 640px) {
+  .profile-details-page__toolbar--modal {
+    border-radius: 0;
+  }
+
+  .profile-details-page__toolbar--modal .header__panel-btn {
+    max-width: min(220px, 48vw);
+    padding: 0 10px 0 8px;
+    height: 40px;
+  }
+
+  .profile-details-page__toolbar--modal .header__panel-btn-text {
+    font-size: 0.78rem;
+  }
 }
 
 @import '../styles/floatingPanel.css';
@@ -160,4 +181,3 @@
   flex-wrap: wrap;
   width: 100%;
 }
-

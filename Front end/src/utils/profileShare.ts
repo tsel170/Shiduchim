@@ -449,7 +449,7 @@ export function downloadProfileSharePdf(profile: FullProfile, settings: ProfileS
   const html = buildPrintableHtml(profile, settings);
   const popup = window.open('', '_blank');
   if (!popup) {
-    window.alert('לא ניתן לפתוח חלון PDF. בדוק חוסם חלונות קופצים.');
+    window.alert('לא ניתן לפתוח חלון הדפסה. בדוק/י חוסם חלונות קופצים.');
     return;
   }
   popup.document.write(html);

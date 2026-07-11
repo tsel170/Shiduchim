@@ -391,6 +391,37 @@
   }
 }
 
+@keyframes ds-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ds-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ds-panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes ds-slide-up {
   from {
     opacity: 0;
@@ -427,6 +458,26 @@
 
 .animate-slide-up {
   animation: ds-slide-up 0.45s var(--ease-out-expo) both;
+}
+
+.overlay-backdrop-enter {
+  animation: ds-backdrop-in 0.28s ease both;
+}
+
+.overlay-panel-enter {
+  animation: ds-modal-in 0.38s var(--ease-out-expo) both;
+}
+
+.overlay-panel-enter--delayed {
+  animation: ds-modal-in 0.42s var(--ease-out-expo) 0.04s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-backdrop-enter,
+  .overlay-panel-enter,
+  .overlay-panel-enter--delayed {
+    animation: none;
+  }
 }
 
 .animate-stagger-1 {

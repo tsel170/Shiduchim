@@ -1,4 +1,4 @@
-import { CaseStage, MatchCase, ProfileDecision, ShidduchStatus, STAGE_LABELS } from '../types/matchCase';
+import { CaseStage, CaseHistoryAction, MatchCase, PersonSlot, ProfileDecision, ShidduchStatus, STAGE_LABELS } from '../types/matchCase';
 import { FullProfile } from '../types/profile';
 import { getProfileDisplayName } from '../utils/profileDisplay';
 
@@ -223,4 +223,44 @@ export function decisionForStage(
 ): ProfileDecision {
   const status = slot === 'A' ? matchCase.profileAStatus : matchCase.profileBStatus;
   return status ?? 'waiting';
+}
+
+export const CASE_HISTORY_ACTION_LABELS: Record<CaseHistoryAction, string> = {
+  'Case Created': 'תיק נוצר',
+  'Profile Sent': 'פרופיל נשלח',
+  'Accepted By Other Side': 'הצד השני אישר',
+  'Background Check Approved': 'בדיקת רקע אושרה',
+  'Entered Background Check': 'נכנס לשלב בדיקת רקע',
+  'Viewed Contact Details': 'נצפו פרטי קשר',
+  'Meeting Approved': 'פגישה אושרה',
+  'Meeting Scheduled': 'פגישה נקבעה',
+  'Meeting Completed': 'פגישה הושלמה',
+  'Moved To On Hold': 'הועבר להמתנה',
+  Denied: 'נדחה',
+  Matched: 'הותאם',
+  'Notes Added': 'נוספו הערות',
+  'Status Changed': 'הסטטוס השתנה',
+  Assigned: 'הוקצה',
+  Reassigned: 'הוקצה מחדש',
+  Cancelled: 'בוטל',
+  Resumed: 'חודש',
+};
+
+export function getCaseHistoryActionLabel(action: string): string {
+  const trimmed = action.trim();
+  if (!trimmed) return trimmed;
+  return CASE_HISTORY_ACTION_LABELS[trimmed as CaseHistoryAction] ?? trimmed;
+}
+
+export function getPersonSlotLabel(slot: PersonSlot | 'Shadchan' | string): string {
+  switch (slot) {
+    case 'PersonA':
+      return 'משתתף/ת א׳';
+    case 'PersonB':
+      return 'משתתף/ת ב׳';
+    case 'Shadchan':
+      return 'שדכן/ית';
+    default:
+      return slot;
+  }
 }

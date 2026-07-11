@@ -23,6 +23,7 @@ import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import { getProfileDisplayName } from '../utils/profileDisplay';
 import { openProfilePreview } from '../utils/profileNavigation';
 import { isDisplayPreferencesAtDefault } from '../utils/profileHelpers';
+import '../components/header/Header.css';
 import './Page.css';
 import './ProfileDetailsPage.css';
 
@@ -200,9 +201,100 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
   const canFavorite = !isShadchan && isRatingsCompleteForProfile(profile, rating);
   const photosUnlocked = isShadchan || isMatchCaseView || canFavorite;
 
+  const renderActions = () => (
+    <>
+      {isShadchan ? (
+        <div className="profile-details-page__shadchan-actions">
+          <SendButton variant="site" onClick={() => openShare('site')}>
+            שלח דרך האתר
+          </SendButton>
+          <SendButton variant="alt" onClick={() => openShare('other')}>
+            שלח בשיטות אחרות
+          </SendButton>
+          {profileHasAccount && (
+            <SendButton
+              variant="management"
+              selected={managementOpen}
+              onClick={openManagement}
+              disabled={!canSendManagementRequest}
+              title={!canSendManagementRequest ? managementStatusMessage ?? undefined : undefined}
+            >
+              שלח בקשת ניהול
+            </SendButton>
+          )}
+          {!canSendManagementRequest && managementStatusMessage && (
+            <p className="profile-details-page__hint">{managementStatusMessage}</p>
+          )}
+        </div>
+      ) : (
+        <>
+          {!isMatchCaseView && (
+            <>
+              <FavoriteButton
+                isFavorite={isFavorite}
+                isLoading={isFavoriteLoading}
+                onClick={handleToggleFavorite}
+                disabled={!canFavorite}
+                title={
+                  !canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''
+                }
+              />
+              {!canFavorite && (
+                <p className="profile-details-page__hint">
+                  יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
+                </p>
+              )}
+              <SendButton variant="shadchan" onClick={handleSendToShadchan}>
+                שלח לשדכן
+              </SendButton>
+            </>
+          )}
+          {isMatchCaseView && matchCase && (
+            <div className="profile-details-page__case-status">
+              <CaseStatusMessage matchCase={matchCase} />
+              <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={() => navigate(`/my-cases/view/${matchCase.caseId}`)}
+              >
+                מעבר לתיק השידוך
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}
+
+      <SendToShadchanDialog
+        isOpen={isSendDialogOpen}
+        profileName={getProfileDisplayName(profile)}
+        groups={dialogGroups}
+        senderProfileId={senderProfileId}
+        senderProfileName={senderProfileName}
+        isLoading={loadingShadchanim}
+        isSubmitting={isSendSubmitting}
+        onSend={handleConfirmSendToShadchan}
+        onClose={closeSendDialog}
+      />
+
+      {isShadchan && managementOpen && canSendManagementRequest && (
+        <ManagementRequestForm
+          profile={profile}
+          onSend={handleSendManagementRequest}
+          onClose={() => setManagementOpen(false)}
+          isSending={isSending}
+        />
+      )}
+    </>
+  );
+
   return (
     <div className={`page profile-details-page${isModal ? ' profile-details-page--modal' : ''}`}>
-      <div className="profile-details-page__toolbar">
+      <div
+        className={`profile-details-page__toolbar${
+          isModal ? ' profile-details-page__toolbar--modal' : ''
+        }`}
+      >
         <button type="button" className="profile-details-page__back" onClick={onBack}>
           <BackIcon />
           חזרה
@@ -210,19 +302,34 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
         {!isShadchan && isModal && (
           <button
             type="button"
-            className={`profile-details-page__prefs${
-              isDisplayPrefsOpen ? ' profile-details-page__prefs--open' : ''
+            className={`header__panel-btn header__panel-btn--preferences${
+              isDisplayPrefsOpen ? ' header__panel-btn--open' : ''
             }${
               !isDisplayPreferencesAtDefault(displayPreferences)
-                ? ' profile-details-page__prefs--active'
+                ? ' header__panel-btn--highlight'
                 : ''
             }`}
             onClick={() => onDisplayPrefsOpenChange(!isDisplayPrefsOpen)}
             aria-expanded={isDisplayPrefsOpen}
-            aria-label="העדפות תצוגה"
+            aria-label="העדפות תצוגה · תצוגת פרופיל"
           >
-            <DisplayPrefsIcon />
-            העדפות תצוגה
+            <span className="header__panel-icon header__panel-icon--preferences" aria-hidden="true">
+              <DisplayPrefsIcon />
+            </span>
+            <span className="header__panel-btn-copy">
+              <span className="header__panel-btn-context">תצוגת פרופיל</span>
+              <span className="header__panel-btn-row">
+                <span className="header__panel-btn-text">העדפות תצוגה</span>
+                <span className="header__panel-btn-chevron" aria-hidden="true">
+                  {isDisplayPrefsOpen ? '▲' : '▼'}
+                </span>
+              </span>
+            </span>
+            {!isDisplayPreferencesAtDefault(displayPreferences) && (
+              <span className="header__panel-badge" aria-label="הגדרות מותאמות פעילות">
+                פעיל
+              </span>
+            )}
           </button>
         )}
       </div>
@@ -270,101 +377,41 @@ export const ProfileDetailsPage: React.FC<ProfileDetailsPageProps> = ({
         </SharePanelOverlay>
       )}
 
-      <div className="profile-details-page__content">
-        <ProfileDetails
-          profile={profile}
-          displayPreferences={displayPreferences}
-          photosUnlocked={photosUnlocked}
-          viewerRole={viewerRole}
-          rating={rating}
-          onRate={onRate}
-        />
-      </div>
-
-      <div className="profile-details-page__actions">
-        {isShadchan ? (
-          <div className="profile-details-page__shadchan-actions">
-            <SendButton variant="site" onClick={() => openShare('site')}>
-              שלח דרך האתר
-            </SendButton>
-            <SendButton variant="alt" onClick={() => openShare('other')}>
-              שלח בשיטות אחרות
-            </SendButton>
-            {profileHasAccount && (
-              <SendButton
-                variant="management"
-                selected={managementOpen}
-                onClick={openManagement}
-                disabled={!canSendManagementRequest}
-                title={!canSendManagementRequest ? managementStatusMessage ?? undefined : undefined}
-              >
-                שלח בקשת ניהול
-              </SendButton>
-            )}
-            {!canSendManagementRequest && managementStatusMessage && (
-              <p className="profile-details-page__hint">{managementStatusMessage}</p>
-            )}
+      {isModal ? (
+        <div className="profile-details-page__scroll">
+          <div className="profile-details-page__content">
+            <ProfileDetails
+              profile={profile}
+              displayPreferences={displayPreferences}
+              photosUnlocked={photosUnlocked}
+              viewerRole={viewerRole}
+              rating={rating}
+              onRate={onRate}
+            />
           </div>
-        ) : (
-          <>
-            {!isMatchCaseView && (
-              <>
-                <FavoriteButton
-                  isFavorite={isFavorite}
-                  isLoading={isFavoriteLoading}
-                  onClick={handleToggleFavorite}
-                  disabled={!canFavorite}
-                  title={
-                    !canFavorite ? 'יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.' : ''
-                  }
-                />
-                {!canFavorite && (
-                  <p className="profile-details-page__hint">
-                    יש להשלים את כל דירוגי הפרופיל לפני הוספה למועדפים.
-                  </p>
-                )}
-                <SendButton variant="shadchan" onClick={handleSendToShadchan}>
-                  שלח לשדכן
-                </SendButton>
-              </>
-            )}
-            {isMatchCaseView && matchCase && (
-              <div className="profile-details-page__case-status">
-                <CaseStatusMessage matchCase={matchCase} />
-                <button
-                  type="button"
-                  className="btn btn--primary btn--sm"
-                  onClick={() => navigate(`/my-cases/view/${matchCase.caseId}`)}
-                >
-                  מעבר לתיק השידוך
-                </button>
-              </div>
-            )}
-          </>
-        )}
-        {actionMessage && <p className="profile-details-page__hint">{actionMessage}</p>}
 
-        <SendToShadchanDialog
-          isOpen={isSendDialogOpen}
-          profileName={getProfileDisplayName(profile)}
-          groups={dialogGroups}
-          senderProfileId={senderProfileId}
-          senderProfileName={senderProfileName}
-          isLoading={loadingShadchanim}
-          isSubmitting={isSendSubmitting}
-          onSend={handleConfirmSendToShadchan}
-          onClose={closeSendDialog}
-        />
+          <div className="profile-details-page__actions">
+            {renderActions()}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="profile-details-page__content">
+            <ProfileDetails
+              profile={profile}
+              displayPreferences={displayPreferences}
+              photosUnlocked={photosUnlocked}
+              viewerRole={viewerRole}
+              rating={rating}
+              onRate={onRate}
+            />
+          </div>
 
-        {isShadchan && managementOpen && canSendManagementRequest && (
-          <ManagementRequestForm
-            profile={profile}
-            onSend={handleSendManagementRequest}
-            onClose={() => setManagementOpen(false)}
-            isSending={isSending}
-          />
-        )}
-      </div>
+          <div className="profile-details-page__actions">
+            {renderActions()}
+          </div>
+        </>
+      )}
     </div>
   );
 };

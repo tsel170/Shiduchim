@@ -1,4 +1,4 @@
-/* ─── Fixed viewport overlay (one dialog, always on screen) ─── */
+/* ─── Fixed viewport overlay (rendered via portal on document.body) ─── */
 .share-panel-overlay {
   position: fixed;
   inset: 0;
@@ -7,7 +7,6 @@
   align-items: center;
   justify-content: center;
   padding: calc(var(--header-height, 68px) + 12px) 16px 16px;
-  pointer-events: none;
 }
 
 .share-panel-overlay__backdrop {
@@ -19,8 +18,8 @@
   background: rgba(44, 52, 64, 0.5);
   backdrop-filter: blur(4px);
   cursor: pointer;
-  pointer-events: auto;
-  animation: ds-fade-in 0.2s ease;
+  opacity: 0;
+  transition: opacity 0.32s ease;
 }
 
 .share-panel-overlay__dialog {
@@ -28,29 +27,50 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  width: min(920px, 100%);
-  height: min(86vh, calc(100vh - var(--header-height, 68px) - 28px));
+  width: min(920px, calc(100vw - 32px));
   max-height: calc(100vh - var(--header-height, 68px) - 28px);
-  pointer-events: auto;
-  animation: ds-slide-up 0.3s var(--ease-out-expo) both;
   overflow: hidden;
+  transform-origin: center center;
+  opacity: 0;
+  transform: translateY(28px) scale(0.94);
+  transition:
+    opacity 0.42s var(--ease-out-expo),
+    transform 0.42s var(--ease-out-expo);
 }
 
-.app-shell__main:has(.share-panel-overlay),
-.profile-preview__panel:has(.share-panel-overlay) {
+.share-panel-overlay--entered .share-panel-overlay__backdrop {
+  opacity: 1;
+}
+
+.share-panel-overlay--entered .share-panel-overlay__dialog {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-panel-overlay__backdrop,
+  .share-panel-overlay__dialog {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+body.share-panel-overlay-open .app-shell__main,
+body.share-panel-overlay-open .profile-preview__panel {
   overflow: hidden !important;
 }
 
 @media (max-width: 640px) {
   .share-panel-overlay {
-    padding: 0;
+    padding: var(--header-height, 68px) 0 0;
     align-items: stretch;
   }
 
   .share-panel-overlay__dialog {
     width: 100%;
-    height: 100%;
-    max-height: 100vh;
+    max-height: 100%;
+    flex: 1;
     border-radius: 0;
   }
 }
@@ -236,6 +256,7 @@
   width: 100%;
   max-width: 220px;
   border-radius: var(--radius-sm);
+  margin-top: var(--space-lg);
 }
 
 .shadchan-share-panel__preview-line {
@@ -319,7 +340,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   padding: var(--space-md);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);

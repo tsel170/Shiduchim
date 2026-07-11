@@ -22,6 +22,7 @@ import { ManagementRequest } from '../types/managementRequest';
 import { ShadchanSuggestion, SuggestionStage } from '../types/suggestion';
 import { FullProfile } from '../types/profile';
 import { openProfilePreview } from '../utils/profileNavigation';
+import { getUserDisplayLabel } from '../utils/accountName';
 import './AddedProfilesPage.css';
 import './Page.css';
 import './ShadchanSuggestionsPage.css';
@@ -170,7 +171,7 @@ export const ShadchanSuggestionsPage: React.FC = () => {
       : getSuggestionStageSubtitle(activeStage, suggestions.length);
 
   const emptyMessage = isManagementView
-    ? `${MANAGEMENT_REQUESTS_EMPTY_MESSAGE} בקשות מגיעות לחשבון המחובר (${currentUser?.email ?? 'לא ידוע'}).`
+    ? `${MANAGEMENT_REQUESTS_EMPTY_MESSAGE} בקשות מגיעות לחשבון המחובר (${currentUser ? getUserDisplayLabel(currentUser) : 'לא ידוע'}).`
     : getSuggestionStageEmptyMessage(activeStage);
 
   const isEmpty = isManagementView ? pendingCount === 0 : suggestions.length === 0;

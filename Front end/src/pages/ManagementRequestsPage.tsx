@@ -4,6 +4,7 @@ import { managementRequestsApi } from '../api/managementRequestsApi';
 import { PageState } from '../components/common/PageState';
 import { ManagementRequestList } from '../components/suggestions/ManagementRequestList';
 import { getManagementRequestsSubtitle } from '../constants/suggestionOptions';
+import { getUserDisplayLabel } from '../utils/accountName';
 import { useAuth } from '../contexts/AuthContext';
 import { ManagementRequest } from '../types/managementRequest';
 import './Page.css';
@@ -86,7 +87,7 @@ export const ManagementRequestsPage: React.FC = () => {
         />
         {!loading && requests.length === 0 && (
           <p className="page__subtitle">
-            בקשות מגיעות לחשבון המחובר ({currentUser?.email ?? 'לא ידוע'}).
+            בקשות מגיעות לחשבון המחובר ({currentUser ? getUserDisplayLabel(currentUser) : 'לא ידוע'}).
           </p>
         )}
       </PageState>
