@@ -13,7 +13,7 @@ export const DEMO_BROWSE_PROFILES = [
     maritalStatus: 'single',
     age: 24,
     personalityTraits: ['אדיב/ה', 'אחראי/ת', 'צנוע/ה'],
-    hobbies: ['קריאה', 'טיולים', 'לימוד תורה'],
+    hobbies: ['קריאה', 'נסיעות', 'בישול'],
     familyVision:
       'מחפשת בית חם עם ערכי תורה, אווירה תומכת ומשפחה מלוכדת. חשוב לי חינוך לילדים בסביבה יהודית.',
     lookingFor: ['משפחתי/ת', 'אמפתי/ת', 'מתחשב/ת'],
@@ -33,7 +33,7 @@ export const DEMO_BROWSE_PROFILES = [
     maritalStatus: 'single',
     age: 22,
     personalityTraits: ['ישר/ה', 'צנוע/ה', 'אמפתי/ת'],
-    hobbies: ['בישול', 'התנדבות', 'משפחה'],
+    hobbies: ['בישול', 'התנדבות', 'אפייה'],
     familyVision: 'בית מלא חסד, עם דגש על מסורת וצניעות.',
     lookingFor: ['צנוע/ה', 'נאמן/נאמנה', 'אחראי/ת'],
     references: [{ id: 'r2-1', name: 'יעל לוי', phoneNumber: '058-1112233', countryCode: '+972' }],
@@ -50,7 +50,7 @@ export const DEMO_BROWSE_PROFILES = [
     maritalStatus: 'single',
     age: 26,
     personalityTraits: ['יצירתי/ת', 'חיובי/ת', 'מצחיק/ה'],
-    hobbies: ['אמנות', 'מוזיקה', 'טיולים'],
+    hobbies: ['ציור', 'מוזיקה', 'נסיעות'],
     familyVision: 'משפחה עם אהבה, צחוק וערכים.',
     lookingFor: ['מצחיק/ה', 'משפחתי/ת', 'תומך/ת'],
     references: [
@@ -70,7 +70,7 @@ export const DEMO_BROWSE_PROFILES = [
     maritalStatus: 'single',
     age: 23,
     personalityTraits: ['אחראי/ת', 'מאורגן/ת', 'רגוע/ה'],
-    hobbies: ['קריאה', 'ספורט', 'לימוד תורה'],
+    hobbies: ['קריאה', 'כושר', 'שחמט'],
     familyVision: 'בית יציב עם דגש על חינוך ותמיכה הדדית.',
     lookingFor: ['אמין/ה', 'בוגר/ה רגשית', 'מתחשב/ת'],
     references: [
@@ -90,7 +90,7 @@ export const DEMO_BROWSE_PROFILES = [
     maritalStatus: 'single',
     age: 25,
     personalityTraits: ['אדיב/ה', 'אופטימי/ת', 'אמפתי/ת'],
-    hobbies: ['טבע', 'טיולים', 'צילום'],
+    hobbies: ['טיולי הליכה', 'נסיעות', 'צילום'],
     familyVision: 'משפחה שאוהבת ארץ ישראל, טיולים וזמן איכות יחד.',
     lookingFor: ['הרפתקן/ית', 'משפחתי/ת', 'חיובי/ת'],
     references: [
@@ -109,7 +109,7 @@ export const DEMO_BROWSE_PROFILES = [
     maritalStatus: 'single',
     age: 21,
     personalityTraits: ['צנוע/ה', 'חיובי/ת', 'אחראי/ת'],
-    hobbies: ['התנדבות', 'משפחה', 'בישול'],
+    hobbies: ['התנדבות', 'בישול', 'אפייה'],
     familyVision: 'בית מכבד מסורת ספרדית עם חום וכבוד להורים.',
     lookingFor: ['מכבד/ת', 'משפחתי/ת', 'ראוי/ה לאמון'],
     references: [{ id: 'r6-1', name: 'רחל אברהם', phoneNumber: '050-9988776', countryCode: '+972' }],
@@ -128,7 +128,7 @@ export const DEMO_PERSON_PROFILE = {
   maritalStatus: 'single',
   age: 27,
   personalityTraits: ['אחראי/ת', 'אדיב/ה', 'ישר/ה'],
-  hobbies: ['לימוד תורה', 'טיולים', 'ספורט'],
+  hobbies: ['ריצה', 'נסיעות', 'כושר'],
   familyVision:
     'מחפש בית ישראלי חם, עם דגש על תורה, משפחה וצמיחה משותפת.',
   lookingFor: ['משפחתי/ת', 'אמפתי/ת', 'אחראי/ת', 'ראוי/ה לאמון'],
