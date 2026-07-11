@@ -170,7 +170,7 @@ function buildShadchanProfileFields(
   const lastName = profile.lastName.trim();
   if (lastName) body.lastName = lastName;
 
-  if (profile.city) body.city = profile.city;
+  if (profile.city.trim()) body.city = profile.city.trim();
   if (profile.heightCm > 0) body.heightCm = profile.heightCm;
   if (profile.religiousStream) body.religiousStream = profile.religiousStream;
   if (profile.familyVision.trim()) body.familyVision = profile.familyVision.trim();

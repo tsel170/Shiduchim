@@ -1,4 +1,4 @@
-@import '../../styles/profileFieldThemes.css';
+@import "../../styles/profileFieldThemes.css";
 
 .filter-panel {
   display: flex;
@@ -113,7 +113,7 @@
 }
 
 .filter-panel__section-title::before {
-  content: '';
+  content: "";
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -172,7 +172,8 @@
 .filter-panel__range input:focus {
   outline: none;
   border-color: var(--section-accent, var(--color-primary));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--section-accent, #4f46e5) 20%, transparent);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--section-accent, #4f46e5) 20%, transparent);
 }
 
 .filter-panel__range-conversion {
@@ -210,7 +211,8 @@
   border-color: var(--section-accent, var(--color-primary));
   color: var(--section-accent, var(--color-primary));
   font-weight: 600;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--section-accent, #4f46e5) 15%, transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--section-accent, #4f46e5) 15%, transparent);
 }
 
 @media (max-width: 480px) {

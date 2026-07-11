@@ -39,7 +39,6 @@ export function matchesFilterConfiguration<T extends ProfileFilterable>(
   ) {
     return false;
   }
-  if (!includesValue(profile.city, filters.cities)) return false;
   if (!includesValue(profile.religiousStream, filters.religiousStreams)) return false;
   if (!includesValue(profile.gender, filters.genders)) return false;
   if (!includesValue(profile.maritalStatus, filters.maritalStatuses)) return false;

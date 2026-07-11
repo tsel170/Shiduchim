@@ -96,7 +96,6 @@ export function filterProfiles(
     ) {
       return false;
     }
-    if (!includesValue(profile.city, normalized.cities)) return false;
     if (!includesValue(profile.religiousStream, normalized.religiousStreams)) {
       return false;
     }

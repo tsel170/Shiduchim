@@ -194,6 +194,10 @@ export function getCityLabel(cityId: string): string {
   return CITIES.find((c) => c.id === cityId)?.label ?? cityId;
 }
 
+export function isKnownCityId(city: string): boolean {
+  return Boolean(city) && CITIES.some((entry) => entry.id === city);
+}
+
 export function getReligiousStreamLabel(streamId: string): string {
   return RELIGIOUS_STREAMS.find((s) => s.id === streamId)?.label ?? streamId;
 }
