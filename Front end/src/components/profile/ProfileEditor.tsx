@@ -1,7 +1,6 @@
 import React from 'react';
 import { FullProfile, ProfileFormErrors } from '../../types/profile';
 import {
-  CITIES,
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
   RELIGIOUS_STREAMS,
@@ -10,6 +9,7 @@ import {
 } from '../../constants/profileOptions';
 import { formatHeightAll } from '../../utils/height';
 import { PhotoUploader } from './PhotoUploader';
+import { CitySelect } from './CitySelect';
 import { TraitSelector } from './TraitSelector';
 import { HobbySelector } from './HobbySelector';
 import { LookingForSelector } from './LookingForSelector';
@@ -125,19 +125,11 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               עיר
               {isShadchanAdd && <OptionalMark />}
             </label>
-            <select
+            <CitySelect
               id="city"
-              className="form-field__select"
               value={profile.city}
-              onChange={(e) => patch('city', e.target.value)}
-            >
-              <option value="">בחר עיר</option>
-              {CITIES.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.label}
-                </option>
-              ))}
-            </select>
+              onChange={(city) => patch('city', city)}
+            />
           </div>
         </div>
         <div className="form-field">

@@ -19,9 +19,9 @@ const SAMPLE_TEXT = `שם: יעקב
 גובה: 1.78 מ
 זרם: חרדי
 מצב משפחתי: רווק
-תכונות: חם/ה, רציני/ת, אמפתי/ת
-תחביבים: לימוד תורה, טיולים
-מחפש/ת: ערכים דומים, צניעות
+תכונות: אדיב/ה, ישר/ה, אמפתי/ת
+תחביבים: קריאה, נסיעות
+מחפש/ת: משפחתי/ת, צנוע/ה
 חזון: בית חם ותומך עם דגש על חינוך הילדים.`;
 
 export const AiImportPage: React.FC = () => {  const navigate = useNavigate();
@@ -64,7 +64,7 @@ export const AiImportPage: React.FC = () => {  const navigate = useNavigate();
     <div className="ds-page ds-page--wide ai-import-page">
       <PageHeader
         variant="hero"
-        title="ייבוא פרופיל עם AI"
+        title="ייבוא פרופיל אוטומטי"
         subtitle="הדביקו טקסט גולמי מוואטסאפ, אימייל או מסמך — המערכת תחלץ שדות אוטומטית לבדיקה ואישור."
         badge={<span className="ds-badge ds-badge--primary">חדש</span>}
         actions={
@@ -116,7 +116,7 @@ export const AiImportPage: React.FC = () => {  const navigate = useNavigate();
                     מחלץ שדות...
                   </>
                 ) : (
-                  'חלץ שדות עם AI'
+                  'חלץ שדות אוטומטית'
                 )}
               </button>
             </div>

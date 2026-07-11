@@ -9,7 +9,7 @@ import { CloseCaseDialog } from '../components/match-cases/CloseCaseDialog';
 import { ContactDetailsSection } from '../components/match-cases/ContactDetailsSection';
 import { PageState } from '../components/common/PageState';
 import { SendButton } from '../components/common/SendButton';
-import { getMatchStatusLabel, getCounterpartyInCase, isCaseClosed } from '../constants/matchCaseOptions';
+import { getMatchStatusLabel, getCounterpartyInCase, isCaseClosed, getCaseHistoryActionLabel, getPersonSlotLabel } from '../constants/matchCaseOptions';
 import { useAuth } from '../contexts/AuthContext';
 import { useMatchCase } from '../hooks/useMatchCase';
 import { getProfileDisplayName } from '../utils/profileDisplay';
@@ -181,11 +181,13 @@ export const CaseDetailsView: React.FC<CaseDetailsViewProps> = ({
                 <time dateTime={entry.timestamp}>
                   {new Date(entry.timestamp).toLocaleString('he-IL')}
                 </time>
-                <span>{entry.action}</span>
-                {entry.onBehalfOfSlot && <span>בשם {entry.onBehalfOfSlot}</span>}
+                <span>{getCaseHistoryActionLabel(entry.action)}</span>
+                {entry.onBehalfOfSlot && (
+                  <span>בשם {getPersonSlotLabel(entry.onBehalfOfSlot)}</span>
+                )}
                 {entry.previousStatus && entry.newStatus && (
                   <span>
-                    {getMatchStatusLabel(entry.previousStatus)} → {getMatchStatusLabel(entry.newStatus)}
+                    {getMatchStatusLabel(entry.previousStatus)} ← {getMatchStatusLabel(entry.newStatus)}
                   </span>
                 )}
                 {entry.note && <p>{entry.note}</p>}
@@ -209,8 +211,10 @@ function ProfileCard({
 }) {
   return (
     <div className="match-case-details__profile-card">
-      <span className="match-case-details__role">{role}</span>
-      <strong>{name}</strong>
+      <div className="match-case-details__profile-info">
+        <span className="match-case-details__role">{role}</span>
+        <strong className="match-case-details__profile-name">{name}</strong>
+      </div>
       <button type="button" className="btn btn--secondary btn--sm" onClick={onView}>
         צפייה
       </button>

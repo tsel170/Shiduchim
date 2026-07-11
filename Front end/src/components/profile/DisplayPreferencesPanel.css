@@ -1,11 +1,16 @@
 @import '../../styles/profileFieldThemes.css';
 
 .display-prefs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg);
+  -webkit-overflow-scrolling: touch;
 }
 
 .display-prefs__header {
@@ -13,6 +18,10 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
   padding: var(--space-md);
   background: #fff;
   border-bottom: 1px solid var(--color-border);

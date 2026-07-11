@@ -1,5 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrandLogo } from '../components/brand/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.css';
 
@@ -48,11 +49,8 @@ export const LoginPage: React.FC = () => {
     <div className="login-page">
       <div className="login-card">
         <div className="login-card__brand">
-          <span className="login-card__logo" aria-hidden="true">
-            ש
-          </span>
-          <h1>שידוכים</h1>
-          <p>התחברות למערכת</p>
+          <BrandLogo size="lg" showSlogan />
+          <p className="login-card__tagline">התחברות למערכת</p>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
@@ -64,7 +62,7 @@ export const LoginPage: React.FC = () => {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Person / Shadchan"
+              placeholder="משודך/ת או שדכן/ית"
               disabled={isSubmitting}
             />
           </div>
@@ -101,7 +99,7 @@ export const LoginPage: React.FC = () => {
         </p>
 
         <p className="login-card__hint">
-          דמו: Person / Person או Shadchan / Shadchan
+          דמו: משודך/משודך או שדכן/שדכן
         </p>
       </div>
     </div>

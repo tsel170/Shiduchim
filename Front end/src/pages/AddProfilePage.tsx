@@ -100,13 +100,13 @@ export const AddProfilePage: React.FC = () => {
       .then((options) => {
         if (!cancelled && !options.genders?.length) {
           setServerWarning(
-            'הבקאנד על פורט 3002 לא מעודכן. עצור אותו והפעל מחדש: cd backEnd && npm run build && npm run start:dev'
+            'השרת לא מעודכן. נסה/י לרענן את הדף, ואם הבעיה נמשכת — פנה/י למנהל המערכת.'
           );
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setServerWarning('לא ניתן להתחבר לבקאנד. ודא שהשרת רץ על פורט 3002.');
+          setServerWarning('לא ניתן להתחבר לשרת. ודא שהשרת פועל ונסה שוב.');
         }
       });
     return () => {
@@ -149,7 +149,7 @@ export const AddProfilePage: React.FC = () => {
         subtitle="שדות חובה: שם פרטי, גיל, מין ומצב משפחתי. שאר השדות אופציונליים."
         badge={
           fromAiImport ? (
-            <span className="ds-badge ds-badge--success">יובא מ-AI — בדקו לפני שמירה</span>
+            <span className="ds-badge ds-badge--success">יובא אוטומטית — בדקו לפני שמירה</span>
           ) : undefined
         }
         actions={
@@ -158,7 +158,7 @@ export const AddProfilePage: React.FC = () => {
             className="btn btn--secondary btn--sm"
             onClick={() => navigate('/ai-import')}
           >
-            ייבוא AI
+            ייבוא אוטומטי
           </button>
         }
       />

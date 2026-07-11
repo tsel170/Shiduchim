@@ -1,0 +1,29 @@
+.city-select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.city-select__mode-btn {
+  align-self: flex-start;
+  border: none;
+  padding: 0;
+  background: none;
+  color: var(--color-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.city-select__mode-btn:hover {
+  color: var(--color-primary-dark);
+}
+
+.city-select__selected {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}

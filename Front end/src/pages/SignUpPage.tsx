@@ -1,5 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { BrandLogo } from '../components/brand/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { AccountRole } from '../types/account';
 import './LoginPage.css';
@@ -121,11 +122,10 @@ export const SignUpPage: React.FC = () => {
     <div className="login-page">
       <div className="login-card">
         <div className="login-card__brand">
-          <span className="login-card__logo" aria-hidden="true">
-            ש
-          </span>
-          <h1>שידוכים</h1>
-          <p>{step === 'role' ? 'בחר/י את התפקיד שלך' : 'פרטי חשבון'}</p>
+          <BrandLogo size="lg" showSlogan />
+          <p className="login-card__tagline">
+            {step === 'role' ? 'בחר/י את התפקיד שלך' : 'פרטי חשבון'}
+          </p>
         </div>
 
         {step === 'role' ? (
@@ -215,7 +215,7 @@ export const SignUpPage: React.FC = () => {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder="הזן כתובת אימייל"
                 disabled={isSubmitting}
               />
             </div>

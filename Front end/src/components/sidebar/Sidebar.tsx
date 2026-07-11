@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { BrandLogo } from '../brand/BrandLogo';
 import { useAuth } from '../../contexts/AuthContext';
 import { AccountRole } from '../../types/account';
 import { getLayoutPathname } from '../../utils/profileNavigation';
@@ -71,7 +72,7 @@ const NAV_ITEMS: NavConfig[] = [
   {
     id: 'ai-import',
     path: '/ai-import',
-    label: 'ייבוא AI',
+    label: 'ייבוא אוטומטי',
     icon: <SparklesIcon />,
     roles: ['shadchan'],
     group: 'manage',
@@ -152,10 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, use
   return (
     <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`} aria-label="ניווט ראשי">
       <div className="sidebar__brand">
-        <span className="sidebar__brand-logo" aria-hidden="true">
-          ש
-        </span>
-        <span className="sidebar__brand-text">שידוכים</span>
+        <BrandLogo size="sm" />
       </div>
 
       <nav className="sidebar__nav">

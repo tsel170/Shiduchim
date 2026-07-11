@@ -3,9 +3,9 @@
 }
 
 .match-cases-page__empty {
-  padding: 2rem 1rem;
+  padding: var(--space-2xl) var(--space-lg);
   text-align: center;
-  color: var(--text-muted, #64748b);
+  color: var(--color-text-muted);
 }
 
 .match-cases-list {
@@ -14,134 +14,116 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-md);
 }
 
 .match-cases-list__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 12px;
-  background: var(--surface, #fff);
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  transition:
+    box-shadow var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-fast);
+}
+
+.match-cases-list__item:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .match-cases-list__main {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 6px;
   min-width: 0;
 }
 
 .match-cases-list__title {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
 }
 
 .match-cases-list__meta,
 .match-cases-list__hint {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted, #64748b);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
 }
 
 .match-cases-list__actions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-sm);
   flex-shrink: 0;
 }
 
 .match-case-details__approvals {
-  margin: 1rem 0;
-}
-
-.match-case-details__header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0;
+  margin: var(--space-lg) 0;
 }
 
 .match-case-details__profiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0;
 }
 
 .match-case-details__profile-card {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.match-case-details__profile-info {
+  display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 10px;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
 }
 
 .match-case-details__role {
-  font-size: 0.75rem;
-  color: var(--text-muted, #64748b);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
 }
 
-.match-case-details__notes {
-  margin-bottom: 1.5rem;
+.match-case-details__profile-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
 }
 
-.match-case-details__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+.match-case-details__profile-card .btn {
+  flex-shrink: 0;
+  margin-inline-start: var(--space-md);
 }
 
-.match-case-details__error {
-  color: #b91c1c;
-  margin: 0;
-  width: 100%;
-}
+@media (max-width: 640px) {
+  .match-cases-list__item {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.match-case-details__timeline h2 {
-  font-size: 1.1rem;
-  margin-bottom: 0.75rem;
-}
-
-.match-case-details__history {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.match-case-details__history-item {
-  padding: 0.75rem 1rem;
-  border-right: 3px solid var(--accent, #7c3aed);
-  background: #f8fafc;
-  border-radius: 0 8px 8px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.9rem;
-}
-
-.match-case-details__history-item time {
-  font-size: 0.78rem;
-  color: var(--text-muted, #64748b);
-}
-
-.profile-card__status {
-  margin-top: 0.35rem;
-}
-
-.favorites-item__pending-note {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--text-muted, #64748b);
-  text-align: center;
-  padding: 0.35rem 0;
+  .match-cases-list__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }

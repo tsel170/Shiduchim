@@ -2,13 +2,9 @@ import React from 'react';
 
 import {
 
-  CITIES,
-
   DEFAULT_FILTER_CONFIGURATION,
 
   HOBBY_OPTIONS,
-
-  LOOKING_FOR_OPTIONS,
 
   MIN_PROFILE_AGE,
 
@@ -257,23 +253,6 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
         </FilterSection>
 
         <FilterChipsSection
-          themeClass="profile-field--city"
-
-          title="עיר"
-
-          options={CITIES.map((x) => ({ id: x.id, label: x.label }))}
-
-          selected={value.cities}
-
-          onToggle={(id) => toggleMulti('cities', id)}
-
-          onReset={() => resetKey('cities')}
-
-          canReset={!isFilterKeyAtDefault(value, 'cities')}
-
-        />
-
-        <FilterChipsSection
 
           themeClass="profile-field--religiousStream"
 
@@ -369,7 +348,7 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
 
           title="מחפש/ת"
 
-          options={LOOKING_FOR_OPTIONS.map((x) => ({ id: x, label: x }))}
+          options={PERSONALITY_TRAIT_OPTIONS.map((x) => ({ id: x, label: x }))}
 
           selected={value.lookingFor}
 
