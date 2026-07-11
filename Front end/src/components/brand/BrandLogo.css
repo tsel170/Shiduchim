@@ -10,9 +10,9 @@
   justify-content: center;
   flex-shrink: 0;
   border-radius: var(--radius-md);
-  background: var(--color-primary-bg);
-  color: var(--color-primary-dark);
+  background: var(--color-surface);
   border: 1px solid rgba(74, 124, 155, 0.14);
+  overflow: hidden;
 }
 
 .brand-logo--sm .brand-logo__icon-wrap {
@@ -32,18 +32,23 @@
 }
 
 .brand-logo--sm .brand-logo__icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .brand-logo--md .brand-logo__icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 .brand-logo--lg .brand-logo__icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
+}
+
+.brand-logo__icon {
+  display: block;
+  object-fit: contain;
 }
 
 .brand-logo__text {
