@@ -233,6 +233,7 @@
 
 .profile-details__section--references {
   grid-column: 1 / -1;
+  margin-bottom: var(--space-xl);
 }
 
 .profile-details__references {
@@ -276,6 +277,7 @@
 .profile-details__section--photos {
   min-height: auto;
   display: block;
+  margin-top: var(--space-md);
 }
 
 .profile-details__photos-locked {

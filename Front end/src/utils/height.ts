@@ -10,9 +10,9 @@ export function formatHeightFeetInches(heightCm: number): string {
   const totalInches = heightCm / 2.54;
   const feet = Math.floor(totalInches / 12);
   const inches = Math.round(totalInches % 12);
-  return `${feet}' ${inches}"`;
+  return `${feet} רגל ${inches} אינץ'`;
 }
 
 export function formatHeightAll(heightCm: number): string {
-  return `${formatHeightCm(heightCm)} · ${formatHeightMeters(heightCm)} · ${formatHeightFeetInches(heightCm)}`;
+  return `${formatHeightCm(heightCm)} · ${formatHeightMeters(heightCm)}`;
 }

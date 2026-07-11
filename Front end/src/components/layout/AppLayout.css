@@ -20,12 +20,12 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: var(--space-xl);
+  padding: var(--space-xl) var(--space-2xl);
   min-width: 0;
   -webkit-overflow-scrolling: touch;
   background:
-    radial-gradient(ellipse 80% 50% at 100% -20%, rgba(79, 70, 229, 0.06), transparent),
-    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(13, 148, 136, 0.04), transparent),
+    radial-gradient(ellipse 70% 45% at 100% 0%, rgba(74, 124, 155, 0.06), transparent),
+    radial-gradient(ellipse 50% 40% at 0% 100%, rgba(91, 138, 114, 0.05), transparent),
     var(--color-bg);
 }
 
@@ -35,8 +35,8 @@
   inset: 0;
   top: var(--header-height);
   border: none;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(44, 52, 64, 0.4);
+  backdrop-filter: blur(3px);
   z-index: var(--z-overlay);
   cursor: pointer;
   animation: ds-fade-in 0.2s ease;

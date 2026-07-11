@@ -48,49 +48,72 @@ export const GENDER_OPTIONS: ReadonlyArray<{ value: Gender; label: string }> = [
 ];
 
 export const PERSONALITY_TRAIT_OPTIONS = [
-  'חם/ה',
-  'אחריות',
-  'שמח/ה',
-  'רציני/ת',
-  'יצירתי/ת',
-  'צנוע/ה',
-  'חברותי/ת',
-  'רגוע/ה',
-  'אנרגטי/ת',
+  'אדיב/ה',
+  'ישר/ה',
+  'נאמן/נאמנה',
+  'מכבד/ת',
+  'סבלני/ת',
+  'רחום/ת',
   'אמפתי/ת',
+  'אופטימי/ת',
+  'אחראי/ת',
+  'אמין/ה',
+  'חרוץ/חרוצה',
+  'שאפתן/ית',
+  'בטוח/ה בעצמו',
+  'צנוע/ה',
+  'נדיב/ה',
+  'תומך/ת',
+  'שומע/ה טוב',
+  'מתקשר/ת טוב',
+  'רגוע/ה',
+  'חיובי/ת',
+  'מצחיק/ה',
+  'יצירתי/ת',
+  'בעל/ת אופקים',
+  'משפחתי/ת',
+  'עצמאי/ת',
+  'בוגר/ה רגשית',
   'מאורגן/ת',
-  'גמיש/ה',
+  'הרפתקן/ית',
+  'מתחשב/ת',
+  'ראוי/ה לאמון',
 ] as const;
 
 export const HOBBY_OPTIONS = [
   'קריאה',
-  'טיולים',
   'בישול',
-  'מוזיקה',
-  'ספורט',
-  'אמנות',
-  'התנדבות',
-  'לימוד תורה',
+  'אפייה',
+  'נסיעות',
+  'טיולי הליכה',
+  'קемпינג',
+  'ריצה',
+  'כושר',
+  'שחייה',
+  'רכיבה על אופניים',
   'צילום',
-  'טבע',
-  'משפחה',
-  'יוגה',
+  'ציור',
+  'מוזיקה',
+  'שירה',
+  'נגינה',
+  'משחקי קופסה',
+  'משחקי מחשב',
+  'קולנוע',
+  'תיאטרון',
+  'ריקוד',
+  'התנדבות',
+  'גינון',
+  'יצירה ומלאכות יד',
+  'לימוד שפות',
+  'תכנות',
+  'שחמט',
+  'דיג',
+  'כתיבה',
+  'האזנה לפודקאst',
+  'בתי קפה',
 ] as const;
 
-export const LOOKING_FOR_OPTIONS = [
-  'ערכים דומים',
-  'לימוד תורה',
-  'משפחה חמה',
-  'יציבות כלכלית',
-  'צניעות',
-  'חינוך לילדים',
-  'עלייה לארץ',
-  'קריירה מאוזנת',
-  'חברות טובה',
-  'הומור',
-  'אחריות',
-  'רוחניות',
-] as const;
+export const LOOKING_FOR_OPTIONS = PERSONALITY_TRAIT_OPTIONS;
 
 export const COUNTRY_CODES = [
   { code: '+972', label: 'ישראל (+972)' },
@@ -192,6 +215,18 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
 
 export function getCityLabel(cityId: string): string {
   return CITIES.find((c) => c.id === cityId)?.label ?? cityId;
+}
+
+export function isKnownCityId(city: string): boolean {
+  return Boolean(city) && CITIES.some((entry) => entry.id === city);
+}
+
+export function isPersonalityTrait(value: string): boolean {
+  return (PERSONALITY_TRAIT_OPTIONS as readonly string[]).includes(value);
+}
+
+export function filterPersonalityTraits(values: string[]): string[] {
+  return values.filter(isPersonalityTrait);
 }
 
 export function getReligiousStreamLabel(streamId: string): string {

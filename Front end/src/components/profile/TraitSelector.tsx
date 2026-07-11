@@ -37,9 +37,9 @@ export const TraitSelector: React.FC<TraitSelectorProps> = ({
     setCustomValue('');
   };
 
-  const allOptions = Array.from(
-    new Set([...options, ...selected])
-  );
+  const allOptions = allowCustom
+    ? Array.from(new Set([...options, ...selected]))
+    : [...options];
 
   return (
     <div className="trait-selector">

@@ -8,6 +8,7 @@ import {
 } from '../../types/profile';
 import {
   DEFAULT_DISPLAY_PREFERENCES,
+  filterPersonalityTraits,
   getCityLabel,
   getGenderLabel,
   getMaritalStatusLabel,
@@ -183,7 +184,13 @@ function ProfileFieldSection({
     },
     lookingFor: {
       title: 'מחפש/ת',
-      content: <ChipList items={profile.lookingFor} variant="primary" emptyLabel="לא צוין" />,
+      content: (
+        <ChipList
+          items={filterPersonalityTraits(profile.lookingFor)}
+          variant="primary"
+          emptyLabel="לא צוין"
+        />
+      ),
       ratingCategory: 'lookingFor',
     },
   };

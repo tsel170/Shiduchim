@@ -14,7 +14,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
-  CITIES,
   GENDERS,
   HOBBIES,
   LOOKING_FOR_TRAITS,
@@ -60,11 +59,11 @@ export class CreateProfileDto {
   @MaxLength(255, { message: 'שם משפחה: ארוך מדי' })
   lastName?: string;
 
-  @ApiPropertyOptional({ example: 'jerusalem', enum: CITIES })
+  @ApiPropertyOptional({ example: 'jerusalem' })
   @IsOptional()
   @Transform(emptyToUndefined)
-  @ValidateIf((_, value) => value !== undefined)
-  @IsIn(CITIES, { message: 'עיר: ערך לא תקין' })
+  @IsString({ message: 'עיר: ערך לא תקין' })
+  @MaxLength(120, { message: 'עיר: ארוך מדי' })
   city?: string;
 
   @ApiProperty({ example: 22 })

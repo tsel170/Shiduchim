@@ -2,7 +2,6 @@ import {
   CITIES,
   GENDER_OPTIONS,
   HOBBY_OPTIONS,
-  LOOKING_FOR_OPTIONS,
   MARITAL_STATUS_OPTIONS,
   PERSONALITY_TRAIT_OPTIONS,
   RELIGIOUS_STREAMS,
@@ -284,7 +283,7 @@ export function extractProfileFromText(rawText: string): AiExtractionResult {
   for (const multi of [
     extractMultiSelect(text, PERSONALITY_TRAIT_OPTIONS, 'personalityTraits', 'תכונות אישיות'),
     extractMultiSelect(text, HOBBY_OPTIONS, 'hobbies', 'תחביבים'),
-    extractMultiSelect(text, LOOKING_FOR_OPTIONS, 'lookingFor', 'מחפש/ת'),
+    extractMultiSelect(text, PERSONALITY_TRAIT_OPTIONS, 'lookingFor', 'מחפש/ת'),
   ]) {
     if (multi && !usedKeys.has(multi.key)) {
       usedKeys.add(multi.key);

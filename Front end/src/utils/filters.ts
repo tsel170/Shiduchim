@@ -1,4 +1,4 @@
-import { DEFAULT_FILTER_CONFIGURATION, MIN_PROFILE_AGE } from '../constants/profileOptions';
+import { DEFAULT_FILTER_CONFIGURATION, MIN_PROFILE_AGE, filterPersonalityTraits } from '../constants/profileOptions';
 import { FilterConfiguration, Profile } from '../types/profile';
 
 /** Merge partial/stale saved filters with defaults (e.g. after new filter keys are added). */
@@ -35,7 +35,7 @@ export function normalizeFilterConfiguration(
     personalityTraits:
       input.personalityTraits ?? DEFAULT_FILTER_CONFIGURATION.personalityTraits,
     hobbies: input.hobbies ?? DEFAULT_FILTER_CONFIGURATION.hobbies,
-    lookingFor: input.lookingFor ?? DEFAULT_FILTER_CONFIGURATION.lookingFor,
+    lookingFor: filterPersonalityTraits(input.lookingFor ?? DEFAULT_FILTER_CONFIGURATION.lookingFor),
   };
 }
 
@@ -96,7 +96,6 @@ export function filterProfiles(
     ) {
       return false;
     }
-    if (!includesValue(profile.city, normalized.cities)) return false;
     if (!includesValue(profile.religiousStream, normalized.religiousStreams)) {
       return false;
     }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppEmptyState, AppLoader } from '../ui';
 import './PageState.css';
 
 interface PageStateProps {
@@ -21,9 +22,7 @@ export const PageState: React.FC<PageStateProps> = ({
   if (loading) {
     return (
       <div className="page-state page-state--loading ds-card" role="status" aria-live="polite">
-        <div className="page-state__spinner" aria-hidden="true" />
-        <p className="page-state__label">טוען נתונים...</p>
-        <p className="page-state__hint">רגע אחד בבקשה</p>
+        <AppLoader label="טוען נתונים..." hint="רגע אחד בבקשה" />
       </div>
     );
   }
@@ -32,7 +31,10 @@ export const PageState: React.FC<PageStateProps> = ({
     return (
       <div className="page-state page-state--error ds-alert ds-alert--error" role="alert">
         <span className="page-state__error-icon" aria-hidden="true">
-          !
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
+          </svg>
         </span>
         <p className="page-state__error-text">{error}</p>
       </div>
@@ -41,16 +43,11 @@ export const PageState: React.FC<PageStateProps> = ({
 
   if (isEmpty) {
     return (
-      <div className="ds-empty page-state--empty">
-        <div className="ds-empty__icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M8 12h8" strokeLinecap="round" />
-          </svg>
-        </div>
-        <p className="ds-empty__title">{emptyTitle}</p>
-        <p className="ds-empty__text">{emptyMessage}</p>
-      </div>
+      <AppEmptyState
+        title={emptyTitle}
+        message={emptyMessage}
+        className="page-state--empty"
+      />
     );
   }
 
