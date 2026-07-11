@@ -211,8 +211,10 @@ function ProfileCard({
 }) {
   return (
     <div className="match-case-details__profile-card">
-      <span className="match-case-details__role">{role}</span>
-      <strong>{name}</strong>
+      <div className="match-case-details__profile-info">
+        <span className="match-case-details__role">{role}</span>
+        <strong className="match-case-details__profile-name">{name}</strong>
+      </div>
       <button type="button" className="btn btn--secondary btn--sm" onClick={onView}>
         צפייה
       </button>
