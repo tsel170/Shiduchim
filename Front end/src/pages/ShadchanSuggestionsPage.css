@@ -65,6 +65,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-sm);
   padding: 8px 16px;
   border-radius: var(--radius-full);
   font-size: 0.875rem;
@@ -93,6 +94,26 @@
   background: linear-gradient(135deg, #ecfeff, #e0e7ff);
   color: #0f766e;
   box-shadow: 0 4px 14px rgba(8, 145, 178, 0.16);
+}
+
+.suggestions-tabs__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.suggestions-tabs__tab--active .suggestions-tabs__count {
+  background: rgba(74, 124, 155, 0.14);
+  color: var(--color-primary-dark);
 }
 
 .suggestions-tabs__badge {
