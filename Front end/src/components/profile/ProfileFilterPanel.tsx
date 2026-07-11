@@ -2,8 +2,6 @@ import React from 'react';
 
 import {
 
-  CITIES,
-
   DEFAULT_FILTER_CONFIGURATION,
 
   HOBBY_OPTIONS,
@@ -255,23 +253,6 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
             </label>
           </div>
         </FilterSection>
-
-        <FilterChipsSection
-          themeClass="profile-field--city"
-
-          title="עיר"
-
-          options={CITIES.map((x) => ({ id: x.id, label: x.label }))}
-
-          selected={value.cities}
-
-          onToggle={(id) => toggleMulti('cities', id)}
-
-          onReset={() => resetKey('cities')}
-
-          canReset={!isFilterKeyAtDefault(value, 'cities')}
-
-        />
 
         <FilterChipsSection
 
