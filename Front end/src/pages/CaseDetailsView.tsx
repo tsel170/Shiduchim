@@ -9,7 +9,7 @@ import { CloseCaseDialog } from '../components/match-cases/CloseCaseDialog';
 import { ContactDetailsSection } from '../components/match-cases/ContactDetailsSection';
 import { PageState } from '../components/common/PageState';
 import { SendButton } from '../components/common/SendButton';
-import { getMatchStatusLabel, getCounterpartyInCase, isCaseClosed } from '../constants/matchCaseOptions';
+import { getMatchStatusLabel, getCounterpartyInCase, isCaseClosed, getCaseHistoryActionLabel, getPersonSlotLabel } from '../constants/matchCaseOptions';
 import { useAuth } from '../contexts/AuthContext';
 import { useMatchCase } from '../hooks/useMatchCase';
 import { getProfileDisplayName } from '../utils/profileDisplay';
@@ -181,11 +181,13 @@ export const CaseDetailsView: React.FC<CaseDetailsViewProps> = ({
                 <time dateTime={entry.timestamp}>
                   {new Date(entry.timestamp).toLocaleString('he-IL')}
                 </time>
-                <span>{entry.action}</span>
-                {entry.onBehalfOfSlot && <span>בשם {entry.onBehalfOfSlot}</span>}
+                <span>{getCaseHistoryActionLabel(entry.action)}</span>
+                {entry.onBehalfOfSlot && (
+                  <span>בשם {getPersonSlotLabel(entry.onBehalfOfSlot)}</span>
+                )}
                 {entry.previousStatus && entry.newStatus && (
                   <span>
-                    {getMatchStatusLabel(entry.previousStatus)} → {getMatchStatusLabel(entry.newStatus)}
+                    {getMatchStatusLabel(entry.previousStatus)} ← {getMatchStatusLabel(entry.newStatus)}
                   </span>
                 )}
                 {entry.note && <p>{entry.note}</p>}

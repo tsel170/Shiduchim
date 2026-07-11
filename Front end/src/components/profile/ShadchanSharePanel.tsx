@@ -47,8 +47,8 @@ const OTHER_METHODS: ReadonlyArray<{ id: ShadchanShareMethod; label: string }> =
   { id: 'copy-as-image', label: 'העתק כתמונה' },
   { id: 'copy-text', label: 'העתק טקסט' },
   { id: 'copy-image', label: 'העתק תמונה' },
-  { id: 'download-pdf', label: 'הורד PDF' },
-  { id: 'share-pdf', label: 'שתף PDF' },
+  { id: 'download-pdf', label: 'הורד כמסמך' },
+  { id: 'share-pdf', label: 'שתף כמסמך' },
 ];
 
 export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
@@ -153,14 +153,14 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
       }
       case 'download-pdf':
         downloadProfileSharePdf(profile, settings);
-        setStatusMessage('נפתח חלון להדפסה / שמירה כ-PDF.');
+        setStatusMessage('נפתח חלון להדפסה או שמירה כמסמך.');
         break;
       case 'share-pdf': {
         const ok = await shareProfilePdf(profile, settings);
         setStatusMessage(
           ok
             ? 'נפתח תפריט השיתוף.'
-            : 'שיתוף לא זמין בדפדפן זה. נסה "הורד PDF".'
+            : 'שיתוף לא זמין בדפדפן זה. נסה "הורד כמסמך".'
         );
         break;
       }
@@ -177,7 +177,7 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
     if (isCategorySegment(segment) && isCategorySegment(previous)) {
       return settings.linesBetweenCategories;
     }
-    return segment.type === 'image' || previous.type === 'image' ? 1 : 0;
+    return segment.type === 'image' || previous.type === 'image' ? 2 : 0;
   };
 
   const renderSiteRecipientSection = () => (

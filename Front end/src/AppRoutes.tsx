@@ -48,6 +48,7 @@ import { FavoriteSortKey, isRatingsCompleteStrict } from './utils/rating';
 import { MatchCase } from './types/matchCase';
 import { isCounterpartyProfileInCase } from './constants/matchCaseOptions';
 import { buildPersonCreateRequestBody } from './utils/profileValidation';
+import { getUserDisplayLabel } from './utils/accountName';
 import { PageState } from './components/common/PageState';
 import {
   getLayoutPathname,
@@ -385,7 +386,7 @@ export const AppRoutes: React.FC = () => {
     }
   }, [headerPanelMode]);
 
-  const userLabel = currentUser?.email ?? undefined;
+  const userLabel = currentUser ? getUserDisplayLabel(currentUser) : undefined;
 
   return (
     <AppLayout

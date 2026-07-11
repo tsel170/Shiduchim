@@ -7,6 +7,28 @@ export function formatAccountName(
   return name || fallback;
 }
 
+function formatDemoLoginLabel(email: string, roleFallback: string): string {
+  const localPart = email.includes('@') ? email.split('@')[0]?.trim().toLowerCase() : email.trim().toLowerCase();
+  if (localPart === 'person') return 'משודך/ת (דמו)';
+  if (localPart === 'shadchan') return 'שדכן/ית (דמו)';
+  return localPart || roleFallback;
+}
+
+export function getUserDisplayLabel(user: {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  role?: 'person' | 'shadchan';
+}): string {
+  const fullName = formatAccountName(user.firstName, user.lastName);
+  if (fullName) return fullName;
+
+  const email = user.email?.trim();
+  if (!email) return user.role === 'shadchan' ? 'שדכן/ית' : 'משתמש/ת';
+
+  return formatDemoLoginLabel(email, user.role === 'shadchan' ? 'שדכן/ית' : 'משודך/ת');
+}
+
 export function getShadchanDisplayName(shadchan: {
   firstName?: string | null;
   lastName?: string | null;
@@ -18,8 +40,7 @@ export function getShadchanDisplayName(shadchan: {
   const email = shadchan.email?.trim();
   if (!email) return 'שדכן/ית';
 
-  const localPart = email.includes('@') ? email.split('@')[0]?.trim() : email;
-  return localPart || 'שדכן/ית';
+  return formatDemoLoginLabel(email, 'שדכן/ית');
 }
 
 export function getShadchanInitial(shadchan: {
@@ -53,8 +74,7 @@ export function getPersonDisplayName(person: {
   const email = person.email?.trim();
   if (!email) return 'משודך/ת';
 
-  const localPart = email.includes('@') ? email.split('@')[0]?.trim() : email;
-  return localPart || 'משודך/ת';
+  return formatDemoLoginLabel(email, 'משודך/ת');
 }
 
 export function getPersonInitial(person: {

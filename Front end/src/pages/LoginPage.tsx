@@ -62,7 +62,7 @@ export const LoginPage: React.FC = () => {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Person / Shadchan"
+              placeholder="משודך/ת או שדכן/ית"
               disabled={isSubmitting}
             />
           </div>
@@ -99,7 +99,7 @@ export const LoginPage: React.FC = () => {
         </p>
 
         <p className="login-card__hint">
-          דמו: Person / Person או Shadchan / Shadchan
+          דמו: משודך/משודך או שדכן/שדכן
         </p>
       </div>
     </div>

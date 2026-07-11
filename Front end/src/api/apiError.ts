@@ -123,7 +123,7 @@ export function getApiErrorMessage(error: unknown): string {
       if (message && !/^cannot (get|post|put|patch|delete) /i.test(message)) {
         return translateApiMessage(message);
       }
-      return 'לא נמצאה נקודת הקצה בשרת. ודא שהבקאנד רץ (npm run start:dev ב-backEnd) וש-REACT_APP_API_URL מצביע לפורט הנכון.';
+      return 'לא ניתן להתחבר לשרת. ודא שהשרת פועל ונסה שוב.';
     }
     if (error.isServerError) return 'שגיאת שרת. נסה שוב מאוחר יותר.';
     const message = error.message?.trim();

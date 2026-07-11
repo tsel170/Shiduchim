@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useOverlayEnter } from '../../hooks/useOverlayEnter';
 import './ProfilePreviewOverlay.css';
 
 interface ProfilePreviewOverlayProps {
@@ -10,6 +12,8 @@ export const ProfilePreviewOverlay: React.FC<ProfilePreviewOverlayProps> = ({
   onClose,
   children,
 }) => {
+  const entered = useOverlayEnter();
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -26,8 +30,11 @@ export const ProfilePreviewOverlay: React.FC<ProfilePreviewOverlayProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  return (
-    <div className="profile-preview" role="presentation">
+  return createPortal(
+    <div
+      className={`profile-preview${entered ? ' profile-preview--entered' : ''}`}
+      role="presentation"
+    >
       <button
         type="button"
         className="profile-preview__backdrop"
@@ -43,6 +50,7 @@ export const ProfilePreviewOverlay: React.FC<ProfilePreviewOverlayProps> = ({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

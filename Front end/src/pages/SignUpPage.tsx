@@ -215,7 +215,7 @@ export const SignUpPage: React.FC = () => {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder="הזן כתובת אימייל"
                 disabled={isSubmitting}
               />
             </div>

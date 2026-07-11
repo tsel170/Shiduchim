@@ -72,7 +72,7 @@ const NAV_ITEMS: NavConfig[] = [
   {
     id: 'ai-import',
     path: '/ai-import',
-    label: 'ייבוא AI',
+    label: 'ייבוא אוטומטי',
     icon: <SparklesIcon />,
     roles: ['shadchan'],
     group: 'manage',
