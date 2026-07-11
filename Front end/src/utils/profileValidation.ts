@@ -1,5 +1,5 @@
 import { FullProfile, ProfileFormErrors, ReferenceContact } from '../types/profile';
-import { MAX_PROFILE_PHOTOS, MIN_PROFILE_AGE } from '../constants/profileOptions';
+import { MAX_PROFILE_PHOTOS, MIN_PROFILE_AGE, filterPersonalityTraits } from '../constants/profileOptions';
 
 const PHONE_PATTERN = /^[\d\s\-()]{7,15}$/;
 
@@ -189,7 +189,7 @@ function buildShadchanProfileFields(
     body.hobbies = profile.hobbies;
   }
   if (options.includeEmptyArrays || profile.lookingFor.length > 0) {
-    body.lookingFor = profile.lookingFor;
+    body.lookingFor = filterPersonalityTraits(profile.lookingFor);
   }
   if (options.includeEmptyArrays || profile.photos.length > 0) {
     body.photos = profile.photos;
