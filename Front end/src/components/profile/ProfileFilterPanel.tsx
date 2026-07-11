@@ -6,8 +6,6 @@ import {
 
   HOBBY_OPTIONS,
 
-  LOOKING_FOR_OPTIONS,
-
   MIN_PROFILE_AGE,
 
   MARITAL_STATUS_OPTIONS,
@@ -350,7 +348,7 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
 
           title="מחפש/ת"
 
-          options={LOOKING_FOR_OPTIONS.map((x) => ({ id: x, label: x }))}
+          options={PERSONALITY_TRAIT_OPTIONS.map((x) => ({ id: x, label: x }))}
 
           selected={value.lookingFor}
 
