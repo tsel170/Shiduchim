@@ -7,7 +7,6 @@ const API_ERROR_MESSAGES_HE: Record<string, string> = {
   'Interest already exists for this profile': 'כבר קיים עניין בפרופיל זה',
   'role is required': 'נדרש לציין תפקיד',
   'Invalid or missing token': 'אסימון התחברות לא תקין או חסר',
-  'Demo shadchan account not found': 'חשבון שדכן הדמו לא נמצא',
   'request entity too large':
     'הבקשה גדולה מדי (בדרך כלל בגלל תמונות). נסה/י תמונה קטנה יותר או פחות תמונות.',
   'Payload Too Large':
