@@ -12,7 +12,7 @@ export class CreateMatchRequestDto {
   @IsString({ message: 'נדרש פרופיל יעד' })
   targetProfileId: string;
 
-  @ApiPropertyOptional({ description: 'Defaults to demo shadchan when omitted' })
+  @ApiProperty({ description: 'Required when sending as a person' })
   @IsOptional()
   @IsString({ message: 'שדכן: ערך לא תקין' })
   shadchanId?: string;

@@ -38,10 +38,12 @@ export class MatchRequestsService {
     }
 
     const shadchanId =
-      createMatchRequestDto.shadchanId ??
-      (user.role === 'shadchan'
-        ? user.accountId
-        : await this.accountsService.findDemoShadchanAccountId());
+      createMatchRequestDto.shadchanId?.trim() ||
+      (user.role === 'shadchan' ? user.accountId : undefined);
+
+    if (!shadchanId) {
+      throw new BadRequestException('נדרש לבחור שדכן/ית');
+    }
 
     if (user.role === 'person') {
       await this.assertPersonCanSendToShadchan(
