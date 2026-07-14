@@ -97,10 +97,6 @@ export const LoginPage: React.FC = () => {
             הרשמה
           </Link>
         </p>
-
-        <p className="login-card__hint">
-          דמו: משודך/משודך או שדכן/שדכן
-        </p>
       </div>
     </div>
   );

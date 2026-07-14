@@ -7,10 +7,10 @@ export function formatAccountName(
   return name || fallback;
 }
 
-function formatDemoLoginLabel(email: string, roleFallback: string): string {
-  const localPart = email.includes('@') ? email.split('@')[0]?.trim().toLowerCase() : email.trim().toLowerCase();
-  if (localPart === 'person') return 'משודך/ת (דמו)';
-  if (localPart === 'shadchan') return 'שדכן/ית (דמו)';
+function formatEmailFallback(email: string, roleFallback: string): string {
+  const localPart = email.includes('@')
+    ? email.split('@')[0]?.trim()
+    : email.trim();
   return localPart || roleFallback;
 }
 
@@ -26,7 +26,7 @@ export function getUserDisplayLabel(user: {
   const email = user.email?.trim();
   if (!email) return user.role === 'shadchan' ? 'שדכן/ית' : 'משתמש/ת';
 
-  return formatDemoLoginLabel(email, user.role === 'shadchan' ? 'שדכן/ית' : 'משודך/ת');
+  return formatEmailFallback(email, user.role === 'shadchan' ? 'שדכן/ית' : 'משודך/ת');
 }
 
 export function getShadchanDisplayName(shadchan: {
@@ -40,7 +40,7 @@ export function getShadchanDisplayName(shadchan: {
   const email = shadchan.email?.trim();
   if (!email) return 'שדכן/ית';
 
-  return formatDemoLoginLabel(email, 'שדכן/ית');
+  return formatEmailFallback(email, 'שדכן/ית');
 }
 
 export function getShadchanInitial(shadchan: {
@@ -74,7 +74,7 @@ export function getPersonDisplayName(person: {
   const email = person.email?.trim();
   if (!email) return 'משודך/ת';
 
-  return formatDemoLoginLabel(email, 'משודך/ת');
+  return formatEmailFallback(email, 'משודך/ת');
 }
 
 export function getPersonInitial(person: {

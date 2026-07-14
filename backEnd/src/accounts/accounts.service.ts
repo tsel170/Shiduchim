@@ -18,23 +18,6 @@ import {
 } from './dto/account.dto';
 import { Account, AccountDocument } from './schemas/account.schema';
 
-const DEMO_ACCOUNTS = [
-  {
-    email: 'Person',
-    password: 'Person',
-    role: 'person' as const,
-    firstName: 'משודך',
-    lastName: 'דמו',
-  },
-  {
-    email: 'Shadchan',
-    password: 'Shadchan',
-    role: 'shadchan' as const,
-    firstName: 'שדכן',
-    lastName: 'דמו',
-  },
-];
-
 @Injectable()
 export class AccountsService {
   constructor(
@@ -44,59 +27,15 @@ export class AccountsService {
     private readonly profileModel: Model<ProfileDocument>,
   ) {}
 
-  async seedDemoAccounts() {
-    for (const demo of DEMO_ACCOUNTS) {
-      const existing = await this.accountModel.findOne({ email: demo.email });
-      if (existing) {
-        const needsName =
-          !existing.firstName?.trim() ||
-          !existing.lastName?.trim() ||
-          existing.firstName !== demo.firstName ||
-          existing.lastName !== demo.lastName;
-        if (needsName) {
-          existing.firstName = demo.firstName;
-          existing.lastName = demo.lastName;
-          await existing.save();
-        }
-        continue;
-      }
-
-      const passwordHash = await bcrypt.hash(demo.password, 10);
-      try {
-        await this.accountModel.create({
-          accountId: generateId(),
-          email: demo.email,
-          passwordHash,
-          role: demo.role,
-          firstName: demo.firstName,
-          lastName: demo.lastName,
-          profileId: null,
-          settings: {},
-        });
-      } catch (error) {
-        const code = (error as { code?: number }).code;
-        if (code !== 11000) throw error;
-      }
-    }
-
-    await this.backfillMissingAccountNames();
-  }
-
   async backfillMissingAccountNames() {
-    const accounts = await this.accountModel.find();
+    const accounts = await this.accountModel.find({
+      $or: [
+        { firstName: { $exists: false } },
+        { firstName: null },
+        { firstName: '' },
+      ],
+    });
     for (const account of accounts) {
-      const demo = DEMO_ACCOUNTS.find((entry) => entry.email === account.email);
-      if (demo) {
-        const needsUpdate =
-          account.firstName !== demo.firstName || account.lastName !== demo.lastName;
-        if (needsUpdate) {
-          account.firstName = demo.firstName;
-          account.lastName = demo.lastName;
-          await account.save();
-        }
-        continue;
-      }
-
       if (account.firstName?.trim()) {
         continue;
       }
@@ -667,14 +606,6 @@ export class AccountsService {
     if (result.deletedCount === 0) {
       throw new NotFoundException(`החשבון "${accountId}" לא נמצא`);
     }
-  }
-
-  async findDemoShadchanAccountId(): Promise<string> {
-    const account = await this.accountModel.findOne({ email: 'Shadchan' });
-    if (!account) {
-      throw new NotFoundException('חשבון שדכן הדמו לא נמצא');
-    }
-    return account.accountId;
   }
 
   async findPersonAccountIdForProfile(
