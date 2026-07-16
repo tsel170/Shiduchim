@@ -6,6 +6,25 @@ import { AppModule } from './app.module';
 import { validationExceptionFactory } from './common/utils/validation-error.util';
 
 const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT ?? '20mb';
+const DEV_CORS_ORIGINS = ['http://localhost:3000', 'http://localhost:3001'];
+
+function resolveCorsOrigins(): string | string[] {
+  const raw = process.env.FRONTEND_URL ?? process.env.CORS_ORIGIN;
+  if (!raw?.trim()) {
+    return DEV_CORS_ORIGINS;
+  }
+
+  const origins = raw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (origins.length === 0) {
+    return DEV_CORS_ORIGINS;
+  }
+
+  return origins.length === 1 ? origins[0] : origins;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -13,7 +32,7 @@ async function bootstrap() {
   app.useBodyParser('urlencoded', { limit: BODY_SIZE_LIMIT, extended: true });
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'],
+    origin: resolveCorsOrigins(),
     credentials: true,
   });
 
@@ -35,10 +54,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT ?? 3001;
-  await app.listen(port);
+  const port = Number(process.env.PORT) || 3001;
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`Server running on http://localhost:${port}`);
-  console.log(`Swagger UI: http://localhost:${port}/api`);
+  console.log(`Server listening on port ${port}`);
+  console.log(`Swagger UI available at /api`);
 }
 bootstrap();
