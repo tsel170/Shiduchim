@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: shiduchim-api
+    runtime: node
+    rootDir: backEnd
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: BODY_SIZE_LIMIT
+        value: 20mb
