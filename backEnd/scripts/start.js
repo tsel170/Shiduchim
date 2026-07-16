@@ -5,17 +5,9 @@ const { spawnSync } = require('child_process');
 const mainJs = path.join(__dirname, '..', 'dist', 'main.js');
 
 if (!existsSync(mainJs)) {
-  console.error(`
-Missing dist/main.js.
-
-On Render, set Build Command to:
-  npm install && npm run build
-
-Start Command must stay:
-  npm start
-
-Do NOT build during start on the free plan — Nest runs out of memory.
-`);
+  console.error(
+    'Missing dist/main.js. Expected postinstall/build to create it. Check the Build logs for TypeScript errors.',
+  );
   process.exit(1);
 }
 
