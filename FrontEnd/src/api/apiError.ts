@@ -11,6 +11,8 @@ const API_ERROR_MESSAGES_HE: Record<string, string> = {
     'הבקשה גדולה מדי (בדרך כלל בגלל תמונות). נסה/י תמונה קטנה יותר או פחות תמונות.',
   'Payload Too Large':
     'הבקשה גדולה מדי (בדרך כלל בגלל תמונות). נסה/י תמונה קטנה יותר או פחות תמונות.',
+  'Method Not Allowed':
+    'הבקשה נשלחה לפרונט (Vercel) במקום לבקאנד. הגדר REACT_APP_API_URL ב-Vercel לכתובת Render ועשה Redeploy.',
   'Network error': 'שגיאת רשת. בדוק את החיבור לשרת.',
   'Request failed': 'הבקשה נכשלה',
   'Bad Request': 'בקשה לא תקינה',
@@ -97,6 +99,12 @@ export function translateClientApiMessage(message: string): string {
 export function getApiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.isNetworkError) return 'שגיאת רשת. בדוק את החיבור לשרת.';
+    if (error.status === 405) {
+      return (
+        'הבקשה נשלחה לפרונט (Vercel) במקום לבקאנד. ' +
+        'ב-Vercel הגדר REACT_APP_API_URL לכתובת ה-Render שלך (בלי / בסוף) ועשה Redeploy.'
+      );
+    }
     if (error.isUnauthorized) {
       const message = error.message?.trim();
       if (message && message !== 'Unauthorized') {
