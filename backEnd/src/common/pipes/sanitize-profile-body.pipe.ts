@@ -5,6 +5,7 @@ const OPTIONAL_STRING_KEYS = [
   'city',
   'religiousStream',
   'familyVision',
+  'additionalInfo',
   'aboutMe',
   'aboutMyFamily',
   'ownerAccountId',

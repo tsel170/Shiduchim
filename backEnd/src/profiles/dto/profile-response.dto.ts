@@ -50,6 +50,9 @@ export class ProfileResponseDto {
   @ApiProperty({ type: [String] })
   lookingFor: string[];
 
+  @ApiProperty()
+  additionalInfo: string;
+
   @ApiProperty({ type: [ReferenceContactDto] })
   references: ReferenceContactDto[];
 

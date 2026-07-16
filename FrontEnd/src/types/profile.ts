@@ -26,7 +26,8 @@ export type DisplayField =
   | 'personalityTraits'
   | 'hobbies'
   | 'familyVision'
-  | 'lookingFor';
+  | 'lookingFor'
+  | 'additionalInfo';
 
 export interface ReferenceContact {
   id: string;
@@ -50,6 +51,7 @@ export interface Profile {
   hobbies: string[];
   familyVision: string;
   lookingFor: string[];
+  additionalInfo: string;
   references: ReferenceContact[];
   photos: string[];
   ownerAccountId?: string | null;

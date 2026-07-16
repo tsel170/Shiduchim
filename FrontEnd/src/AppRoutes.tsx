@@ -70,6 +70,7 @@ const EMPTY_MY_PROFILE: FullProfile = {
   hobbies: [],
   familyVision: '',
   lookingFor: [],
+  additionalInfo: '',
   references: [],
   photos: [],
 };

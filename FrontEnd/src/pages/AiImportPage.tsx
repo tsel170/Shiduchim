@@ -22,7 +22,8 @@ const SAMPLE_TEXT = `שם: יעקב
 תכונות: אדיב/ה, ישר/ה, אמפתי/ת
 תחביבים: קריאה, נסיעות
 מחפש/ת: משפחתי/ת, צנוע/ה
-חזון: בית חם ותומך עם דגש על חינוך הילדים.`;
+חזון: בית חם ותומך עם דגש על חינוך הילדים.
+אוהב ללמוד בכולל ומתנדב עם נוער בשכונה.`;
 
 export const AiImportPage: React.FC = () => {  const navigate = useNavigate();
   const [step, setStep] = useState<Step>('input');

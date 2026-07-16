@@ -193,6 +193,14 @@ function ProfileFieldSection({
       ),
       ratingCategory: 'lookingFor',
     },
+    additionalInfo: {
+      title: 'מידע נוסף',
+      content: (
+        <p className="profile-details__text">
+          {profile.additionalInfo?.trim() || 'לא צוין'}
+        </p>
+      ),
+    },
   };
 
   const section = map[field];

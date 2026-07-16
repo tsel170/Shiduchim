@@ -1,5 +1,10 @@
 import { FullProfile, ProfileFormErrors, ReferenceContact } from '../types/profile';
-import { MAX_PROFILE_PHOTOS, MIN_PROFILE_AGE, filterPersonalityTraits } from '../constants/profileOptions';
+import {
+  MAX_PROFILE_PHOTOS,
+  MIN_PROFILE_AGE,
+  MAX_ADDITIONAL_INFO_LENGTH,
+  filterPersonalityTraits,
+} from '../constants/profileOptions';
 
 const PHONE_PATTERN = /^[\d\s\-()]{7,15}$/;
 
@@ -174,6 +179,9 @@ function buildShadchanProfileFields(
   if (profile.heightCm > 0) body.heightCm = profile.heightCm;
   if (profile.religiousStream) body.religiousStream = profile.religiousStream;
   if (profile.familyVision.trim()) body.familyVision = profile.familyVision.trim();
+  if (profile.additionalInfo.trim()) {
+    body.additionalInfo = profile.additionalInfo.trim().slice(0, MAX_ADDITIONAL_INFO_LENGTH);
+  }
 
   const references = profile.references.filter(
     (ref) => ref.name.trim() || ref.phoneNumber.trim()

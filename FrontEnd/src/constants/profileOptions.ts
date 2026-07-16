@@ -9,6 +9,8 @@ import {
 
 export const MAX_PROFILE_PHOTOS = 6;
 export const MIN_PROFILE_AGE = 18;
+export const MAX_ADDITIONAL_INFO_LENGTH = 2000;
+
 
 export const CITIES = [
   { id: 'jerusalem', label: 'ירושלים' },
@@ -133,6 +135,7 @@ export const DISPLAY_FIELDS: ReadonlyArray<{ id: DisplayField; label: string }> 
   { id: 'hobbies', label: 'תחביבים' },
   { id: 'familyVision', label: 'חזון בית ומשפחה' },
   { id: 'lookingFor', label: 'מחפש/ת' },
+  { id: 'additionalInfo', label: 'מידע נוסף' },
 ];
 
 /** Always visible on profile page — reorder only */
@@ -141,6 +144,7 @@ export const REQUIRED_DISPLAY_FIELDS: ReadonlyArray<DisplayField> = [
   'hobbies',
   'familyVision',
   'lookingFor',
+  'additionalInfo',
 ];
 
 export const OPTIONAL_DISPLAY_FIELDS: ReadonlyArray<DisplayField> = [
@@ -199,6 +203,7 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
     hobbies: true,
     familyVision: true,
     lookingFor: true,
+    additionalInfo: true,
   },
   fieldOrder: [
     'city',
@@ -210,6 +215,7 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
     'hobbies',
     'familyVision',
     'lookingFor',
+    'additionalInfo',
   ],
 };
 

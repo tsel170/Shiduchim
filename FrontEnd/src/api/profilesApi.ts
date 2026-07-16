@@ -19,6 +19,13 @@ function normalizeProfile(raw: ProfileInput): FullProfile {
     firstName,
     lastName,
     displayName,
+    additionalInfo: String(raw.additionalInfo ?? ''),
+    familyVision: String(raw.familyVision ?? ''),
+    lookingFor: Array.isArray(raw.lookingFor) ? raw.lookingFor : [],
+    personalityTraits: Array.isArray(raw.personalityTraits) ? raw.personalityTraits : [],
+    hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
+    references: Array.isArray(raw.references) ? raw.references : [],
+    photos: Array.isArray(raw.photos) ? raw.photos : [],
   };
 }
 

@@ -10,6 +10,7 @@ const FIELD_LABELS: Record<string, string> = {
   heightCm: 'גובה',
   religiousStream: 'זרם דתי',
   familyVision: 'חזון בית ומשפחה',
+  additionalInfo: 'מידע נוסף',
   email: 'אימייל',
   password: 'סיסמה',
   role: 'תפקיד',

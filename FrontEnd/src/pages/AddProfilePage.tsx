@@ -29,6 +29,7 @@ const EMPTY_PROFILE: FullProfile = {
   hobbies: [],
   familyVision: '',
   lookingFor: [],
+  additionalInfo: '',
   references: [],
   photos: [],
 };
@@ -41,6 +42,7 @@ function applyAiDraft(base: FullProfile, draft: AiImportDraft): FullProfile {
   if (typeof draft.city === 'string') next.city = draft.city;
   if (typeof draft.religiousStream === 'string') next.religiousStream = draft.religiousStream;
   if (typeof draft.familyVision === 'string') next.familyVision = draft.familyVision;
+  if (typeof draft.additionalInfo === 'string') next.additionalInfo = draft.additionalInfo;
   if (typeof draft.gender === 'string') next.gender = draft.gender;
   if (typeof draft.maritalStatus === 'string') next.maritalStatus = draft.maritalStatus;
 

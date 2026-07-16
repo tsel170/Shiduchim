@@ -80,6 +80,13 @@
   --section-border: #bfdbfe;
 }
 
+.profile-field--additionalInfo,
+.profile-details__section--additionalInfo {
+  --section-accent: #57534e;
+  --section-bg: #fafaf9;
+  --section-border: #d6d3d1;
+}
+
 .profile-field--look,
 .profile-field--photo,
 .profile-details__section--photos {

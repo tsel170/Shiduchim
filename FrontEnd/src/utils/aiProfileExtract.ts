@@ -3,6 +3,7 @@ import {
   GENDER_OPTIONS,
   HOBBY_OPTIONS,
   MARITAL_STATUS_OPTIONS,
+  MAX_ADDITIONAL_INFO_LENGTH,
   PERSONALITY_TRAIT_OPTIONS,
   RELIGIOUS_STREAMS,
 } from '../constants/profileOptions';
@@ -291,7 +292,73 @@ export function extractProfileFromText(rawText: string): AiExtractionResult {
     }
   }
 
+  const additionalInfo = buildAdditionalInfo(text, fields);
+  if (additionalInfo) {
+    fields.push({
+      key: 'additionalInfo',
+      label: 'מידע נוסף',
+      inputType: 'text',
+      value: additionalInfo,
+      confidence: 0.55,
+      sourceSnippet: additionalInfo.slice(0, 80),
+    });
+  }
+
   return { fields, rawText: text };
+}
+
+/** Leftover text that was not mapped into structured fields. */
+function buildAdditionalInfo(rawText: string, fields: ExtractedField[]): string {
+  let leftover = rawText;
+
+  for (const field of fields) {
+    if (field.sourceSnippet) {
+      leftover = leftover.split(field.sourceSnippet).join(' ');
+    }
+    if (field.unmatchedRaw) {
+      // keep unmatched raw values — they belong in additional info
+      continue;
+    }
+    if (field.inputType === 'multiselect' && field.values) {
+      for (const value of field.values) {
+        leftover = leftover.split(value).join(' ');
+      }
+    }
+    if (field.value && field.inputType !== 'multiselect') {
+      leftover = leftover.split(field.value).join(' ');
+    }
+  }
+
+  const unmatchedBits = fields
+    .map((field) => field.unmatchedRaw?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  leftover = leftover
+    .replace(/שם(?:\s*משפחה)?\s*[:：]?\s*/gi, ' ')
+    .replace(/גיל\s*[:：]?\s*/gi, ' ')
+    .replace(/עיר\s*[:：]?\s*/gi, ' ')
+    .replace(/גובה\s*[:：]?\s*/gi, ' ')
+    .replace(/זרם(?:\s*דתי)?\s*[:：]?\s*/gi, ' ')
+    .replace(/מצב\s*משפחתי\s*[:：]?\s*/gi, ' ')
+    .replace(/תכונות?\s*[:：]?\s*/gi, ' ')
+    .replace(/תחביבים?\s*[:：]?\s*/gi, ' ')
+    .replace(/מחפש\/?ת\s*[:：]?\s*/gi, ' ')
+    .replace(/חזון(?:\s*בית(?:\s*ומשפחה)?)?\s*[:：]?\s*/gi, ' ')
+    .replace(/[,;|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const parts = [...unmatchedBits];
+  if (leftover.length >= 8) {
+    parts.push(leftover);
+  }
+
+  const combined = Array.from(new Set(parts))
+    .join('\n')
+    .trim()
+    .slice(0, MAX_ADDITIONAL_INFO_LENGTH);
+
+  return combined;
 }
 
 export function getConfidenceLevel(confidence: number): ConfidenceLevel {

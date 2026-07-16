@@ -14,6 +14,7 @@ export const REQUIRED_SHARE_FIELDS: ReadonlyArray<ProfileShareField> = [
   'hobbies',
   'familyVision',
   'lookingFor',
+  'additionalInfo',
 ];
 
 export const OPTIONAL_SHARE_FIELDS: ReadonlyArray<ProfileShareField> = [
@@ -45,6 +46,7 @@ export const DEFAULT_PROFILE_SHARE_SETTINGS: {
     hobbies: true,
     familyVision: true,
     lookingFor: true,
+    additionalInfo: true,
     photo: true,
   },
   fieldOrder: [
@@ -59,6 +61,7 @@ export const DEFAULT_PROFILE_SHARE_SETTINGS: {
     'hobbies',
     'familyVision',
     'lookingFor',
+    'additionalInfo',
     'photo',
   ],
   linesBetweenCategories: 0,
