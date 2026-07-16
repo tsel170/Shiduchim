@@ -1,9 +1,7 @@
 import { ApiError, translateClientApiMessage } from './apiError';
 
-/** In dev, use CRA proxy (package.json → 3002). Set REACT_APP_API_URL for production. */
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL ??
-  (process.env.NODE_ENV === 'development' ? '' : 'http://localhost:3002');
+/** In dev, use CRA proxy (package.json → backend). Set REACT_APP_API_URL for production (e.g. Render). */
+const API_BASE_URL = process.env.REACT_APP_API_URL ?? '';
 const TOKEN_STORAGE_KEY = 'shiduchim_auth_token';
 
 type UnauthorizedHandler = () => void;

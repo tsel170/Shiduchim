@@ -22,13 +22,13 @@ function resolveMongoUri(configService: ConfigService): string {
 
   if (!uri) {
     throw new Error(
-      'MONGODB_URI is missing. Set it in backEnd/.env (Atlas / external only).',
+      'MONGODB_URI is missing. Set it in the environment (Atlas connection string).',
     );
   }
 
   if (/localhost|127\.0\.0\.1/i.test(uri)) {
     throw new Error(
-      'MONGODB_URI points to a local database. Use your Atlas connection string in backEnd/.env.',
+      'MONGODB_URI points to a local database. Use your Atlas connection string.',
     );
   }
 
