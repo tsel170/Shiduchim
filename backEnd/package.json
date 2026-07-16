@@ -8,7 +8,7 @@
   "scripts": {
     "build": "npx nest build && node -e \"require('fs').accessSync('dist/main.js'); console.log('Build OK: dist/main.js')\"",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main.js",
+    "start": "node scripts/start.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main.js",
@@ -20,7 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": "20.x"
   },
   "dependencies": {
     "@nestjs/cli": "^11.0.0",
