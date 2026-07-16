@@ -33,21 +33,26 @@ export const SettingsPage: React.FC = () => {
 
   const isPerson = currentUser?.role === 'person';
   const isShadchan = currentUser?.role === 'shadchan';
-  const linkedIds = currentUser?.linkedShadchanIds ?? [];
+  const linkedShadchanIds = currentUser?.linkedShadchanIds;
+  const linkedIds = useMemo(
+    () => linkedShadchanIds ?? [],
+    [linkedShadchanIds]
+  );
+  const linkedIdsKey = useMemo(() => linkedIds.join('|'), [linkedIds]);
+
+  const accountId = currentUser?.accountId;
+  const userFirstName = currentUser?.firstName;
+  const userLastName = currentUser?.lastName;
+  const userEmail = currentUser?.email;
+  const userPhone = currentUser?.phone;
 
   useEffect(() => {
-    if (!currentUser) return;
-    setFirstName(currentUser.firstName ?? '');
-    setLastName(currentUser.lastName ?? '');
-    setEmail(currentUser.email);
-    setPhone(currentUser.phone ?? '');
-  }, [
-    currentUser?.accountId,
-    currentUser?.firstName,
-    currentUser?.lastName,
-    currentUser?.email,
-    currentUser?.phone,
-  ]);
+    if (!accountId) return;
+    setFirstName(userFirstName ?? '');
+    setLastName(userLastName ?? '');
+    setEmail(userEmail ?? '');
+    setPhone(userPhone ?? '');
+  }, [accountId, userFirstName, userLastName, userEmail, userPhone]);
 
   useEffect(() => {
     if (!isPerson) return;
@@ -79,7 +84,7 @@ export const SettingsPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isPerson, linkedIds.join('|')]);
+  }, [isPerson, linkedIdsKey]);
 
   useEffect(() => {
     if (!toast) return;

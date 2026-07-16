@@ -212,6 +212,7 @@ export const ShadchanSharePanel: React.FC<ShadchanSharePanelProps> = ({
                     <button
                       type="button"
                       role="option"
+                      aria-selected={false}
                       className="shadchan-share-panel__recipient-option"
                       onClick={() => setSelectedPerson(person)}
                       disabled={isSending}

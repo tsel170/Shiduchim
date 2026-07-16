@@ -1,6 +1,5 @@
 import {
   FavoriteProfile,
-  FullProfile,
   Profile,
   ProfileRating,
   ProfileRatingCategory,
