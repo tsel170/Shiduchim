@@ -109,6 +109,7 @@ export const DISPLAY_FIELDS = [
   'hobbies',
   'familyVision',
   'lookingFor',
+  'additionalInfo',
 ] as const;
 
 export const PROFILE_OPTIONS_RESPONSE = {

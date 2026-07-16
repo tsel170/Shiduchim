@@ -3,6 +3,7 @@ import { FullProfile, ProfileFormErrors } from '../../types/profile';
 import {
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
+  MAX_ADDITIONAL_INFO_LENGTH,
   RELIGIOUS_STREAMS,
   MIN_PROFILE_AGE,
   PERSONALITY_TRAIT_OPTIONS,
@@ -263,6 +264,27 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
           selected={profile.lookingFor}
           onChange={(lookingFor) => patch('lookingFor', lookingFor)}
         />
+      </section>
+
+      <section className="form-section">
+        <h2 className="form-section__title">
+          מידע נוסף
+          {isShadchanAdd && <OptionalMark />}
+        </h2>
+        <div className="form-field">
+          <textarea
+            id="additionalInfo"
+            className="form-field__textarea"
+            rows={5}
+            maxLength={MAX_ADDITIONAL_INFO_LENGTH}
+            value={profile.additionalInfo}
+            onChange={(e) => patch('additionalInfo', e.target.value)}
+            placeholder="כל מידע נוסף שחשוב לציין..."
+          />
+          <span className="form-field__hint">
+            {profile.additionalInfo.length}/{MAX_ADDITIONAL_INFO_LENGTH}
+          </span>
+        </div>
       </section>
 
       <section className="form-section">

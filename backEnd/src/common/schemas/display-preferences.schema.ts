@@ -23,6 +23,7 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
     hobbies: true,
     familyVision: true,
     lookingFor: true,
+    additionalInfo: true,
   },
   fieldOrder: [
     'city',
@@ -34,5 +35,6 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
     'hobbies',
     'familyVision',
     'lookingFor',
+    'additionalInfo',
   ],
 };

@@ -40,6 +40,7 @@ const demoProfiles = [
     hobbies: ['קריאה'],
     familyVision: 'בית חם',
     lookingFor: ['משפחתי/ת'],
+    additionalInfo: '',
     references: [],
     photos: ['https://example.com/photo.jpg'],
   },

@@ -135,6 +135,7 @@ export interface Profile {
   hobbies: string[];
   familyVision: string;
   lookingFor: string[];
+  additionalInfo: string;
   references: ReferenceContact[];
   photos: string[];
   shadchanIds?: string[];

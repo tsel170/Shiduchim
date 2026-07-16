@@ -126,6 +126,13 @@ export class CreateProfileDto {
   @IsIn(LOOKING_FOR_TRAITS, { each: true })
   lookingFor?: string[];
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyToUndefined)
+  @IsString()
+  @MaxLength(2000, { message: 'מידע נוסף: עד 2000 תווים' })
+  additionalInfo?: string;
+
   @ApiPropertyOptional({ type: [ReferenceContactDto] })
   @IsOptional()
   @IsArray()

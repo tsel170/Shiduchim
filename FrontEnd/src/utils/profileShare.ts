@@ -48,6 +48,10 @@ function getShareFieldLine(profile: FullProfile, field: ProfileShareField): stri
         : null;
     case 'lookingFor':
       return profile.lookingFor.length > 0 ? `מחפש/ת: ${profile.lookingFor.join(', ')}` : null;
+    case 'additionalInfo':
+      return profile.additionalInfo.trim()
+        ? `מידע נוסף: ${profile.additionalInfo.trim()}`
+        : null;
     case 'photo':
       return null;
     default:

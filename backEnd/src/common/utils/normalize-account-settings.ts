@@ -52,8 +52,17 @@ export function normalizeAccountSettings(
         ...DEFAULT_DISPLAY_PREFERENCES.visibleFields,
         ...displayPreferences?.visibleFields,
       },
-      fieldOrder:
-        displayPreferences?.fieldOrder ?? DEFAULT_DISPLAY_PREFERENCES.fieldOrder,
+      fieldOrder: (() => {
+        const order = [
+          ...(displayPreferences?.fieldOrder ?? DEFAULT_DISPLAY_PREFERENCES.fieldOrder),
+        ];
+        for (const field of DEFAULT_DISPLAY_PREFERENCES.fieldOrder) {
+          if (!order.includes(field)) {
+            order.push(field);
+          }
+        }
+        return order;
+      })(),
     },
   };
 }

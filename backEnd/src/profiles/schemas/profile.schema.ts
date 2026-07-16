@@ -54,6 +54,9 @@ export class Profile {
   @Prop({ type: [String], default: [] })
   lookingFor: string[];
 
+  @Prop({ default: '' })
+  additionalInfo: string;
+
   @Prop({ type: [ReferenceContactSchema], default: [] })
   references: ReferenceContact[];
 

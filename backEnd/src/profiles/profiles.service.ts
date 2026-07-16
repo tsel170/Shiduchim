@@ -59,6 +59,7 @@ export class ProfilesService {
       hobbies: createProfileDto.hobbies ?? [],
       familyVision: createProfileDto.familyVision ?? '',
       lookingFor: createProfileDto.lookingFor ?? [],
+      additionalInfo: createProfileDto.additionalInfo ?? '',
       references: createProfileDto.references ?? [],
       photos: createProfileDto.photos ?? [],
       shadchanIds: 'shadchanIds' in createProfileDto ? createProfileDto.shadchanIds ?? [] : [],
@@ -198,6 +199,9 @@ export class ProfilesService {
     }
     if (typeof set.familyVision === 'string') {
       set.familyVision = set.familyVision.trim();
+    }
+    if (typeof set.additionalInfo === 'string') {
+      set.additionalInfo = set.additionalInfo.trim();
     }
     if (set.heightCm === undefined) {
       // keep existing

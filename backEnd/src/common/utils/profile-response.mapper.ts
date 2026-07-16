@@ -21,6 +21,7 @@ export function toProfileResponse(profile: ProfileDocument) {
     hobbies: profile.hobbies ?? [],
     familyVision,
     lookingFor: profile.lookingFor ?? [],
+    additionalInfo: profile.additionalInfo ?? '',
     references: profile.references ?? [],
     photos: profile.photos ?? [],
     shadchanIds: profile.shadchanIds ?? [],
