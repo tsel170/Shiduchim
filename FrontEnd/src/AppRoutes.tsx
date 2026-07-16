@@ -102,17 +102,20 @@ export const AppRoutes: React.FC = () => {
   const filtersSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displaySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const accountId = currentUser?.accountId;
+  const userRole = currentUser?.role;
+  const userProfileId = currentUser?.profileId;
+  const userSettings = currentUser?.settings;
+
   const filteredProfiles = useMemo(() => browseProfiles, [browseProfiles]);
 
   const catalogProfiles = useMemo(() => Object.values(profileCatalog), [profileCatalog]);
 
   useEffect(() => {
-    if (!currentUser?.settings) return;
-    setFilters(normalizeFilterConfiguration(currentUser.settings.filters));
-    setDisplayPreferences(
-      normalizeDisplayPreferences(currentUser.settings.displayPreferences)
-    );
-  }, [currentUser?.accountId]);
+    if (!userSettings) return;
+    setFilters(normalizeFilterConfiguration(userSettings.filters));
+    setDisplayPreferences(normalizeDisplayPreferences(userSettings.displayPreferences));
+  }, [accountId, userSettings]);
 
   useEffect(() => {
     return () => {
@@ -152,7 +155,7 @@ export const AppRoutes: React.FC = () => {
   }, [handleFiltersChange]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!accountId) return;
     let cancelled = false;
 
     async function loadBrowse() {
@@ -178,10 +181,10 @@ export const AppRoutes: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [filters, currentUser?.accountId]);
+  }, [filters, accountId]);
 
   useEffect(() => {
-    if (!currentUser || currentUser.role !== 'person') {
+    if (!accountId || userRole !== 'person') {
       setFavoritesLoading(false);
       return;
     }
@@ -223,10 +226,10 @@ export const AppRoutes: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentUser?.accountId, currentUser?.role]);
+  }, [accountId, userRole]);
 
   useEffect(() => {
-    if (!currentUser?.profileId) {
+    if (!userProfileId) {
       setMyProfileLoading(false);
       return;
     }
@@ -235,7 +238,7 @@ export const AppRoutes: React.FC = () => {
     setMyProfileLoading(true);
 
     profilesApi
-      .getById(currentUser.profileId)
+      .getById(userProfileId)
       .then((profile) => {
         if (!cancelled) {
           setMyProfile(profile);
@@ -249,7 +252,7 @@ export const AppRoutes: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentUser?.profileId]);
+  }, [userProfileId]);
 
   const hasActiveFilters = useMemo(
     () =>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FavoriteProfile, FullProfile, ProfileRating } from '../../types/profile';
 import { MatchStatus } from '../../types/matchCase';
-import { getRateableCategories, isRatingsCompleteForProfile } from '../../utils/rating';
+import { isRatingsCompleteForProfile } from '../../utils/rating';
 import { ProfileCard } from './ProfileCard';
 import { ProfileCardSkeleton } from './ProfileCardSkeleton';
 import './ProfileGrid.css';
