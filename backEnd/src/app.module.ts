@@ -22,13 +22,7 @@ function resolveMongoUri(configService: ConfigService): string {
 
   if (!uri) {
     throw new Error(
-      'MONGODB_URI is missing. Set it in the environment (Atlas connection string).',
-    );
-  }
-
-  if (/localhost|127\.0\.0\.1/i.test(uri)) {
-    throw new Error(
-      'MONGODB_URI points to a local database. Use your Atlas connection string.',
+      'MONGODB_URI is missing. Set it in backEnd/.env (e.g. mongodb://localhost:27017/shiduchim).',
     );
   }
 
@@ -48,17 +42,9 @@ function resolveMongoUri(configService: ConfigService): string {
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const uri = resolveMongoUri(configService);
-        const host = uri
-          .replace(/^mongodb(\+srv)?:\/\//i, '')
-          .split('/')[0]
-          ?.split('@')
-          .pop();
-        // eslint-disable-next-line no-console
-        console.log(`[Database] Connecting to: ${host ?? '(unknown host)'}`);
-        return { uri };
-      },
+      useFactory: (configService: ConfigService) => ({
+        uri: resolveMongoUri(configService),
+      }),
     }),
     AuthModule,
     AccountsModule,
