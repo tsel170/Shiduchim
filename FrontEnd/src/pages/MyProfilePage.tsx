@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { getApiErrorMessage } from '../api/apiError';
 import { FullProfile, ProfileFormErrors } from '../types/profile';
 import { ProfileShareSettings } from '../types/profileShare';
 import { ProfileEditor } from '../components/profile/ProfileEditor';
 import { ShadchanSharePanel } from '../components/profile/ShadchanSharePanel';
 import { SharePanelOverlay } from '../components/profile/SharePanelOverlay';
+import { useAuth } from '../contexts/AuthContext';
+import { useProfileDraft } from '../hooks/useProfileDraft';
 import { createDefaultProfileShareSettings } from '../utils/profileShare';
 import {
   validateProfile,
@@ -27,7 +29,16 @@ export const MyProfilePage: React.FC<MyProfilePageProps> = ({
   onSave,
   onCreate,
 }) => {
-  const [profile, setProfile] = useState<FullProfile>(initialProfile);
+  const { currentUser } = useAuth();
+  const isCreate = mode === 'create';
+  const draftScope = isCreate ? 'new-mine' : initialProfile.id;
+
+  const { profile, setProfile, draftRestored, clearDraft } = useProfileDraft({
+    accountId: currentUser?.accountId,
+    scope: draftScope,
+    baseProfile: initialProfile,
+  });
+
   const [errors, setErrors] = useState<ProfileFormErrors>({});
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -36,11 +47,6 @@ export const MyProfilePage: React.FC<MyProfilePageProps> = ({
   const [shareSettings, setShareSettings] = useState<ProfileShareSettings>(() =>
     createDefaultProfileShareSettings()
   );
-  const isCreate = mode === 'create';
-
-  useEffect(() => {
-    setProfile(initialProfile);
-  }, [initialProfile]);
 
   const handleSave = async () => {
     const validationErrors = isCreate
@@ -65,6 +71,7 @@ export const MyProfilePage: React.FC<MyProfilePageProps> = ({
         await onSave(profile);
         setSaveMessage('הפרופיל נשמר בהצלחה');
       }
+      clearDraft();
       setTimeout(() => setSaveMessage(null), 4000);
     } catch (error) {
       setSaveError(getApiErrorMessage(error));
@@ -88,6 +95,12 @@ export const MyProfilePage: React.FC<MyProfilePageProps> = ({
             : 'עריכת פרטים אישיים'}
         </p>
       </header>
+
+      {draftRestored && (
+        <div className="my-profile-page__toast" role="status">
+          שוחזרה טיוטה מקומית שלא נשמרה בשרת
+        </div>
+      )}
 
       {saveMessage && (
         <div className="my-profile-page__toast" role="status">

@@ -5,6 +5,7 @@ import { profilesApi } from '../api/profilesApi';
 import { PageState } from '../components/common/PageState';
 import { ProfileEditor } from '../components/profile/ProfileEditor';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfileDraft } from '../hooks/useProfileDraft';
 import { FullProfile, ProfileFormErrors } from '../types/profile';
 import {
   buildShadchanUpdateRequestBody,
@@ -14,11 +15,30 @@ import {
 import './Page.css';
 import './MyProfilePage.css';
 
+const EMPTY_EDIT: FullProfile = {
+  id: '',
+  firstName: '',
+  lastName: '',
+  city: '',
+  heightCm: 0,
+  religiousStream: '',
+  gender: '',
+  maritalStatus: '',
+  age: 0,
+  personalityTraits: [],
+  hobbies: [],
+  familyVision: '',
+  lookingFor: [],
+  additionalInfo: '',
+  references: [],
+  photos: [],
+};
+
 export const EditAddedProfilePage: React.FC = () => {
   const { profileId } = useParams<{ profileId: string }>();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<FullProfile | null>(null);
+  const [serverProfile, setServerProfile] = useState<FullProfile | null>(null);
   const [errors, setErrors] = useState<ProfileFormErrors>({});
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,8 +56,7 @@ export const EditAddedProfilePage: React.FC = () => {
       try {
         const loaded = await profilesApi.getById(profileId!);
         if (cancelled) return;
-
-        setProfile(loaded);
+        setServerProfile(loaded);
       } catch (err) {
         if (!cancelled) setError(getApiErrorMessage(err));
       } finally {
@@ -49,7 +68,14 @@ export const EditAddedProfilePage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [profileId, currentUser, navigate]);
+  }, [profileId, currentUser]);
+
+  const { profile, setProfile, draftRestored, clearDraft } = useProfileDraft({
+    accountId: currentUser?.accountId,
+    scope: profileId ?? 'edit-unknown',
+    baseProfile: serverProfile ?? { ...EMPTY_EDIT, id: profileId ?? '' },
+    enabled: !!serverProfile,
+  });
 
   const handleSave = async () => {
     if (!profile || !profileId) return;
@@ -70,6 +96,7 @@ export const EditAddedProfilePage: React.FC = () => {
         buildShadchanUpdateRequestBody(profile)
       );
       setProfile(updated);
+      clearDraft();
       setSaveMessage('הפרופיל עודכן בהצלחה');
       setTimeout(() => navigate('/added-profiles'), 1500);
     } catch (err) {
@@ -89,8 +116,13 @@ export const EditAddedProfilePage: React.FC = () => {
       </header>
 
       <PageState loading={loading} error={error} isEmpty={false}>
-        {profile && (
+        {serverProfile && (
           <>
+            {draftRestored && (
+              <div className="my-profile-page__toast" role="status">
+                שוחזרה טיוטה מקומית שלא נשמרה בשרת
+              </div>
+            )}
             <ProfileEditor
               profile={profile}
               onChange={setProfile}
