@@ -55,6 +55,13 @@ import {
   isProfilePreviewOpen,
   ProfilePreviewLocationState,
 } from './utils/profileNavigation';
+import {
+  loadBrowseCache,
+  loadFavoritesCache,
+  saveBrowseCache,
+  saveFavoritesCache,
+} from './utils/listCache';
+import { loadSettingsCache, saveSettingsCache } from './utils/settingsCache';
 
 const EMPTY_MY_PROFILE: FullProfile = {
   id: 'new-my-profile',
@@ -113,9 +120,22 @@ export const AppRoutes: React.FC = () => {
   const catalogProfiles = useMemo(() => Object.values(profileCatalog), [profileCatalog]);
 
   useEffect(() => {
-    if (!userSettings) return;
-    setFilters(normalizeFilterConfiguration(userSettings.filters));
-    setDisplayPreferences(normalizeDisplayPreferences(userSettings.displayPreferences));
+    if (!accountId) return;
+
+    const local = loadSettingsCache(accountId);
+    if (local) {
+      setFilters(normalizeFilterConfiguration(local.filters));
+      setDisplayPreferences(normalizeDisplayPreferences(local.displayPreferences));
+    }
+  }, [accountId]);
+
+  useEffect(() => {
+    if (!userSettings || !accountId) return;
+    const filtersNext = normalizeFilterConfiguration(userSettings.filters);
+    const displayNext = normalizeDisplayPreferences(userSettings.displayPreferences);
+    setFilters(filtersNext);
+    setDisplayPreferences(displayNext);
+    saveSettingsCache(accountId, filtersNext, displayNext);
   }, [accountId, userSettings]);
 
   useEffect(() => {
@@ -130,12 +150,14 @@ export const AppRoutes: React.FC = () => {
       setFilters(next);
       if (!currentUser) return;
 
+      saveSettingsCache(currentUser.accountId, next, displayPreferences);
+
       if (filtersSaveTimerRef.current) clearTimeout(filtersSaveTimerRef.current);
       filtersSaveTimerRef.current = setTimeout(() => {
         updateAccountSettings({ filters: next }).catch(() => undefined);
       }, SETTINGS_SAVE_DEBOUNCE_MS);
     },
-    [currentUser, updateAccountSettings]
+    [currentUser, displayPreferences, updateAccountSettings]
   );
 
   const handleDisplayPreferencesChange = useCallback(
@@ -143,12 +165,14 @@ export const AppRoutes: React.FC = () => {
       setDisplayPreferences(next);
       if (!currentUser) return;
 
+      saveSettingsCache(currentUser.accountId, filters, next);
+
       if (displaySaveTimerRef.current) clearTimeout(displaySaveTimerRef.current);
       displaySaveTimerRef.current = setTimeout(() => {
         updateAccountSettings({ displayPreferences: next }).catch(() => undefined);
       }, SETTINGS_SAVE_DEBOUNCE_MS);
     },
-    [currentUser, updateAccountSettings]
+    [currentUser, filters, updateAccountSettings]
   );
 
   const handleResetFilters = useCallback(() => {
@@ -157,22 +181,39 @@ export const AppRoutes: React.FC = () => {
 
   useEffect(() => {
     if (!accountId) return;
+    const resolvedAccountId = accountId;
     let cancelled = false;
 
-    async function loadBrowse() {
+    const cached = loadBrowseCache(resolvedAccountId, filters);
+    if (cached && cached.length > 0) {
+      setBrowseProfiles(cached);
+      setProfileCatalog((prev) => ({
+        ...prev,
+        ...Object.fromEntries(cached.map((profile) => [profile.id, profile])),
+      }));
+      setBrowseLoading(false);
+    } else {
       setBrowseLoading(true);
-      setBrowseError(null);
+    }
+    setBrowseError(null);
+
+    async function loadBrowse() {
       try {
         const profiles = await profilesApi.search(filters);
-        if (!cancelled) {
-          setBrowseProfiles(profiles);
-          setProfileCatalog((prev) => ({
-            ...prev,
-            ...Object.fromEntries(profiles.map((profile) => [profile.id, profile])),
-          }));
-        }
+        if (cancelled) return;
+        setBrowseProfiles(profiles);
+        setProfileCatalog((prev) => ({
+          ...prev,
+          ...Object.fromEntries(profiles.map((profile) => [profile.id, profile])),
+        }));
+        saveBrowseCache(resolvedAccountId, filters, profiles);
+        setBrowseError(null);
       } catch (error) {
-        if (!cancelled) setBrowseError(getApiErrorMessage(error));
+        if (cancelled) return;
+        // Keep cached list visible when the server is slow/asleep.
+        if (!cached?.length) {
+          setBrowseError(getApiErrorMessage(error));
+        }
       } finally {
         if (!cancelled) setBrowseLoading(false);
       }
@@ -190,15 +231,29 @@ export const AppRoutes: React.FC = () => {
       return;
     }
 
+    const resolvedAccountId = accountId;
     let cancelled = false;
+    const cached = loadFavoritesCache(resolvedAccountId);
+    if (cached) {
+      setFavorites(cached.favorites);
+      if (cached.profiles.length > 0) {
+        setProfileCatalog((prev) => ({
+          ...prev,
+          ...Object.fromEntries(cached.profiles.map((profile) => [profile.id, profile])),
+        }));
+      }
+      setFavoritesLoading(false);
+    } else {
+      setFavoritesLoading(true);
+    }
 
     async function loadFavorites() {
-      setFavoritesLoading(true);
       try {
         const items = await favoritesApi.list();
         if (cancelled) return;
         setFavorites(items);
 
+        let loadedProfiles: FullProfile[] = [];
         if (items.length > 0) {
           const profiles = await Promise.all(
             items.map(async (item) => {
@@ -210,14 +265,16 @@ export const AppRoutes: React.FC = () => {
             })
           );
           if (cancelled) return;
-          const loadedProfiles = profiles.filter((profile): profile is FullProfile => profile !== null);
+          loadedProfiles = profiles.filter((profile): profile is FullProfile => profile !== null);
           setProfileCatalog((prev) => ({
             ...prev,
             ...Object.fromEntries(loadedProfiles.map((profile) => [profile.id, profile])),
           }));
         }
+        saveFavoritesCache(resolvedAccountId, items, loadedProfiles);
       } catch {
-        if (!cancelled) setFavorites([]);
+        // Keep cached favorites if network fails.
+        if (!cancelled && !cached) setFavorites([]);
       } finally {
         if (!cancelled) setFavoritesLoading(false);
       }
@@ -349,9 +406,24 @@ export const AppRoutes: React.FC = () => {
   const handleToggleFavorite = useCallback(
     async (profileId: string) => {
       const existing = favorites.find((favorite) => favorite.profileId === profileId);
+      const previousFavorites = favorites;
+      const catalogSnapshot = Object.values(profileCatalog);
+
       if (existing) {
-        await favoritesApi.remove(existing.favoriteId);
         setFavorites((prev) => prev.filter((favorite) => favorite.favoriteId !== existing.favoriteId));
+        if (accountId) {
+          saveFavoritesCache(
+            accountId,
+            previousFavorites.filter((favorite) => favorite.favoriteId !== existing.favoriteId),
+            catalogSnapshot
+          );
+        }
+        try {
+          await favoritesApi.remove(existing.favoriteId);
+        } catch {
+          setFavorites(previousFavorites);
+          if (accountId) saveFavoritesCache(accountId, previousFavorites, catalogSnapshot);
+        }
         return;
       }
 
@@ -359,10 +431,37 @@ export const AppRoutes: React.FC = () => {
       const profile = profileCatalog[profileId];
       if (!profile || !isRatingsCompleteStrict(profile, rating)) return;
 
-      const created = await favoritesApi.add(profileId, profile, rating);
-      setFavorites((prev) => [...prev, created]);
+      const optimistic: FavoriteProfile = {
+        favoriteId: `local-${profileId}`,
+        profileId,
+        createdAt: new Date().toISOString(),
+        rating: {
+          personality: rating.personality ?? 0,
+          hobbies: rating.hobbies,
+          familyVision: rating.familyVision,
+          lookingFor: rating.lookingFor,
+          look: rating.look,
+        },
+      };
+      const optimisticList = [...previousFavorites, optimistic];
+      setFavorites(optimisticList);
+      if (accountId) saveFavoritesCache(accountId, optimisticList, catalogSnapshot);
+
+      try {
+        const created = await favoritesApi.add(profileId, profile, rating);
+        setFavorites((prev) => {
+          const next = prev.map((favorite) =>
+            favorite.favoriteId === optimistic.favoriteId ? created : favorite
+          );
+          if (accountId) saveFavoritesCache(accountId, next, catalogSnapshot);
+          return next;
+        });
+      } catch {
+        setFavorites(previousFavorites);
+        if (accountId) saveFavoritesCache(accountId, previousFavorites, catalogSnapshot);
+      }
     },
-    [favorites, ratingsByProfileId, profileCatalog]
+    [favorites, ratingsByProfileId, profileCatalog, accountId]
   );
 
   const profileDetailsRouteElement = (

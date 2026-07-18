@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { profilesApi } from '../api/profilesApi';
 import { PageHeader } from '../components/common/PageHeader';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfileDraft } from '../hooks/useProfileDraft';
 import { FullProfile, ProfileFormErrors } from '../types/profile';
 import { ProfileEditor } from '../components/profile/ProfileEditor';
 import { clearAiImportDraft, loadAiImportDraft, AiImportDraft } from '../utils/aiProfileExtract';
@@ -77,23 +78,34 @@ export const AddProfilePage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [profile, setProfile] = useState<FullProfile>(EMPTY_PROFILE);
+  const fromAi = searchParams.get('from') === 'ai-import';
+
+  const aiBaseProfile = useMemo(() => {
+    if (!fromAi) return EMPTY_PROFILE;
+    const draft = loadAiImportDraft();
+    if (!draft) return EMPTY_PROFILE;
+    return applyAiDraft(EMPTY_PROFILE, draft);
+  }, [fromAi]);
+
+  const { profile, setProfile, draftRestored, clearDraft } = useProfileDraft({
+    accountId: currentUser?.accountId,
+    scope: 'add-profile',
+    baseProfile: aiBaseProfile,
+    skipRestore: fromAi,
+  });
+
   const [errors, setErrors] = useState<ProfileFormErrors>({});
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [serverWarning, setServerWarning] = useState<string | null>(null);
-  const [fromAiImport, setFromAiImport] = useState(false);
+  const [fromAiImport, setFromAiImport] = useState(fromAi && !!loadAiImportDraft());
 
   useEffect(() => {
-    if (searchParams.get('from') === 'ai-import') {
-      const draft = loadAiImportDraft();
-      if (draft) {
-        setProfile(applyAiDraft(EMPTY_PROFILE, draft));
-        setFromAiImport(true);
-        clearAiImportDraft();
-      }
+    if (fromAi) {
+      clearAiImportDraft();
+      setFromAiImport(true);
     }
-  }, [searchParams]);
+  }, [fromAi]);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +146,7 @@ export const AddProfilePage: React.FC = () => {
         buildShadchanCreateRequestBody(profile, currentUser.accountId)
       );
       setSaveMessage('הפרופיל נוסף בהצלחה');
+      clearDraft();
       setProfile(EMPTY_PROFILE);
       setFromAiImport(false);
       setTimeout(() => navigate('/added-profiles'), 1500);
@@ -152,6 +165,8 @@ export const AddProfilePage: React.FC = () => {
         badge={
           fromAiImport ? (
             <span className="ds-badge ds-badge--success">יובא אוטומטית — בדקו לפני שמירה</span>
+          ) : draftRestored ? (
+            <span className="ds-badge">שוחזרה טיוטה מקומית</span>
           ) : undefined
         }
         actions={
