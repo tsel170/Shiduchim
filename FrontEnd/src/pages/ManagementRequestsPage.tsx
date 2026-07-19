@@ -79,7 +79,12 @@ export const ManagementRequestsPage: React.FC = () => {
         </div>
       )}
 
-      <PageState loading={loading} error={error} isEmpty={!loading && !error && requests.length === 0}>
+      <PageState
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && requests.length === 0}
+        skeletonVariant="list"
+      >
         <ManagementRequestList
           requests={requests}
           respondingId={respondingId}

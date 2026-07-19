@@ -271,6 +271,7 @@ export const ShadchanSuggestionsPage: React.FC = () => {
             ? `${emptyMessage} יש ${otherStageCount} הצעות בטאבים אחרים.`
             : emptyMessage
         }
+        skeletonVariant="list"
       >
         {isManagementView ? (
           <ManagementRequestList

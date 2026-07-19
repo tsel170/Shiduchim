@@ -1,0 +1,5 @@
+.protected-route-skeleton {
+  min-height: 100vh;
+  padding: var(--space-xl);
+  background: var(--color-bg);
+}

@@ -629,7 +629,7 @@ export const AppRoutes: React.FC = () => {
           path="/my-profile"
           element={
             <RoleRoute allowed={['person']}>
-              <PageState loading={myProfileLoading}>
+              <PageState loading={myProfileLoading} skeletonVariant="form">
                 <MyProfilePage
                   mode={myProfile ? 'edit' : 'create'}
                   initialProfile={myProfile ?? EMPTY_MY_PROFILE}
@@ -773,7 +773,7 @@ const ProfileDetailsRoute: React.FC<ProfileDetailsRouteProps> = ({
   }
 
   if (loading) {
-    return <PageState loading />;
+    return <PageState loading skeletonVariant="detail" />;
   }
 
   if (error || !profile) {

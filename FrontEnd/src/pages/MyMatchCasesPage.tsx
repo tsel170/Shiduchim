@@ -181,7 +181,7 @@ export const MyMatchCasesPage: React.FC = () => {
       </nav>
 
       {loading ? (
-        <PageState loading />
+        <PageState loading skeletonVariant="list" />
       ) : error ? (
         <PageState error={error} />
       ) : cases.length === 0 ? (

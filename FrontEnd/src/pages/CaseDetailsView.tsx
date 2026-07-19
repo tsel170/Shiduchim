@@ -59,7 +59,13 @@ export const CaseDetailsView: React.FC<CaseDetailsViewProps> = ({
     );
   }
 
-  if (loading) return <PageState loading />;
+  if (loading) {
+    return (
+      <div className="page">
+        <PageState loading skeletonVariant="detail" />
+      </div>
+    );
+  }
   if (error || !matchCase) {
     return (
       <div className="page">

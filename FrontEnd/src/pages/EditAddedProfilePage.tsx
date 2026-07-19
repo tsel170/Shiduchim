@@ -115,7 +115,7 @@ export const EditAddedProfilePage: React.FC = () => {
         </p>
       </header>
 
-      <PageState loading={loading} error={error} isEmpty={false}>
+      <PageState loading={loading} error={error} isEmpty={false} skeletonVariant="form">
         {serverProfile && (
           <>
             {draftRestored && (

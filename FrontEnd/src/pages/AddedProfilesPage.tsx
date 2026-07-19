@@ -125,6 +125,7 @@ export const AddedProfilesPage: React.FC = () => {
         error={error}
         isEmpty={!loading && !error && filteredProfiles.length === 0}
         emptyMessage={emptyMessage}
+        skeletonVariant="list"
       >
         <ul className="added-profiles-list">
           {filteredProfiles.map((profile, index) => {

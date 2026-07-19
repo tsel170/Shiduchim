@@ -63,9 +63,17 @@ function persistUser(user: AuthUser | null) {
   localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
 }
 
+function hasStoredAuthSession(): boolean {
+  return Boolean(readStoredUser() || localStorage.getItem('shiduchim_auth_token'));
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => readStoredUser());
-  const [isLoading, setIsLoading] = useState(true);
+  // Only block the tree when we have a token but no cached user yet.
+  // With a cached user, render the app immediately and refresh in the background.
+  const [isLoading, setIsLoading] = useState(
+    () => !readStoredUser() && Boolean(localStorage.getItem('shiduchim_auth_token'))
+  );
 
   const logout = useCallback(() => {
     authApi.clearSession();
@@ -94,8 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let cancelled = false;
 
     async function bootstrap() {
-      if (!readStoredUser() && !localStorage.getItem('shiduchim_auth_token')) {
-        setIsLoading(false);
+      if (!hasStoredAuthSession()) {
+        if (!cancelled) setIsLoading(false);
         return;
       }
 

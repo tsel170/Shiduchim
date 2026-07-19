@@ -147,6 +147,7 @@ export const RequestsPage: React.FC = () => {
         error={error}
         isEmpty={!loading && !error && items.length === 0 && responses.length === 0}
         emptyMessage="אין בקשות או עדכונים פעילים כרגע."
+        skeletonVariant="list"
       >
         {actionError && <p className="request-card__note request-card__note--error">{actionError}</p>}
         <ul className="added-profiles-list">

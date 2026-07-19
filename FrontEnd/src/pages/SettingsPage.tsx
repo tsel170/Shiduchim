@@ -167,7 +167,11 @@ export const SettingsPage: React.FC = () => {
   };
 
   if (!currentUser) {
-    return <PageState loading />;
+    return (
+      <div className="page settings-page">
+        <PageState loading skeletonVariant="form" />
+      </div>
+    );
   }
 
   const displayName = formatAccountName(
