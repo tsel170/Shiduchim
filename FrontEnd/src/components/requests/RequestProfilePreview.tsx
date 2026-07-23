@@ -1,6 +1,7 @@
 import React, { KeyboardEvent } from 'react';
 import { getCityLabel, getMaritalStatusLabel } from '../../constants/profileOptions';
 import { FullProfile } from '../../types/profile';
+import { ProfileImage } from '../common/ProfileImage';
 import './RequestProfilePreview.css';
 
 interface RequestProfilePreviewProps {
@@ -15,7 +16,6 @@ export const RequestProfilePreview: React.FC<RequestProfilePreviewProps> = ({
   onViewProfile,
 }) => {
   const fullName = `${profile.firstName} ${profile.lastName}`;
-  const cover = profile.photos[0];
 
   const openProfile = () => onViewProfile(profile.id);
 
@@ -37,13 +37,11 @@ export const RequestProfilePreview: React.FC<RequestProfilePreviewProps> = ({
     >
       <p className="request-profile-preview__label">{label}</p>
       <div className="request-profile-preview__image-wrap">
-        {cover ? (
-          <img src={cover} alt="" className="request-profile-preview__image" loading="lazy" />
-        ) : (
-          <div className="request-profile-preview__placeholder" aria-hidden="true">
-            אין תמונה
-          </div>
-        )}
+        <ProfileImage
+          photos={profile.photos}
+          alt=""
+          imgClassName="request-profile-preview__image"
+        />
       </div>
       <h3 className="request-profile-preview__name">{fullName}</h3>
       <p className="request-profile-preview__meta">

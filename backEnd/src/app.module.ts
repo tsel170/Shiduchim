@@ -12,6 +12,10 @@ import { MatchRequestsModule } from './match-requests/match-requests.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SuggestionsModule } from './suggestions/suggestions.module';
 import { MatchCasesModule } from './match-cases/match-cases.module';
+import { CitiesModule } from './cities/cities.module';
+import { GeoModule } from './geo/geo.module';
+import { ImagesModule } from './images/images.module';
+import { AdminModule } from './admin/admin.module';
 
 function resolveMongoUri(configService: ConfigService): string {
   const uri = (
@@ -54,6 +58,10 @@ function resolveMongoUri(configService: ConfigService): string {
     MatchRequestsModule,
     MatchCasesModule,
     ManagementRequestsModule,
+    GeoModule,
+    CitiesModule,
+    ImagesModule,
+    AdminModule,
   ],
   providers: [
     {

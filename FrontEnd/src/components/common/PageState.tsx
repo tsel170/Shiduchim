@@ -1,5 +1,6 @@
 import React from 'react';
-import { AppEmptyState, AppLoader } from '../ui';
+import { AppEmptyState } from '../ui';
+import { PageSkeleton, PageSkeletonVariant } from './PageSkeleton';
 import './PageState.css';
 
 interface PageStateProps {
@@ -8,23 +9,23 @@ interface PageStateProps {
   isEmpty?: boolean;
   emptyMessage?: string;
   emptyTitle?: string;
+  skeleton?: React.ReactNode;
+  skeletonVariant?: PageSkeletonVariant;
   children?: React.ReactNode;
 }
 
-export const PageState: React.FC<PageStateProps> = ({
+export function PageState({
   loading = false,
   error = null,
   isEmpty = false,
   emptyMessage = 'אין נתונים להצגה כרגע.',
   emptyTitle = 'אין תוצאות',
+  skeleton,
+  skeletonVariant = 'list',
   children,
-}) => {
+}: PageStateProps) {
   if (loading) {
-    return (
-      <div className="page-state page-state--loading ds-card" role="status" aria-live="polite">
-        <AppLoader label="טוען נתונים..." hint="רגע אחד בבקשה" />
-      </div>
-    );
+    return <>{skeleton ?? <PageSkeleton variant={skeletonVariant} />}</>;
   }
 
   if (error) {
@@ -52,4 +53,4 @@ export const PageState: React.FC<PageStateProps> = ({
   }
 
   return <>{children}</>;
-};
+}

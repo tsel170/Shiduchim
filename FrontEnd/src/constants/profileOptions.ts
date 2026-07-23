@@ -6,28 +6,15 @@ import {
   MaritalStatus,
   ProfileRatingCategory,
 } from '../types/profile';
+import { getCityLabel as getCityLabelFromStore, getCachedCities } from '../utils/citiesStore';
 
 export const MAX_PROFILE_PHOTOS = 6;
 export const MIN_PROFILE_AGE = 18;
 export const MAX_ADDITIONAL_INFO_LENGTH = 2000;
 
 
-export const CITIES = [
-  { id: 'jerusalem', label: 'ירושלים' },
-  { id: 'bnei-brak', label: 'בני ברק' },
-  { id: 'modiin', label: 'מודיעין' },
-  { id: 'petah-tikva', label: 'פתח תקווה' },
-  { id: 'haifa', label: 'חיפה' },
-  { id: 'ashdod', label: 'אשדוד' },
-  { id: 'beer-sheva', label: 'באר שבע' },
-  { id: 'netanya', label: 'נתניה' },
-  { id: 'ramat-gan', label: 'רמת גן' },
-  { id: 'tzfat', label: 'צפת' },
-  { id: 'kiryat-gat', label: 'קריית גת' },
-  { id: 'raanana', label: 'רעננה' },
-  { id: 'tel-aviv', label: 'תל אביב' },
-  { id: 'bet-shemesh', label: 'בית שמש' },
-] as const;
+/** Official cities load from /cities — kept empty for backward-compatible imports. */
+export const CITIES: ReadonlyArray<{ id: string; label: string }> = [];
 
 export const RELIGIOUS_STREAMS = [
   { id: 'haredi', label: 'חרדי' },
@@ -190,6 +177,8 @@ export const DEFAULT_FILTER_CONFIGURATION: FilterConfiguration = {
   personalityTraits: [],
   hobbies: [],
   lookingFor: [],
+  originCityId: null,
+  maxDistanceKm: null,
 };
 
 export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
@@ -220,11 +209,12 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
 };
 
 export function getCityLabel(cityId: string): string {
-  return CITIES.find((c) => c.id === cityId)?.label ?? cityId;
+  return getCityLabelFromStore(cityId);
 }
 
 export function isKnownCityId(city: string): boolean {
-  return Boolean(city) && CITIES.some((entry) => entry.id === city);
+  if (!city) return false;
+  return getCachedCities().some((entry) => entry.id === city);
 }
 
 export function isPersonalityTrait(value: string): boolean {

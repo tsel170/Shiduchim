@@ -4,6 +4,8 @@ import {
   AccountSettings,
   AccountSettingsSchema,
 } from '../../common/schemas/account-settings.schema';
+import { ACCOUNT_ROLES } from '../../common/types/account-role';
+import type { AccountRole } from '../../common/types/account-role';
 
 export type AccountDocument = HydratedDocument<Account>;
 
@@ -18,8 +20,8 @@ export class Account {
   @Prop({ required: true, select: false })
   passwordHash: string;
 
-  @Prop({ type: String, required: true, enum: ['person', 'shadchan'] })
-  role: 'person' | 'shadchan';
+  @Prop({ type: String, required: true, enum: ACCOUNT_ROLES })
+  role: AccountRole;
 
   @Prop({ type: String, default: null })
   profileId: string | null;
@@ -38,6 +40,15 @@ export class Account {
 
   @Prop({ type: [String], default: [] })
   linkedShadchanIds: string[];
+
+  @Prop({ type: Boolean, default: false, index: true })
+  isBlocked: boolean;
+
+  @Prop({ type: Boolean, default: false, index: true })
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+  deletedAt: Date | null;
 }
 
 export const AccountSchema = SchemaFactory.createForClass(Account);

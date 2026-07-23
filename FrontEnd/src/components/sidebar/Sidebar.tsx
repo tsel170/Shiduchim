@@ -16,7 +16,8 @@ export type NavItem =
   | 'ai-import'
   | 'match-cases'
   | 'my-profile'
-  | 'settings';
+  | 'settings'
+  | 'admin';
 
 interface NavConfig {
   id: NavItem;
@@ -34,8 +35,17 @@ const NAV_ITEMS: NavConfig[] = [
     path: '/browse',
     label: 'עיון בפרופילים',
     icon: <GridIcon />,
-    roles: ['person', 'shadchan'],
+    roles: ['person', 'shadchan', 'admin'],
     group: 'main',
+  },
+  {
+    id: 'admin',
+    path: '/admin',
+    label: 'ניהול מערכת',
+    icon: <SettingsIcon />,
+    roles: ['admin'],
+    group: 'manage',
+    highlight: true,
   },
   {
     id: 'saved',
@@ -107,7 +117,7 @@ const NAV_ITEMS: NavConfig[] = [
     path: '/settings',
     label: 'הגדרות',
     icon: <SettingsIcon />,
-    roles: ['person', 'shadchan'],
+    roles: ['person', 'shadchan', 'admin'],
     group: 'account',
   },
 ];
@@ -126,6 +136,7 @@ interface SidebarProps {
 }
 
 function pathToNavItem(pathname: string): NavItem {
+  if (pathname.startsWith('/admin')) return 'admin';
   if (pathname.startsWith('/favorites')) return 'saved';
   if (pathname.startsWith('/my-cases')) return 'my-cases';
   if (pathname.startsWith('/management-requests')) return 'management-requests';

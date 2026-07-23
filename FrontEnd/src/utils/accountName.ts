@@ -18,15 +18,21 @@ export function getUserDisplayLabel(user: {
   firstName?: string | null;
   lastName?: string | null;
   email?: string | null;
-  role?: 'person' | 'shadchan';
+  role?: 'person' | 'shadchan' | 'admin';
 }): string {
   const fullName = formatAccountName(user.firstName, user.lastName);
   if (fullName) return fullName;
 
   const email = user.email?.trim();
-  if (!email) return user.role === 'shadchan' ? 'שדכן/ית' : 'משתמש/ת';
+  if (!email) {
+    if (user.role === 'shadchan') return 'שדכן/ית';
+    if (user.role === 'admin') return 'מנהל/ת';
+    return 'משתמש/ת';
+  }
 
-  return formatEmailFallback(email, user.role === 'shadchan' ? 'שדכן/ית' : 'משודך/ת');
+  const roleFallback =
+    user.role === 'shadchan' ? 'שדכן/ית' : user.role === 'admin' ? 'מנהל/ת' : 'משודך/ת';
+  return formatEmailFallback(email, roleFallback);
 }
 
 export function getShadchanDisplayName(shadchan: {

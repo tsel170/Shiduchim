@@ -2,6 +2,7 @@ import React, { KeyboardEvent } from 'react';
 import { MatchStatus } from '../../types/matchCase';
 import { MatchStatusBadge } from '../match-cases/MatchStatusBadge';
 import { FavoriteButton } from '../common/FavoriteButton';
+import { ProfileImage } from '../common/ProfileImage';
 import { FullProfile } from '../../types/profile';
 import { getGenderLabel, getMaritalStatusLabel } from '../../constants/profileOptions';
 import './ProfileCard.css';
@@ -28,7 +29,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   matchStatus = null,
 }) => {
   const fullName = `${profile.firstName} ${profile.lastName}`;
-  const cover = profile.photos[0];
 
   const openProfile = () => onViewProfile(profile.id);
 
@@ -51,7 +51,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       <div
         className={`profile-card__image-wrap${photosLocked ? ' profile-card__image-wrap--locked' : ''}`}
       >
-        {cover ? <img src={cover} alt="" className="profile-card__image" loading="lazy" /> : null}
+        <ProfileImage
+          photos={profile.photos}
+          alt=""
+          locked={photosLocked}
+          imgClassName="profile-card__image"
+        />
         {showFavoriteControls && (
           <FavoriteButton
             variant="icon"

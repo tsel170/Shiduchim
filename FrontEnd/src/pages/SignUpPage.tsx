@@ -1,5 +1,5 @@
-import React, { FormEvent, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import React, { FormEvent, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { AccountRole } from '../types/account';
@@ -8,7 +8,7 @@ import './LoginPage.css';
 type SignUpStep = 'role' | 'details';
 
 const ROLE_OPTIONS: ReadonlyArray<{
-  role: AccountRole;
+  role: Exclude<AccountRole, 'admin'>;
   title: string;
   description: string;
 }> = [
@@ -25,11 +25,11 @@ const ROLE_OPTIONS: ReadonlyArray<{
 ];
 
 export const SignUpPage: React.FC = () => {
-  const { register, isAuthenticated } = useAuth();
+  const { register, logout } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<SignUpStep>('role');
-  const [role, setRole] = useState<AccountRole | null>(null);
+  const [role, setRole] = useState<Exclude<AccountRole, 'admin'> | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -38,9 +38,11 @@ export const SignUpPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (isAuthenticated) {
-    return <Navigate to="/browse" replace />;
-  }
+  // Clear any existing session when opening signup (do not re-run after register).
+  useEffect(() => {
+    logout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
+  }, []);
 
   const selectedRoleLabel = ROLE_OPTIONS.find((option) => option.role === role)?.title;
 

@@ -57,6 +57,10 @@ export interface Profile {
   ownerAccountId?: string | null;
   addedByShadchanId?: string | null;
   shadchanIds?: string[];
+  cityLatitude?: number | null;
+  cityLongitude?: number | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
   /** שם תצוגה מחושב (פרופיל → חשבון) */
   displayName?: string;
 }
@@ -110,6 +114,8 @@ export interface FilterConfiguration {
   personalityTraits: string[];
   hobbies: string[];
   lookingFor: string[];
+  originCityId: string | null;
+  maxDistanceKm: number | null;
 }
 
 export interface ProfileFormErrors {

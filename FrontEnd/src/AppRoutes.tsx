@@ -32,7 +32,10 @@ import { ManagementRequestsPage } from './pages/ManagementRequestsPage';
 import { MatchCasesDashboardPage } from './pages/MatchCasesDashboardPage';
 import { PersonCaseDetailsPage, ShadchanCaseDetailsPage } from './pages/CaseDetailsView';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminPage } from './pages/AdminPage';
 import { ProfileDetailsPage } from './pages/ProfileDetailsPage';
+import { citiesApi } from './api/citiesApi';
+import { imagesApi } from './api/imagesApi';
 import { ProfilePreviewOverlay } from './components/profile/ProfilePreviewOverlay';
 import {
   DisplayPreferences,
@@ -42,7 +45,7 @@ import {
   ProfileRating,
   ProfileRatingCategory,
 } from './types/profile';
-import { isFilterKeyAtDefault, normalizeFilterConfiguration } from './utils/filters';
+import { filterProfiles, isFilterKeyAtDefault, normalizeFilterConfiguration } from './utils/filters';
 import { isDisplayPreferencesAtDefault, normalizeDisplayPreferences } from './utils/profileHelpers';
 import { FavoriteSortKey, isRatingsCompleteStrict } from './utils/rating';
 import { MatchCase } from './types/matchCase';
@@ -115,9 +118,17 @@ export const AppRoutes: React.FC = () => {
   const userProfileId = currentUser?.profileId;
   const userSettings = currentUser?.settings;
 
-  const filteredProfiles = useMemo(() => browseProfiles, [browseProfiles]);
+  const filteredProfiles = useMemo(
+    () => filterProfiles(browseProfiles, filters),
+    [browseProfiles, filters]
+  );
 
   const catalogProfiles = useMemo(() => Object.values(profileCatalog), [profileCatalog]);
+
+  useEffect(() => {
+    void citiesApi.list().catch(() => undefined);
+    void imagesApi.listPigeons().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!accountId) return;
@@ -126,11 +137,10 @@ export const AppRoutes: React.FC = () => {
     if (local) {
       setFilters(normalizeFilterConfiguration(local.filters));
       setDisplayPreferences(normalizeDisplayPreferences(local.displayPreferences));
+      return;
     }
-  }, [accountId]);
 
-  useEffect(() => {
-    if (!userSettings || !accountId) return;
+    if (!userSettings) return;
     const filtersNext = normalizeFilterConfiguration(userSettings.filters);
     const displayNext = normalizeDisplayPreferences(userSettings.displayPreferences);
     setFilters(filtersNext);
@@ -653,6 +663,14 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route
+          path="/admin"
+          element={
+            <RoleRoute allowed={['admin']} fallback="/browse">
+              <AdminPage />
+            </RoleRoute>
+          }
+        />
         <Route
           path="/profiles/:profileId"
           element={profileDetailsRouteElement}

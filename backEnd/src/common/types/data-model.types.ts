@@ -1,4 +1,4 @@
-export type AccountRole = 'person' | 'shadchan';
+export type AccountRole = 'person' | 'shadchan' | 'admin';
 
 export type MatchPriority = 'low' | 'normal' | 'high';
 
@@ -98,6 +98,8 @@ export interface FilterConfiguration {
   personalityTraits: string[];
   hobbies: string[];
   lookingFor: string[];
+  originCityId?: string | null;
+  maxDistanceKm?: number | null;
 }
 
 export interface DisplayPreferences {

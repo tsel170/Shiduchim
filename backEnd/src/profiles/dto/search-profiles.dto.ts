@@ -1,8 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsInt,
+  IsNumber,
+  IsOptional,
   IsString,
   Max,
   Min,
@@ -66,6 +68,19 @@ export class FilterConfigurationDto {
   @IsArray()
   @IsString({ each: true })
   lookingFor: string[];
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  originCityId?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(500)
+  maxDistanceKm?: number | null;
 }
 
 export class SearchProfilesDto {

@@ -2,6 +2,9 @@ import { Injectable, NotFoundException, ForbiddenException, ConflictException } 
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { AccountsService } from '../accounts/accounts.service';
+import { CitiesService } from '../cities/cities.service';
+import { GeoService } from '../geo/geo.service';
+import { resolveKnownCoordinates } from '../cities/known-city-coordinates';
 import { matchesFilterConfiguration } from '../common/utils/profile-filter.util';
 import { toProfileResponse } from '../common/utils/profile-response.mapper';
 import { generateId } from '../common/utils/generate-id';
@@ -20,6 +23,8 @@ export class ProfilesService {
     @InjectModel(Profile.name)
     private readonly profileModel: Model<ProfileDocument>,
     private readonly accountsService: AccountsService,
+    private readonly citiesService: CitiesService,
+    private readonly geoService: GeoService,
   ) {}
 
   async createForPerson(user: AuthUserPayload, createProfileDto: CreateProfileDto) {
@@ -45,11 +50,14 @@ export class ProfilesService {
   }
 
   async create(createProfileDto: CreateShadchanProfileDto | CreateProfileDto) {
+    const cityFields = await this.resolveCityFields(createProfileDto.city);
     const profile = await this.profileModel.create({
       profileId: generateId(),
       firstName: createProfileDto.firstName.trim(),
       lastName: createProfileDto.lastName?.trim() ?? '',
-      city: createProfileDto.city ?? '',
+      city: cityFields.city,
+      cityLatitude: cityFields.cityLatitude,
+      cityLongitude: cityFields.cityLongitude,
       age: createProfileDto.age,
       heightCm: createProfileDto.heightCm ?? 0,
       religiousStream: createProfileDto.religiousStream ?? '',
@@ -69,6 +77,8 @@ export class ProfilesService {
       ownerAccountId:
         'ownerAccountId' in createProfileDto ? createProfileDto.ownerAccountId ?? null : null,
       addedByShadchanId: createProfileDto.addedByShadchanId ?? null,
+      isDeleted: false,
+      deletedAt: null,
     });
     return toProfileResponse(profile);
   }
@@ -82,7 +92,7 @@ export class ProfilesService {
       return this.findManagedByShadchan(filters.managedByShadchanId);
     }
 
-    const query: Record<string, string> = {};
+    const query: Record<string, unknown> = { isDeleted: { $ne: true } };
     if (filters?.addedByShadchanId) {
       query.addedByShadchanId = filters.addedByShadchanId;
     }
@@ -95,8 +105,9 @@ export class ProfilesService {
   }
 
   async findManagedByShadchan(shadchanId: string) {
+    const managedFilter = await this.accountsService.getManagedProfilesFilter(shadchanId);
     const profiles = await this.profileModel
-      .find(await this.accountsService.getManagedProfilesFilter(shadchanId))
+      .find({ ...managedFilter, isDeleted: { $ne: true } })
       .sort({ createdAt: -1 });
 
     const accountsByProfileId =
@@ -123,14 +134,45 @@ export class ProfilesService {
 
   async search(filters: FilterConfiguration) {
     const normalizedFilters = normalizeAccountSettings({ filters }).filters;
-    const profiles = await this.profileModel.find().sort({ createdAt: -1 });
-    return profiles
-      .filter((profile) => matchesFilterConfiguration(profile, normalizedFilters))
-      .map((profile) => toProfileResponse(profile));
+    const profiles = await this.profileModel
+      .find({ isDeleted: { $ne: true } })
+      .sort({ createdAt: -1 });
+
+    let matched = profiles.filter((profile) =>
+      matchesFilterConfiguration(profile, normalizedFilters),
+    );
+
+    // Distance filter: empty/null km → keep all. Number + origin city → radius.
+    const maxKm = normalizedFilters.maxDistanceKm;
+    const originId = normalizedFilters.originCityId?.trim();
+    if (originId && maxKm != null && maxKm > 0) {
+      const origin = await this.citiesService.resolveCoordinates(originId);
+      if (origin?.latitude != null && origin.longitude != null) {
+        matched = this.geoService.filterByMaxDistance(
+          matched,
+          (profile) => {
+            if (profile.cityLatitude != null && profile.cityLongitude != null) {
+              return {
+                latitude: profile.cityLatitude,
+                longitude: profile.cityLongitude,
+              };
+            }
+            return resolveKnownCoordinates(String(profile.city ?? ''));
+          },
+          { latitude: origin.latitude, longitude: origin.longitude },
+          maxKm,
+        );
+      }
+    }
+
+    return matched.map((profile) => toProfileResponse(profile));
   }
 
   async findOne(profileId: string) {
-    const profile = await this.profileModel.findOne({ profileId });
+    const profile = await this.profileModel.findOne({
+      profileId,
+      isDeleted: { $ne: true },
+    });
     if (!profile) {
       throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
@@ -138,9 +180,10 @@ export class ProfilesService {
   }
 
   async update(profileId: string, updateProfileDto: UpdateProfileDto) {
+    const set = await this.normalizeProfileUpdate(updateProfileDto);
     const profile = await this.profileModel.findOneAndUpdate(
-      { profileId },
-      { $set: updateProfileDto },
+      { profileId, isDeleted: { $ne: true } },
+      { $set: set },
       { new: true, runValidators: true },
     );
     if (!profile) {
@@ -154,7 +197,10 @@ export class ProfilesService {
     user: AuthUserPayload,
     updateProfileDto: UpdateShadchanProfileDto | UpdateProfileDto,
   ) {
-    const existing = await this.profileModel.findOne({ profileId });
+    const existing = await this.profileModel.findOne({
+      profileId,
+      isDeleted: { $ne: true },
+    });
     if (!existing) {
       throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
@@ -169,7 +215,7 @@ export class ProfilesService {
       }
     }
 
-    const normalized = this.normalizeProfileUpdate(updateProfileDto);
+    const normalized = await this.normalizeProfileUpdate(updateProfileDto);
     const profile = await this.profileModel.findOneAndUpdate(
       { profileId },
       { $set: normalized },
@@ -181,7 +227,7 @@ export class ProfilesService {
     return toProfileResponse(profile);
   }
 
-  private normalizeProfileUpdate(
+  private async normalizeProfileUpdate(
     updateProfileDto: UpdateShadchanProfileDto | UpdateProfileDto,
   ) {
     const set: Record<string, unknown> = { ...updateProfileDto };
@@ -209,18 +255,45 @@ export class ProfilesService {
       set.heightCm = 0;
     }
 
+    if (typeof set.city === 'string') {
+      const cityFields = await this.resolveCityFields(set.city);
+      set.city = cityFields.city;
+      set.cityLatitude = cityFields.cityLatitude;
+      set.cityLongitude = cityFields.cityLongitude;
+    }
+
     return set;
   }
 
+  private async resolveCityFields(city?: string | null) {
+    const cityId = city?.trim() ?? '';
+    if (!cityId) {
+      return { city: '', cityLatitude: null as number | null, cityLongitude: null as number | null };
+    }
+
+    const resolved = await this.citiesService.resolveCoordinates(cityId);
+    return {
+      city: cityId,
+      cityLatitude: resolved?.latitude ?? null,
+      cityLongitude: resolved?.longitude ?? null,
+    };
+  }
+
   async remove(profileId: string) {
-    const result = await this.profileModel.deleteOne({ profileId });
-    if (result.deletedCount === 0) {
+    const profile = await this.profileModel.findOne({ profileId });
+    if (!profile) {
       throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
+    profile.isDeleted = true;
+    profile.deletedAt = new Date();
+    await profile.save();
   }
 
   async removeForUser(profileId: string, user: AuthUserPayload) {
-    const existing = await this.profileModel.findOne({ profileId });
+    const existing = await this.profileModel.findOne({
+      profileId,
+      isDeleted: { $ne: true },
+    });
     if (!existing) {
       throw new NotFoundException(`הפרופיל "${profileId}" לא נמצא`);
     }
@@ -237,12 +310,17 @@ export class ProfilesService {
       throw new ForbiddenException('לא ניתן למחוק פרופיל המשויך לחשבון משתמש');
     }
 
-    await this.profileModel.deleteOne({ profileId });
+    existing.isDeleted = true;
+    existing.deletedAt = new Date();
+    await existing.save();
   }
 
   async findManyByIds(profileIds: string[]) {
     if (profileIds.length === 0) return [];
-    const profiles = await this.profileModel.find({ profileId: { $in: profileIds } });
+    const profiles = await this.profileModel.find({
+      profileId: { $in: profileIds },
+      isDeleted: { $ne: true },
+    });
     return profiles.map((profile) => toProfileResponse(profile));
   }
 }

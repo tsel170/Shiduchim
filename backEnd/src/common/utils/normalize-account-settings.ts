@@ -44,6 +44,10 @@ export function normalizeAccountSettings(
         filters?.personalityTraits ?? DEFAULT_FILTER_CONFIGURATION.personalityTraits,
       hobbies: filters?.hobbies ?? DEFAULT_FILTER_CONFIGURATION.hobbies,
       lookingFor: filters?.lookingFor ?? DEFAULT_FILTER_CONFIGURATION.lookingFor,
+      originCityId:
+        filters?.originCityId ?? DEFAULT_FILTER_CONFIGURATION.originCityId,
+      maxDistanceKm:
+        filters?.maxDistanceKm ?? DEFAULT_FILTER_CONFIGURATION.maxDistanceKm,
     },
     displayPreferences: {
       ...DEFAULT_DISPLAY_PREFERENCES,

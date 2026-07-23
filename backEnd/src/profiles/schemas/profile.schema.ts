@@ -27,6 +27,12 @@ export class Profile {
   @Prop({ default: '' })
   city: string;
 
+  @Prop({ type: Number, default: null })
+  cityLatitude: number | null;
+
+  @Prop({ type: Number, default: null })
+  cityLongitude: number | null;
+
   @Prop({ required: true })
   age: number;
 
@@ -71,6 +77,12 @@ export class Profile {
 
   @Prop()
   aboutMyFamily?: string;
+
+  @Prop({ type: Boolean, default: false, index: true })
+  isDeleted: boolean;
+
+  @Prop({ type: Date, default: null })
+  deletedAt: Date | null;
 
   createdAt: Date;
   updatedAt: Date;

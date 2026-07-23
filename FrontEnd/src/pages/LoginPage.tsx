@@ -1,23 +1,23 @@
 import React, { FormEvent, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? '/browse';
+  const from = (location.state as { from?: string } | null)?.from;
+  const afterLoginPath =
+    from && from !== '/login' && from !== '/signup' && from !== '/'
+      ? from
+      : '/browse';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (isAuthenticated) {
-    return <Navigate to={from} replace />;
-  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -34,6 +34,10 @@ export const LoginPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    // Ensure a clean login even if a previous session still exists.
+    if (isAuthenticated) {
+      logout();
+    }
     const success = await login(trimmedEmail, password);
     setIsSubmitting(false);
 
@@ -42,7 +46,7 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    navigate(from, { replace: true });
+    navigate(afterLoginPath, { replace: true });
   };
 
   return (
@@ -52,6 +56,22 @@ export const LoginPage: React.FC = () => {
           <BrandLogo size="lg" showSlogan />
           <p className="login-card__tagline">התחברות למערכת</p>
         </div>
+
+        {isAuthenticated && (
+          <div className="login-card__session" role="status">
+            <p>יש כבר חיבור פעיל במכשיר זה.</p>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => navigate('/browse', { replace: true })}
+            >
+              המשך לאפליקציה
+            </button>
+            <button type="button" className="btn btn--secondary" onClick={() => logout()}>
+              התנתק והתחבר מחדש
+            </button>
+          </div>
+        )}
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           <div className="login-form__field">

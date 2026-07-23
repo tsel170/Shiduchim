@@ -1,6 +1,8 @@
+import { AccountRole } from '../../common/types/account-role';
+
 export class AuthUserPayload {
   accountId!: string;
   email!: string;
-  role!: 'person' | 'shadchan';
+  role!: AccountRole;
   profileId!: string | null;
 }

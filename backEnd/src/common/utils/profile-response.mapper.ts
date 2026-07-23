@@ -12,6 +12,8 @@ export function toProfileResponse(profile: ProfileDocument) {
     firstName: profile.firstName,
     lastName: profile.lastName ?? '',
     city: profile.city ?? '',
+    cityLatitude: profile.cityLatitude ?? null,
+    cityLongitude: profile.cityLongitude ?? null,
     age: profile.age,
     heightCm: profile.heightCm ?? 0,
     religiousStream: profile.religiousStream ?? '',

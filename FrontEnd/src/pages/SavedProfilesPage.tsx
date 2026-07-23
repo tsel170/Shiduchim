@@ -16,6 +16,7 @@ import {
   FavoritesSortPanel,
 } from '../components/profile/FavoritesSortPanel';
 import { FavoritesListSkeleton } from '../components/profile/FavoriteCardSkeleton';
+import { ProfileImage } from '../components/common/ProfileImage';
 import { getCityLabel, getMaritalStatusLabel } from '../constants/profileOptions';
 import { useAuth } from '../contexts/AuthContext';
 import { ShadchanSummary } from '../types/account';
@@ -389,7 +390,6 @@ function FavoriteCard({
   const displayScore =
     activeScore === undefined ? '—' : sortBy === 'average' ? average : activeScore;
   const fullName = `${profile.firstName} ${profile.lastName}`;
-  const cover = profile.photos[0];
   const ratingsPanelId = `favorites-ratings-${profile.id}`;
 
   return (
@@ -401,11 +401,7 @@ function FavoriteCard({
     >
       <div className="favorites-item__accent-bar" aria-hidden="true" />
       <div className="favorites-item__media">
-        {cover ? (
-          <img src={cover} alt="" className="favorites-item__photo" loading="lazy" />
-        ) : (
-          <div className="favorites-item__photo favorites-item__photo--empty" />
-        )}
+        <ProfileImage photos={profile.photos} alt="" imgClassName="favorites-item__photo" />
         {hasPendingCase && <span className="favorites-item__sent-badge">נשלח לשדכן</span>}
       </div>
 

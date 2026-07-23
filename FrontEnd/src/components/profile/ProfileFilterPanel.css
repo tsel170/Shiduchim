@@ -184,6 +184,61 @@
   text-align: start;
 }
 
+.filter-panel__range--distance {
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.filter-panel__range--distance input[type='range'] {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  accent-color: var(--section-accent, var(--color-primary));
+  box-shadow: none;
+}
+
+.filter-panel__range--distance input[type='range']:focus {
+  box-shadow: none;
+  border: none;
+}
+
+.filter-panel__range-label {
+  font-weight: 600;
+}
+
+.filter-panel__range-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.filter-panel__range-number {
+  width: 72px;
+  text-align: center;
+  border: 1px solid var(--section-border, var(--color-border));
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.filter-panel__hint {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
+.filter-panel__hint--warn {
+  color: #b45309;
+  font-weight: 600;
+}
+
 .filter-panel__chips {
   display: flex;
   flex-wrap: wrap;

@@ -1,6 +1,6 @@
 import { DisplayPreferences, FilterConfiguration } from './profile';
 
-export type AccountRole = 'person' | 'shadchan';
+export type AccountRole = 'person' | 'shadchan' | 'admin';
 
 export interface AccountSettings {
   filters: FilterConfiguration;
@@ -36,6 +36,9 @@ export interface AuthUser {
   phone: string | null;
   settings: AccountSettings;
   linkedShadchanIds: string[];
+  isBlocked?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
 }
 
 /** @deprecated Mock-only shape */

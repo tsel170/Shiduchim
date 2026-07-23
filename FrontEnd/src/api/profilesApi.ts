@@ -39,10 +39,10 @@ export const profilesApi = {
   },
 
   search(filters: FilterConfiguration) {
-    return apiRequest<FullProfile[]>('/profiles/search', {
+    return apiRequest<ProfileInput[]>('/profiles/search', {
       method: 'POST',
       body: JSON.stringify({ filters }),
-    });
+    }).then((list) => list.map((item) => normalizeProfile(item)));
   },
 
   getAll(params?: {

@@ -22,7 +22,7 @@ import { FilterConfiguration } from '../../types/profile';
 
 import { isFilterKeyAtDefault, resetFilterKey } from '../../utils/filters';
 import { formatHeightFeetInches } from '../../utils/height';
-
+import { CitySelect } from './CitySelect';
 import './ProfileFilterPanel.css';
 
 
@@ -250,6 +250,91 @@ export const ProfileFilterPanel: React.FC<ProfileFilterPanelProps> = ({
               </span>
             </label>
           </div>
+        </FilterSection>
+
+        <FilterSection
+          themeClass="profile-field--city"
+          title="ערים"
+          onReset={() => resetKey('cities')}
+          canReset={!isFilterKeyAtDefault(value, 'cities')}
+        >
+          <CitySelect
+            value={value.cities[0] ?? ''}
+            onChange={(cityId) =>
+              patch('cities', cityId ? [cityId] : [])
+            }
+            placeholder="סנן לפי עיר ספציפית"
+          />
+          <p className="filter-panel__hint">בחירה מרשימת היישובים הרשמית בלבד</p>
+        </FilterSection>
+
+        <FilterSection
+          themeClass="profile-field--distance"
+          title="מרחק מעיר"
+          onReset={() => {
+            onChange({
+              ...value,
+              originCityId: null,
+              maxDistanceKm: null,
+            });
+          }}
+          canReset={
+            !isFilterKeyAtDefault(value, 'originCityId') ||
+            !isFilterKeyAtDefault(value, 'maxDistanceKm')
+          }
+        >
+          <CitySelect
+            value={value.originCityId ?? ''}
+            onChange={(cityId) => patch('originCityId', cityId || null)}
+            placeholder="בחרי עיר מרכז לרדיוס"
+          />
+          <label className="filter-panel__range filter-panel__range--distance">
+            <span className="filter-panel__range-label">
+              {value.maxDistanceKm == null
+                ? 'רדיוס: כבוי (מציג הכל)'
+                : `רדיוס: עד ${value.maxDistanceKm} ק״מ`}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={500}
+              step={10}
+              value={value.maxDistanceKm ?? 0}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                patch('maxDistanceKm', next <= 0 ? null : next);
+              }}
+            />
+            <div className="filter-panel__range-footer">
+              <span>הכל</span>
+              <input
+                type="number"
+                min={0}
+                max={500}
+                className="filter-panel__range-number"
+                value={value.maxDistanceKm ?? ''}
+                placeholder="ק״מ"
+                onChange={(e) =>
+                  patch(
+                    'maxDistanceKm',
+                    e.target.value === ''
+                      ? null
+                      : Math.max(0, Math.min(500, Number(e.target.value) || 0)) || null
+                  )
+                }
+              />
+              <span>500</span>
+            </div>
+          </label>
+          {value.maxDistanceKm != null && !value.originCityId ? (
+            <p className="filter-panel__hint filter-panel__hint--warn">
+              בחרי עיר למעלה — בלי עיר המרחק לא מסנן.
+            </p>
+          ) : (
+            <p className="filter-panel__hint">
+              ריק / 0 = כל הפרופילים. עם מספר + עיר = רק פרופילים בתוך הרדיוס.
+            </p>
+          )}
         </FilterSection>
 
         <FilterChipsSection

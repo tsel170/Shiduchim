@@ -2,28 +2,92 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  position: relative;
 }
 
-.city-select__mode-btn {
-  align-self: flex-start;
+.city-select__input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  position: relative;
+}
+
+.city-select__input-row .form-field__input,
+.city-select__input-row input {
+  flex: 1;
+  min-width: 0;
+  padding-left: 2rem;
+}
+
+.city-select__clear {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   border: none;
-  padding: 0;
-  background: none;
-  color: var(--color-primary);
-  font-family: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  padding: 4px;
 }
 
-.city-select__mode-btn:hover {
-  color: var(--color-primary-dark);
+.city-select__clear:hover {
+  color: var(--color-text);
+}
+
+.city-select__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  margin: 0;
+  padding: var(--space-xs);
+  list-style: none;
+  max-height: 240px;
+  overflow: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.city-select__option {
+  display: block;
+  width: 100%;
+  text-align: right;
+  border: none;
+  background: transparent;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.city-select__option:hover,
+.city-select__option--active {
+  background: var(--color-bg-hover, #eef1f5);
+}
+
+.city-select__empty,
+.city-select__hint {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .city-select__selected {
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+}
+
+.city-select__error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
 }

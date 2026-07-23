@@ -47,5 +47,6 @@ export function matchesFilterConfiguration<T extends ProfileFilterable>(
   }
   if (!includesAny(profile.hobbies ?? [], filters.hobbies)) return false;
   if (!includesAny(profile.lookingFor ?? [], filters.lookingFor)) return false;
+  if (!includesValue(profile.city, filters.cities)) return false;
   return true;
 }

@@ -1,5 +1,4 @@
 import {
-  CITIES,
   GENDER_OPTIONS,
   HOBBY_OPTIONS,
   MARITAL_STATUS_OPTIONS,
@@ -7,6 +6,7 @@ import {
   PERSONALITY_TRAIT_OPTIONS,
   RELIGIOUS_STREAMS,
 } from '../constants/profileOptions';
+import { getCachedCities } from './citiesStore';
 
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
 export type FieldInputType = 'text' | 'select' | 'multiselect' | 'number';
@@ -55,10 +55,11 @@ function normalizeSpaces(value: string): string {
 
 function matchCityId(raw: string): { id: string | null; snippet: string } {
   const text = normalizeSpaces(raw);
-  const exact = CITIES.find((c) => c.label === text);
+  const cities = getCachedCities();
+  const exact = cities.find((c) => c.name === text);
   if (exact) return { id: exact.id, snippet: text };
 
-  const contains = CITIES.find((c) => text.includes(c.label) || c.label.includes(text));
+  const contains = cities.find((c) => text.includes(c.name) || c.name.includes(text));
   if (contains) return { id: contains.id, snippet: text };
 
   return { id: null, snippet: text };
@@ -210,7 +211,7 @@ export function extractProfileFromText(rawText: string): AiExtractionResult {
       key: 'city',
       label: 'עיר',
       id,
-      options: CITIES.map((c) => ({ id: c.id, label: c.label })),
+      options: getCachedCities().map((c) => ({ id: c.id, label: c.name })),
       confidence: 0.85,
       sourceSnippet: snippet,
       unmatchedRaw: id ? undefined : normalizeSpaces(cityRaw),

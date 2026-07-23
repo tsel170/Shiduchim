@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { Profile, ProfileDocument } from '../profiles/schemas/profile.schema';
 import { generateId } from '../common/utils/generate-id';
 import { normalizeAccountSettings } from '../common/utils/normalize-account-settings';
+import { AccountRole } from '../common/types/account-role';
 import {
   CreateAccountDto,
   UpdateAccountDto,
@@ -64,7 +65,22 @@ export class AccountsService {
     const valid = await bcrypt.compare(password, account.passwordHash);
     if (!valid) return null;
 
+    if (account.isDeleted) {
+      throw new ForbiddenException('החשבון נמחק ואינו זמין להתחברות');
+    }
+    if (account.isBlocked) {
+      throw new ForbiddenException('החשבון חסום. פנה/י למנהל המערכת');
+    }
+
     return this.toResponse(account);
+  }
+
+  async assertAccountActive(accountId: string) {
+    const account = await this.accountModel.findOne({ accountId });
+    if (!account || account.isDeleted || account.isBlocked) {
+      throw new ForbiddenException('החשבון אינו פעיל');
+    }
+    return account;
   }
 
   async create(createAccountDto: CreateAccountDto) {
@@ -96,8 +112,9 @@ export class AccountsService {
     return this.toResponse(account);
   }
 
-  async findAll(role?: 'person' | 'shadchan') {
-    const query = role ? { role } : {};
+  async findAll(role?: AccountRole) {
+    const query: Record<string, unknown> = { isDeleted: { $ne: true } };
+    if (role) query.role = role;
     const accounts = await this.accountModel.find(query).sort({ email: 1 });
     return accounts.map((account) => this.toResponse(account));
   }
@@ -178,11 +195,15 @@ export class AccountsService {
     }
 
     if (updateSettingsDto.filters !== undefined) {
-      account.settings.filters = updateSettingsDto.filters;
+      account.settings.filters = normalizeAccountSettings({
+        filters: updateSettingsDto.filters,
+      }).filters;
     }
 
     if (updateSettingsDto.displayPreferences !== undefined) {
-      account.settings.displayPreferences = updateSettingsDto.displayPreferences;
+      account.settings.displayPreferences = normalizeAccountSettings({
+        displayPreferences: updateSettingsDto.displayPreferences,
+      }).displayPreferences;
     }
 
     account.markModified('settings');
@@ -657,6 +678,9 @@ export class AccountsService {
       settings: normalizeAccountSettings(account.settings),
       linkedShadchanIds:
         account.role === 'person' ? account.linkedShadchanIds ?? [] : [],
+      isBlocked: Boolean(account.isBlocked),
+      isDeleted: Boolean(account.isDeleted),
+      deletedAt: account.deletedAt ?? null,
     };
   }
 }

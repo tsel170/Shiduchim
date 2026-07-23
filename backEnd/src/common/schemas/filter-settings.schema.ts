@@ -39,6 +39,14 @@ export class FilterConfiguration {
 
   @Prop({ type: [String], default: [] })
   lookingFor: string[];
+
+  /** Optional origin city id for distance filtering. */
+  @Prop({ type: String, default: null })
+  originCityId: string | null;
+
+  /** Maximum distance in km from originCityId (null = disabled). */
+  @Prop({ type: Number, default: null })
+  maxDistanceKm: number | null;
 }
 
 export const FilterConfigurationSchema =
@@ -54,4 +62,6 @@ export const DEFAULT_FILTER_CONFIGURATION: FilterConfiguration = {
   personalityTraits: [],
   hobbies: [],
   lookingFor: [],
+  originCityId: null,
+  maxDistanceKm: null,
 };

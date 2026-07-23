@@ -279,12 +279,13 @@ export function applyDeny(
 export function computeViewerContext(
   state: SimplifiedCaseState,
   viewerAccountId: string,
-  viewerRole: 'person' | 'shadchan',
+  viewerRole: 'person' | 'shadchan' | 'admin',
   names: { personAName: string; personBName: string },
 ): ViewerContextSimple {
+  const role = viewerRole === 'admin' ? 'shadchan' : viewerRole;
   const closed = isCaseClosed(state);
   const mySlot =
-    viewerRole === 'shadchan'
+    role === 'shadchan'
       ? ('shadchan' as const)
       : slotForAccountId(state, viewerAccountId);
 
@@ -296,35 +297,35 @@ export function computeViewerContext(
         : null;
 
   const canApprove =
-    viewerRole === 'person' && canPersonAct(state, viewerAccountId);
+    role === 'person' && canPersonAct(state, viewerAccountId);
   const canDeny =
-    (viewerRole === 'person' && canPersonAct(state, viewerAccountId)) ||
-    (viewerRole === 'shadchan' && !closed);
+    (role === 'person' && canPersonAct(state, viewerAccountId)) ||
+    (role === 'shadchan' && !closed);
 
   const contactAllowed =
     CONTACT_STAGES.includes(state.stage) && !closed;
   const visible =
-    viewerRole === 'shadchan' ||
+    role === 'shadchan' ||
     isVisibleToAccount(state, viewerAccountId);
 
   const canReleaseToPersonB =
-    viewerRole === 'shadchan' &&
+    role === 'shadchan' &&
     !closed &&
     state.initiatedBy === 'person' &&
     state.stage === 'profile_check' &&
     !state.personBReleased;
 
   const canApproveForA =
-    viewerRole === 'shadchan' && canShadchanActForSlot(state, 'A');
+    role === 'shadchan' && canShadchanActForSlot(state, 'A');
   const canApproveForB =
-    viewerRole === 'shadchan' && canShadchanActForSlot(state, 'B');
+    role === 'shadchan' && canShadchanActForSlot(state, 'B');
 
   const canAdvanceStage =
-    viewerRole === 'shadchan' && canShadchanAdvanceStage(state);
+    role === 'shadchan' && canShadchanAdvanceStage(state);
   const next = canAdvanceStage ? nextStage(state.stage) : null;
 
   const statusMessage = buildStatusMessage(state, mySlot, names, visible);
-  const isShadchan = viewerRole === 'shadchan';
+  const isShadchan = role === 'shadchan';
 
   return {
     stage: state.stage,
@@ -351,7 +352,7 @@ export function computeViewerContext(
       canApproveForB,
       canAdvanceStage,
       nextStageLabel: next ? STAGE_LABELS[next] : undefined,
-      canCancel: viewerRole === 'shadchan' && !closed,
+      canCancel: role === 'shadchan' && !closed,
     },
   };
 }

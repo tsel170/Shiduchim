@@ -1,5 +1,6 @@
 import { DEFAULT_FILTER_CONFIGURATION, MIN_PROFILE_AGE, filterPersonalityTraits } from '../constants/profileOptions';
 import { FilterConfiguration, Profile } from '../types/profile';
+import { distanceKm, getCityCoordinates } from './citiesStore';
 
 /** Merge partial/stale saved filters with defaults (e.g. after new filter keys are added). */
 export function normalizeFilterConfiguration(
@@ -36,7 +37,21 @@ export function normalizeFilterConfiguration(
       input.personalityTraits ?? DEFAULT_FILTER_CONFIGURATION.personalityTraits,
     hobbies: input.hobbies ?? DEFAULT_FILTER_CONFIGURATION.hobbies,
     lookingFor: filterPersonalityTraits(input.lookingFor ?? DEFAULT_FILTER_CONFIGURATION.lookingFor),
+    originCityId: input.originCityId?.trim()
+      ? input.originCityId.trim()
+      : DEFAULT_FILTER_CONFIGURATION.originCityId,
+    maxDistanceKm: normalizeMaxDistanceKm(
+      input.maxDistanceKm ?? DEFAULT_FILTER_CONFIGURATION.maxDistanceKm
+    ),
   };
+}
+
+/** Empty / 0 / invalid → null (distance filter off = show everyone). */
+function normalizeMaxDistanceKm(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.min(500, n);
 }
 
 export function isFilterKeyAtDefault(
@@ -47,8 +62,16 @@ export function isFilterKeyAtDefault(
   const current = normalized[key];
   const defaults = DEFAULT_FILTER_CONFIGURATION[key];
 
+  if (key === 'originCityId' || key === 'maxDistanceKm') {
+    return current == null || current === defaults;
+  }
+
   if (Array.isArray(current)) {
     return current.length === 0;
+  }
+
+  if (typeof current === 'string' || typeof current === 'number' || current === null) {
+    return current === defaults;
   }
 
   const range = current as { min: number; max: number };
@@ -76,11 +99,21 @@ const includesValue = (value: string, selected: string[]) =>
 
 const hasRecordedHeight = (heightCm: number) => heightCm > 0;
 
+/**
+ * Distance rules (exact product behavior):
+ * - maxDistanceKm empty → do not filter by distance (show all matching other filters)
+ * - maxDistanceKm set + originCityId → keep profiles whose city is within that radius
+ * - maxDistanceKm set but no origin city → do not filter by distance
+ */
 export function filterProfiles(
   profiles: Profile[],
   filters: FilterConfiguration
 ): Profile[] {
   const normalized = normalizeFilterConfiguration(filters);
+  const maxKm = normalized.maxDistanceKm;
+  const originId = normalized.originCityId;
+  const distanceActive = Boolean(originId && maxKm != null && maxKm > 0);
+  const origin = distanceActive ? getCityCoordinates(originId) : null;
 
   return profiles.filter((profile) => {
     if (
@@ -108,6 +141,17 @@ export function filterProfiles(
     }
     if (!includesAny(profile.hobbies, normalized.hobbies)) return false;
     if (!includesAny(profile.lookingFor, normalized.lookingFor)) return false;
+    if (!includesValue(profile.city, normalized.cities)) return false;
+
+    if (distanceActive && origin) {
+      const target = getCityCoordinates(profile.city, {
+        latitude: profile.cityLatitude,
+        longitude: profile.cityLongitude,
+      });
+      if (!target) return false;
+      if (distanceKm(origin, target) > maxKm!) return false;
+    }
+
     return true;
   });
 }

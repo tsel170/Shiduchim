@@ -5,9 +5,13 @@ import {
   IsEmail,
   IsIn,
   IsInt,
+  IsNumber,
+  IsObject,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
   MinLength,
   ValidateNested,
 } from 'class-validator';
@@ -68,10 +72,23 @@ export class FilterConfigurationDto {
   @IsArray()
   @IsString({ each: true })
   lookingFor: string[];
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  originCityId?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(500)
+  maxDistanceKm?: number | null;
 }
 
 export class DisplayPreferencesDto {
   @ApiProperty({ type: Object, example: { city: true, hobbies: true } })
+  @IsObject()
   visibleFields: Record<string, boolean>;
 
   @ApiProperty({ type: [String], enum: DISPLAY_FIELDS })

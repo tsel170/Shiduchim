@@ -78,8 +78,8 @@ export class AuthService {
     return this.accountsService.findLinkedShadchanim(personAccountId);
   }
 
-  async listLinkedPersons(shadchanAccountId: string, role: 'person' | 'shadchan') {
-    if (role !== 'shadchan') {
+  async listLinkedPersons(shadchanAccountId: string, role: import('../common/types/account-role').AccountRole) {
+    if (role !== 'shadchan' && role !== 'admin') {
       throw new ForbiddenException('רק שדכן/ית יכול/ה לצפות במשודכים מקושרים');
     }
     return this.accountsService.findLinkedPersons(shadchanAccountId);
@@ -98,11 +98,14 @@ export class AuthService {
     firstName: string;
     lastName: string;
     email: string;
-    role: 'person' | 'shadchan';
+    role: import('../common/types/account-role').AccountRole;
     profileId: string | null;
     phone: string | null;
     settings: unknown;
     linkedShadchanIds?: string[];
+    isBlocked?: boolean;
+    isDeleted?: boolean;
+    deletedAt?: Date | null;
   }) {
     const token = await this.jwtService.signAsync({
       sub: account.accountId,
@@ -123,6 +126,9 @@ export class AuthService {
         phone: account.phone,
         settings: account.settings,
         linkedShadchanIds: account.linkedShadchanIds ?? [],
+        isBlocked: Boolean(account.isBlocked),
+        isDeleted: Boolean(account.isDeleted),
+        deletedAt: account.deletedAt ?? null,
       },
     };
   }
