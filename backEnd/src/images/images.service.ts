@@ -1,4 +1,4 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MemoryCache } from '../common/utils/memory-cache';
 import { PlaceImageDto } from '../common/types/integrations.types';
@@ -12,6 +12,51 @@ interface UnsplashPhoto {
   urls?: { regular?: string; small?: string };
   user?: { name?: string; links?: { html?: string } };
 }
+
+/**
+ * Browser-friendly Commons URLs (Special:FilePath) when Unsplash key is missing.
+ * Local frontend also has /pigeons/*.svg as a final fallback.
+ */
+const FALLBACK_PIGEON_IMAGES: PlaceImageDto[] = [
+  {
+    id: 'wm-rock-doves-flight',
+    url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rock_doves_in_flight.jpg?width=960',
+    thumbUrl:
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Rock_doves_in_flight.jpg?width=640',
+    photographer: 'Charles J. Sharp',
+    photographerUrl: 'https://commons.wikimedia.org/wiki/File:Rock_doves_in_flight.jpg',
+    alt: 'יונים בתעופה',
+  },
+  {
+    id: 'wm-rock-pigeon',
+    url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rock_Pigeon_Columba_livia.jpg?width=960',
+    thumbUrl:
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Rock_Pigeon_Columba_livia.jpg?width=640',
+    photographer: 'Muhammad Mahdi Karim',
+    photographerUrl: 'https://commons.wikimedia.org/wiki/File:Rock_Pigeon_Columba_livia.jpg',
+    alt: 'יונת סלע',
+  },
+  {
+    id: 'wm-common-pigeon',
+    url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rock_pigeon_or_common_pigeon_(Columba_livia).jpg?width=960',
+    thumbUrl:
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Rock_pigeon_or_common_pigeon_(Columba_livia).jpg?width=640',
+    photographer: 'Wikimedia Commons',
+    photographerUrl:
+      'https://commons.wikimedia.org/wiki/File:Rock_pigeon_or_common_pigeon_(Columba_livia).jpg',
+    alt: 'יונה מצויה',
+  },
+  {
+    id: 'wm-mourning-dove',
+    url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Mourning_dove_perched_(61179).jpg?width=960',
+    thumbUrl:
+      'https://commons.wikimedia.org/wiki/Special:FilePath/Mourning_dove_perched_(61179).jpg?width=640',
+    photographer: 'Rhododendrites',
+    photographerUrl:
+      'https://commons.wikimedia.org/wiki/File:Mourning_dove_perched_(61179).jpg',
+    alt: 'תור',
+  },
+];
 
 @Injectable()
 export class ImagesService {
@@ -54,16 +99,20 @@ export class ImagesService {
     if (!images.length) {
       images = await this.searchUnsplash('Dove');
     }
-    if (!images.length) {
-      throw new ServiceUnavailableException('לא נמצאו תמונות יונים כרגע');
+    if (images.length) {
+      this.logger.log(`Loaded ${images.length} pigeon/dove images from Unsplash`);
+      return images;
     }
-    return images;
+
+    this.logger.warn(
+      'Using Commons pigeon fallbacks (set UNSPLASH_ACCESS_KEY for Unsplash photos)',
+    );
+    return FALLBACK_PIGEON_IMAGES;
   }
 
   private async searchUnsplash(query: string): Promise<PlaceImageDto[]> {
     const accessKey = this.configService.get<string>('UNSPLASH_ACCESS_KEY')?.trim();
     if (!accessKey) {
-      this.logger.warn('UNSPLASH_ACCESS_KEY is not set — returning empty image list');
       return [];
     }
 

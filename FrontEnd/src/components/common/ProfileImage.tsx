@@ -4,6 +4,8 @@ import './ProfileImage.css';
 
 interface ProfileImageProps {
   photos?: string[] | null;
+  /** Stable seed (e.g. profile id) so the same card keeps the same pigeon. */
+  seed?: string | null;
   alt?: string;
   className?: string;
   imgClassName?: string;
@@ -12,6 +14,7 @@ interface ProfileImageProps {
 
 export const ProfileImage: React.FC<ProfileImageProps> = ({
   photos,
+  seed = null,
   alt = '',
   className = '',
   imgClassName = '',
@@ -28,9 +31,9 @@ export const ProfileImage: React.FC<ProfileImageProps> = ({
 
     let cancelled = false;
     imagesApi
-      .randomPigeon()
+      .pigeonFor(seed)
       .then((image) => {
-        if (!cancelled) setPlaceholder(image?.url ?? null);
+        if (!cancelled) setPlaceholder(image?.thumbUrl || image?.url || null);
       })
       .catch(() => {
         if (!cancelled) setPlaceholder(null);
@@ -39,7 +42,7 @@ export const ProfileImage: React.FC<ProfileImageProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [uploaded]);
+  }, [uploaded, seed]);
 
   const src = uploaded ?? placeholder;
 

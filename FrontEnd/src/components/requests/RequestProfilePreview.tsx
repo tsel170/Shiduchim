@@ -39,6 +39,7 @@ export const RequestProfilePreview: React.FC<RequestProfilePreviewProps> = ({
       <div className="request-profile-preview__image-wrap">
         <ProfileImage
           photos={profile.photos}
+          seed={profile.id}
           alt=""
           imgClassName="request-profile-preview__image"
         />

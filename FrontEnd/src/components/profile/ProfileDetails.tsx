@@ -80,11 +80,11 @@ export const ProfileDetails: React.FC<ProfileDetailsProps> = ({
       <section className="profile-details__section profile-details__section--photos">
         <h2 className="profile-details__section-title">תמונות פרופיל</h2>
         {photosUnlocked ? (
-          <ProfileGallery photos={profile.photos} alt={fullName} />
+          <ProfileGallery photos={profile.photos} alt={fullName} seed={profile.id} />
         ) : (
           <div className="profile-details__photos-locked">
             <div className="profile-details__photos-locked-blur">
-              <ProfileGallery photos={profile.photos} alt={fullName} />
+              <ProfileGallery photos={profile.photos} alt={fullName} seed={profile.id} />
             </div>
             <p>יש לדרג את כל קטגוריות הפרופיל לפני צפייה בתמונות.</p>
           </div>

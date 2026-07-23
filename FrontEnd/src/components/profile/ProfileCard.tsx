@@ -53,6 +53,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       >
         <ProfileImage
           photos={profile.photos}
+          seed={profile.id}
           alt=""
           locked={photosLocked}
           imgClassName="profile-card__image"

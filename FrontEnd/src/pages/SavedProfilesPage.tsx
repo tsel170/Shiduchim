@@ -401,7 +401,12 @@ function FavoriteCard({
     >
       <div className="favorites-item__accent-bar" aria-hidden="true" />
       <div className="favorites-item__media">
-        <ProfileImage photos={profile.photos} alt="" imgClassName="favorites-item__photo" />
+        <ProfileImage
+          photos={profile.photos}
+          seed={profile.id}
+          alt=""
+          imgClassName="favorites-item__photo"
+        />
         {hasPendingCase && <span className="favorites-item__sent-badge">נשלח לשדכן</span>}
       </div>
 
