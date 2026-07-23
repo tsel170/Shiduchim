@@ -313,6 +313,9 @@ export const AppRoutes: React.FC = () => {
           setProfileCatalog((prev) => ({ ...prev, [profile.id]: profile }));
         }
       })
+      .catch(() => {
+        if (!cancelled) setMyProfile(null);
+      })
       .finally(() => {
         if (!cancelled) setMyProfileLoading(false);
       });

@@ -84,6 +84,16 @@ export class AdminService {
     account.deletedAt = new Date();
     account.isBlocked = true;
     await account.save();
+
+    if (account.profileId) {
+      const profile = await this.profileModel.findOne({ profileId: account.profileId });
+      if (profile && !profile.isDeleted) {
+        profile.isDeleted = true;
+        profile.deletedAt = new Date();
+        await profile.save();
+      }
+    }
+
     return this.toAdminAccount(account);
   }
 
@@ -93,6 +103,16 @@ export class AdminService {
     account.deletedAt = null;
     account.isBlocked = false;
     await account.save();
+
+    if (account.profileId) {
+      const profile = await this.profileModel.findOne({ profileId: account.profileId });
+      if (profile?.isDeleted) {
+        profile.isDeleted = false;
+        profile.deletedAt = null;
+        await profile.save();
+      }
+    }
+
     return this.toAdminAccount(account);
   }
 
